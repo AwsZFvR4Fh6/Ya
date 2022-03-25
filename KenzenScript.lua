@@ -1,4 +1,5 @@
-local RTYGFHSWRGYJJRTG = "Kenzen // V: " .. 2 .. "." .. 0 .. "." .. 5
+local _G = getgenv and getgenv() or _G
+local RTYGFHSWRGYJJRTG = "Kenzen // V: " .. 2 .. "." .. 0 .. "." .. 6
 if printconsole then printconsole(RTYGFHSWRGYJJRTG) else print(RTYGFHSWRGYJJRTG) end
 --= Start Up =--
 if _G.KenzenLoaded then error("kenzen already running") return end
@@ -173,47 +174,49 @@ local function toClipboard(String)
 end
 
 local function saveins(bool)
-	saveinstance({noscripts=bool,mode="optimized"})
-	local market = game:GetService("MarketplaceService")
-	local info = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
-	local e,f = string.gsub(info, "'", "_")
-	e,f = string.gsub(e, "%$", "_")
-	e,f = string.gsub(e, "!", "_")
-	e,f = string.gsub(e, "@", "_")
-	e,f = string.gsub(e, "#", "_")
-	e,f = string.gsub(e, "%^", "_")
-	e,f = string.gsub(e, "&", "_")
-	e,f = string.gsub(e, "%%", "_")
-	e,f = string.gsub(e, "%*", "_")
-	e,f = string.gsub(e, "%(", "_")
-	e,f = string.gsub(e, "%)", "_")
-	e,f = string.gsub(e, "%.", "_")
-	e,f = string.gsub(e, "%[", "_")
-	e,f = string.gsub(e, "%]", "_")
-	e,f = string.gsub(e, "%+", "_")
-	e,f = string.gsub(e, "%-", "_")
-	e,f = string.gsub(e, "%?", "_")
-	info = e
-	local b
-	repeat 
+	if writefile and saveinstance then
+		saveinstance({noscripts=bool,mode="optimized"})
+		local market = game:GetService("MarketplaceService")
+		local info = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name .. " " .. game.JobId
+		local e,f = string.gsub(info, "'", "_")
+		e,f = string.gsub(e, "%$", "_")
+		e,f = string.gsub(e, "!", "_")
+		e,f = string.gsub(e, "@", "_")
+		e,f = string.gsub(e, "#", "_")
+		e,f = string.gsub(e, "%^", "_")
+		e,f = string.gsub(e, "&", "_")
+		e,f = string.gsub(e, "%%", "_")
+		e,f = string.gsub(e, "%*", "_")
+		e,f = string.gsub(e, "%(", "_")
+		e,f = string.gsub(e, "%)", "_")
+		e,f = string.gsub(e, "%.", "_")
+		e,f = string.gsub(e, "%[", "_")
+		e,f = string.gsub(e, "%]", "_")
+		e,f = string.gsub(e, "%+", "_")
+		e,f = string.gsub(e, "%-", "_")
+		e,f = string.gsub(e, "%?", "_")
+		info = e
+		local b
+		repeat 
+			pcall(function()
+				b = readfile(info .. ".rbxl")
+			end)
+			wait()
+		until b
+		local h
 		pcall(function()
-			b = readfile(info .. ".rbxl")
+			h = isfolder("KenzenDecompile")	
 		end)
-		wait()
-	until b
-	local h
-	pcall(function()
-		h = isfolder("KenzenDecompile")	
-	end)
-	if h ~= true then
-		makefolder("KenzenDecompile")
+		if h ~= true then
+			makefolder("KenzenDecompile")
+		end
+		local danameXD = "KenzenDecompile/" .. info .. "-" .. game.PlaceId
+		if bool ~= true then
+			danameXD = danameXD .. "+" .. "scripts"
+		end
+		writefile(danameXD .. ".rbxl",b)
+		delfile(info .. ".rbxl")
 	end
-	local danameXD = "KenzenDecompile/" .. info .. "-" .. game.PlaceId
-	if bool ~= true then
-		danameXD = danameXD .. "+" .. "scripts"
-	end
-	writefile(danameXD .. ".rbxl",b)
-	delfile(info .. ".rbxl")
 end
 
 local Lines,antifling,Clip,Noclipping,FLYING,invisRunning
@@ -658,7 +661,7 @@ local function command(cmd)
 				wait()
 				local stringgroup
 				if antifling then stringgroup = "KPlayers"
-					else stringgroup = "Default"
+				else stringgroup = "Default"
 				end
 				for i,v in pairs(Chr:GetDescendants()) do
 					spawn(function()
@@ -720,8 +723,8 @@ local function command(cmd)
 		]]
 	elseif string.lower(cmd2[1]) == "f3x" then
 		loadstring(game:GetObjects("rbxassetid://4698064966")[1].Source)()
-	elseif string.lower(cmd2[1]) == "animy" then
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/AnimY.lua", true))()
+	elseif string.lower(cmd2[1]) == "kenzengui" then
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua", true))()
 	elseif string.lower(cmd2[1]) == "sdex" then
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/CMD-X/CMD-X/master/others/sdex", true))()
 	elseif string.lower(cmd2[1]) == "untracer" then
@@ -746,7 +749,7 @@ local function command(cmd)
 		local roundedPos = math.round(Player.Character.HumanoidRootPart.Position.X) .. ", " .. math.round(Player.Character.HumanoidRootPart.Position.Y) .. ", " .. math.round(Player.Character.HumanoidRootPart.Position.Z)
 		toClipboard(roundedPos)
 	elseif string.lower(cmd2[1]) == "dqqs" then
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/QuickSwitch.lua"))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/QuickSwitch.lua"))()
 	elseif string.lower(cmd2[1]) == "antilog" then
 		loadstring(game:HttpGet('https://pastebin.com/raw/444k40vk'))();
 	elseif string.lower(cmd2[1]) == "saveinstance" then
@@ -788,7 +791,7 @@ local function command(cmd)
 				game:GetService("CoreGui").DevConsoleMaster.DevConsoleWindow.DevConsoleUI.MainView.ServerLog.CommandLine.InputField.TextBox:ReleaseFocus(true)
 			end
 		end
-		wait(1)
+		wait(.3)
 		local a = Player.PlayerGui:FindFirstChild("PlayerList",true)
 		if a then
 			if a.Parent:FindFirstChild("TopBar") then
@@ -797,7 +800,7 @@ local function command(cmd)
 				a.Parent.TextBox:ReleaseFocus(true)
 			end
 		end
-		wait(1)
+		wait(.3)
 		local b = Player:FindFirstChild("Loadstring",true)
 		if b then
 			for i,v in pairs(b.Parent.Parent:GetDescendants()) do
@@ -941,7 +944,7 @@ TextBox9.FocusLost:connect(function(enterPressed)
 			if TextBox9.Text == "cmds" or TextBox9.Text == "commands" then
 				tweencommands(false)
 			else
-					print(TextBox9.Text)
+				print(TextBox9.Text)
 				local testc = command(TextBox9.Text)
 				if testc ~= nil then
 					if game.JointsService:FindFirstChild("⚡") then
