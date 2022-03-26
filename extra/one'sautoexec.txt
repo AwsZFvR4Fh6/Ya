@@ -236,10 +236,16 @@ end
 getgenv().decompile = advdecompile
 getgenv().netless = netless
 
-loadtime = tick() - loadtime
-printconsole(tostring("Autoexec loaded in " .. loadtime))
+local loadedtime = tick() - loadtime
+printconsole(tostring("Autoexec loaded in " .. loadedtime))
 game.Loaded:Wait()
-loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/5aacd41c762304c92802ed4ad714cc98/raw/e8c9b25cb3660028793342728553efdb24e72bec/NotificationService.lua",true))()({
-	Text = "Autoexec loaded in " .. loadtime,
+local notify = loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/5aacd41c762304c92802ed4ad714cc98/raw/e8c9b25cb3660028793342728553efdb24e72bec/NotificationService.lua",true))()
+notify({
+	Text = "Autoexec loaded in " .. loadedtime,
+	Duration = 5
+})
+printconsole(tostring("Game loaded in " .. tick() - loadtime))
+notify({
+	Text = "Game loaded in " .. tick() - loadtime,
 	Duration = 5
 })
