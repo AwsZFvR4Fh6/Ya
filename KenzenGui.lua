@@ -1,7 +1,7 @@
-
-if getgenv().GuiLoaded then printconsole("Already loaded?") error("Already loaded?") return end
+local getgenv = getgenv and getgenv() or _G
+if getgenv.GuiLoaded then printconsole("Already loaded?") error("Already loaded?") return end
 local gui = game:GetObjects("rbxassetid://9013635661")[1]
-getgenv().GuiLoaded = true
+getgenv.GuiLoaded = true
 if not game:IsLoaded() then game.Loaded:Wait() end
 gui.Parent = game.CoreGui
 local script = gui.Frame.LocalScript
@@ -99,7 +99,7 @@ for i,v in pairs(script.Parent.Parent.Reanimate.Frame.ScrollingFrame:GetChildren
 		v.ImageButton.Activated:Connect(function()
 			v.Activated.Value = not v.Activated.Value
 			v.ImageButton.Image = v.Activated.Value and "rbxassetid://4458804262" or "rbxassetid://4458801905"
-			getgenv()[v.Name] = v.Activated.Value
+			getgenv[v.Name] = v.Activated.Value
 		end)
 	end
 end
@@ -108,43 +108,43 @@ end
 
 local netlessscripts = {
 	{"Star Platinum",function() 
-		loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/be41f738db7abc8d275b956af7307e8f/raw/23f5b20a7d2361ca444e18d7c43ffa9a5264c61d/gistfile1.txt",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/StarPlatinum.lua",true))()
 	end},
 	{"Star Platinum+Fling",function() 
-		loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/a9b2f463cabc667017df63d7f72fbbaa/raw/0861da6f8db723512d84cbece5286a819c07f5aa/gistfile1.txt",true))()
+		loadstring(game:HttpGet("https://github.com/AwsZFvR4Fh6/Ya/blob/main/StarPlatinumFling.lua",true))()
 	end},
 	{"Nights Edge",function() 
-		getgenv().AutoAnimate = false
+		getgenv.AutoAnimate = false
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/netlessreanimate.lua",true))()
-		wait()
-		loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/a5cde09512ccd74e89c36a76dc5a08a9/raw/ad873487cc7120faa0aa9acdae57c6c136767fb9/nightsedge",true))()
+		wait(0/1)
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/NightsEdge.lua",true))()
 	end},
 	{"Nights Edge+Fling",function() 
-		loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/f45a5ba40d9c0e58b52eac2e2b3d8207/raw/dceca0c25eec09d75b276315320a2db76c5668e9/nightsedgefling",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/NightsEdgeFling.lua",true))()
 	end},
 	{"Tool Dances",function() 
-		getgenv().reanimate = true
-		getgenv().preloadanimations = true
-		getgenv().loadtime = 0
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/toolanimations.lua",true))()
+		getgenv.reanimate = true
+		getgenv.preloadanimations = true
+		getgenv.loadtime = 0
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua",true))()
 	end},
 	{"Wao3",function() 
-		getgenv().AutoAnimate = false
+		getgenv.AutoAnimate = false
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/netlessreanimate.lua",true))()
-		wait()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/WAO3%20FE.lua",true))()
+		wait(0/1)
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/WAO3%20FE.lua",true))()
 	end},
 	{"Wao",function() 
-		getgenv().AutoAnimate = false
+		getgenv.AutoAnimate = false
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/netlessreanimate.lua",true))()
-		wait()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/WAO%20FE.txt",true))()
+		wait(0/1)
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/WAO%20FE.txt",true))()
 	end},
 	{"Majora Mask",function() 
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/Majora%20Mask.txt",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/Majora%20Mask.txt",true))()
 	end},
 	{"Eyozen",function() 
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/eyozen.txt",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/eyozen.txt",true))()
 	end},
 }
 local scroll = script.Parent.Parent.Netless.Frame.ScrollingFrame
@@ -164,19 +164,19 @@ end
 
 local MiscScripts = {
 	{"Ping Predict",function() 
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/pingpredict.lua",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/pingpredict.lua",true))()
 	end},
 	{"Kaiju Anti-Grab",function() 
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/antigrab",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/antigrab",true))()
 	end},
 	{"Statistics",function() 
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/message%20(18).txt",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/message%20(18).txt",true))()
 	end},
 	{"Animation Grabber",function() 
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/AnimationStealer.lua",true))()
 	end},
 	{"CFrame Animator",function() 
-		loadstring(game:HttpGet(('https://gist.githubusercontent.com/CenteredSniper/79c80c79d8d73230d1922ce506c64827/raw/23ca64aa14faa3f5c52c6232517fe7cb558485d6/message%2520(34).txt'),true))()
+		loadstring(game:HttpGet(('https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/CFrameAnimator.lua'),true))()
 	end},
 	{"Backdoor Checker",function() 
 		loadstring(game:HttpGet(('https://raw.githubusercontent.com/iK4oS/backdoor.exe/master/source.lua'),true))()
@@ -198,7 +198,7 @@ local MiscScripts = {
 	{"AntiTeleport",function() 
 		local humroot = game.Players.LocalPlayer.Character.HumanoidRootPart
 		local prevpos = humroot.CFrame
-		while task.wait() do
+		while wait(0/1) do
 			if (humroot.Position - prevpos.Position).Magnitude < -2 or (humroot.Position - prevpos.Position).Magnitude > 2 then
 				humroot.CFrame = prevpos
 			end
