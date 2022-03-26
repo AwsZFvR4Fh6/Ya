@@ -228,7 +228,7 @@ script.Parent.Frame.Autoexec.Activated:Connect(function()
 		if not isfolder("AutoexecFiles") then
 			makefolder("AutoexecFiles")
 		end
-		writefile("AutoexecFiles/one'sautoexec.txt",game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/one'sautoexec.txt",true))
+		writefile("AutoexecFiles/one'sautoexec.txt",game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/extra/one'sautoexec.txt",true))
 		notification("Check workspace/AutoexecFiles",3)
 	else
 		notification("writefile not avaliable",3)
