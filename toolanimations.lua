@@ -3,12 +3,7 @@ if not getgenv().preloadanimations then getgenv().preloadanimations = false end
 if not getgenv().loadtime then getgenv().loadtime = 0.1 end
 if not getgenv().reanimate then getgenv().reanimate = true end
 
-local function wait(val) 
-    if val == nil then val = 0.00001 end
-    if val ~= 0 then 
-        task.wait(val) 
-    end 
-end
+local wait = getgenv().MiliWait and getgenv().MiliWait.Event or game:GetService("RunService").Heartbeat --task.wait
 
 local files = game:GetObjects("rbxassetid://9136313101")[1]
 if getgenv().preloadanimations then
@@ -18,7 +13,7 @@ if getgenv().preloadanimations then
     amounttoload = #files.Folder:GetChildren()--amounttoload + 1
     for i,v in pairs(files.Folder:GetChildren()) do
         if getgenv().loadtime ~= 0 then
-            wait(getgenv().loadtime)
+            wait:Wait(getgenv().loadtime)
         end
         spawn(function()
             local animid,soundid = v.ToolTip,v.SoundID.SoundId
@@ -40,22 +35,22 @@ if getgenv().preloadanimations then
             print(loadamount,amounttoload)
         end)
     end
-    repeat task.wait() until loadamount == amounttoload
+    repeat wait:Wait() until loadamount == amounttoload
     gui:Destroy()
 end
 if getgenv().reanimate then
   getgenv().AutoAnimate = false
   loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/newnetlessreanimate.lua",true))()
-  wait()
+   wait = getgenv().MiliWait.Event
+  wait:Wait()
 end
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/AnimyForthing",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimyForthing",true))()
 
 for i,v in pairs(files.Folder:GetChildren()) do
-    spawn(function()
-        local tool = v:Clone()
+    local tool = v --:Clone()
         tool.Parent = game.Players.LocalPlayer.Backpack
-        wait()
+        wait:Wait()
         tool.Activated:Connect(function()
             if _G.runanimation then
                 _G.runanimation(v.ToolTip,string.sub(v.SoundID.SoundId,14))
@@ -67,5 +62,4 @@ for i,v in pairs(files.Folder:GetChildren()) do
                 game.Players.LocalPlayer.Character.HumanoidRootPart.Sound:Destroy()
             end
         end)
-    end)
 end
