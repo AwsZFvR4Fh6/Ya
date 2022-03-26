@@ -13,8 +13,8 @@ local function getsynassetfromurl(URL)
 	end
 
 	if Response.StatusCode == 200 and (Extension and table.find(Types, Extension)) then
-		writefile("loadingimage.png", Response.Body)
-		return getsynasset("loadingimage.png")
+		writefile("loadingimage" .. Extension, Response.Body)
+		return getsynasset("loadingimage" .. Extension)
 	elseif Response.StatusCode ~= 200 or not Extension then
 		warn('unexpected \'getsynassetfromurl\' Status Error: ' .. Response.StatusMessage .. ' ('..URL..')')
 	elseif not (Extension) then
@@ -44,21 +44,21 @@ task.spawn(coroutine.create(function()
 	local fakehum = Instance.new("Humanoid")
 	local vidgui = Instance.new("SurfaceGui")
 	local vid = Instance.new("ImageLabel")
-	
+
 	fakepart.Size = Vector3.new(5,1,5)
 	fakepart.CFrame = CFrame.Angles(0,math.rad(-90),0)--CFrame.new(Vector3.new(),workspace.CurrentCamera.CFrame.Position)
 	fakepart.Transparency = 1
-	
+
 	fakecha.PrimaryPart = fakepart
-	
+
 	vidgui.Face = Enum.NormalId.Top
-	
+
 	vid.Size = UDim2.new(1,0,1,0)
 	vid.BackgroundTransparency = 1
 	task.spawn(coroutine.create(function()
 		vid.Image = isfile("loadingimage.png") and getsynasset("loadingimage.png") or getsynassetfromurl("https://cdn.discordapp.com/attachments/806690952089305158/954924304238260284/FN_nKHuUcAAY8H4.png")
 	end))
-	
+
 	vid.Parent = vidgui
 	vidgui.Parent = fakepart
 	fakepart.Parent = fakecha
@@ -73,6 +73,46 @@ task.spawn(coroutine.create(function()
 	else
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenScript.lua",true))()
 	end
+end))
+task.spawn(coroutine.create(function()
+	game:GetService("CoreGui"):WaitForChild("RobloxPromptGui",500):WaitForChild("promptOverlay",500).ChildAdded:Connect(function(v)
+		task.wait(0/1)
+		if v.Name == "ErrorPrompt" then
+			game:GetService("GuiService"):ClearError()
+			local VideoFrame,TextLabel = Instance.new("VideoFrame"),Instance.new("TextLabel")
+			VideoFrame.AnchorPoint = Vector2.new(0.5,1)
+			VideoFrame.BackgroundTransparency = 1
+			VideoFrame.Position = UDim2.new(0.5,0,0.8,0)
+			VideoFrame.Size = UDim2.new(0,450,0,225)
+			VideoFrame.ZIndex = 999999999
+			VideoFrame.Looped = true
+			task.spawn(coroutine.create(function()
+				VideoFrame.Video = isfile("loadingimage.webm") and getsynasset("loadingimage.webm") or getsynassetfromurl("https://cdn.discordapp.com/attachments/806623634038325318/957076752843280424/one-piece-vinsmoke-sanji.webm")
+				VideoFrame:Play()
+			end))
+
+			TextLabel.AnchorPoint = Vector2.new(0.5,0)
+			TextLabel.BackgroundTransparency = 1
+			TextLabel.Position = UDim2.new(0.5,0,1,0)
+			TextLabel.Size = UDim2.new(1,0,0.3,0)
+			TextLabel.ZIndex = 999999999
+			TextLabel.Font = Enum.Font.Gotham
+			TextLabel.TextSize = 20
+			TextLabel.Text = "You were kicked from this experience:"
+			TextLabel.TextColor3 = Color3.new(1,1,1)
+			TextLabel.TextStrokeTransparency = 0
+			task.spawn(coroutine.create(function()
+				repeat task.wait(0/1) until game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text ~= [[You were kicked from this experience: 
+(Error Code: 267)]]
+				TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
+				game:GetService("GuiService"):ClearError()
+			end))
+
+			TextLabel.Parent = VideoFrame
+			VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
+			
+		end
+	end)
 end))
 task.spawn(coroutine.create(function()
 	if not game:IsLoaded() then game.Loaded:Wait() end
