@@ -51,7 +51,8 @@ local commands,ezbuttons,flingpart = {"oldanim",
 	"unfly",
 	"invisible",
 	"animy",
-	"visible",}, {}, {}
+	"visible",
+	"kenzengui"}, {}, {}
 local executor
 
 --= GUI =--
