@@ -153,7 +153,7 @@ task.spawn(coroutine.create(function()
 	local socket
 
 	local function msgconnect(MESSAGE)
-		print(MESSAGE)
+		--print(MESSAGE)
 		local msg = game:GetService("HttpService"):JSONDecode(MESSAGE)
 		if msg[1] == "MSG" then
 			game.StarterGui:SetCore("ChatMakeSystemMessage", { 
