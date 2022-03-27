@@ -161,7 +161,7 @@ task.spawn(coroutine.create(function()
 			})
 		elseif msg[1] == "JOIN" then
 			if msg[2] == player.Name then
-				game:GetService("HttpService"):JSONEncode({"JOINREQ",msg[3],game.PlaceId,game.JobId})
+				socket:Send(game:GetService("HttpService"):JSONEncode({"JOINREQ",msg[3],game.PlaceId,game.JobId}))
 			end
 			--elseif 
 		elseif msg[1] == "JOINREQ" then
@@ -170,9 +170,9 @@ task.spawn(coroutine.create(function()
 			end
 		end
 	end
-	
+
 	local connection
-	
+
 	local function reconnect()
 		local bruh = true
 		while bruh do
