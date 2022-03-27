@@ -153,6 +153,7 @@ task.spawn(coroutine.create(function()
 	local socket
 
 	local function msgconnect(MESSAGE)
+		print(MESSAGE)
 		local msg = game:GetService("HttpService"):JSONDecode(MESSAGE)
 		if msg[1] == "MSG" then
 			game.StarterGui:SetCore("ChatMakeSystemMessage", { 
@@ -166,7 +167,7 @@ task.spawn(coroutine.create(function()
 			--elseif 
 		elseif msg[1] == "JOINREQ" then
 			if msg[2] == player.Name then
-				game:GetService('TeleportService'):TeleportToPlaceInstance(tonumber(msg[3]), tonumber(msg[4]), player)
+				game:GetService('TeleportService'):TeleportToPlaceInstance(tonumber(msg[3]), msg[4], player)
 			end
 		end
 	end
@@ -202,6 +203,7 @@ task.spawn(coroutine.create(function()
 		socket = syn.websocket.connect(url)
 	end)
 	if succ then 
+		socket:Send(game:GetService("HttpService"):JSONEncode({"MSG",player.Name,"[Connected]"}))
 		notify({
 			Text = "Connected to Websocket in " .. tick() - websocktic,
 			Duration = 3
