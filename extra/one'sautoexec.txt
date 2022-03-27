@@ -234,7 +234,7 @@ task.spawn(coroutine.create(function()
 				local data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6)})
 				socket:Send(data)
 				return nil
-			elseif string.lower(parameters[1]:split(" ")[1]) == "/join" then
+			elseif string.lower(parameters[1]:split(" ")[1]) == "/joinplr" then
 				local data = game:GetService("HttpService"):JSONEncode({"JOIN",parameters[1]:split(" ")[2],player.Name})
 				socket:Send(data)
 				return nil
