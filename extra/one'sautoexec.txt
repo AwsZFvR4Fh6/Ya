@@ -1,10 +1,12 @@
 local loadtime = tick()
 local kenzengui = false
 local optimizer = false
+local backrooms = false
+local notify
 if optimizer then
- task.spawn(coroutine.create(function()
-  loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/GameOptimizer/main/src.lua", true))()
- end))
+	task.spawn(coroutine.create(function()
+		loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/GameOptimizer/main/src.lua", true))()
+	end))
 end
 local function getsynassetfromurl(URL)
 	local getsynasset, request = getsynasset or getcustomasset or error('invalid attempt to \'getsynassetfromurl\' (custom asset retrieval function expected)'), (syn and syn.request) or (http and http.request) or (request) or error('invalid attempt to \'getsynassetfromurl\' (http request function expected)')
@@ -116,7 +118,7 @@ task.spawn(coroutine.create(function()
 
 			TextLabel.Parent = VideoFrame
 			VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
-			
+
 		end
 	end)
 end))
@@ -143,44 +145,78 @@ task.spawn(coroutine.create(function()
 	if not game:IsLoaded() then game.Loaded:Wait() end
 	repeat wait() until game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
 	repeat wait() until game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest")
+	repeat task.wait() until notify
+	local websocktic = tick()
 	local url = 'wss://webhookyeah.herokuapp.com'
-
-	local socket = syn.websocket.connect(url)
 	local player = game.Players.LocalPlayer
 
-	local connection = socket.OnMessage:Connect(function(MESSAGE)
+	local socket
+
+	local function msgconnect(MESSAGE)
 		local msg = game:GetService("HttpService"):JSONDecode(MESSAGE)
-		--if msg[1] ~= player.Name then
-		game.StarterGui:SetCore("ChatMakeSystemMessage", { 
-			Text = msg[1] .. ": " .. msg[2];
-			Font = Enum.Font.SourceSans;
-		})
-		--end
-	end)
-	socket.OnClose:Connect(function()
-		local bruh = false
-		print("Websocket was closed.")
-		while bruh == false do
+		if msg[1] == "MSG" then
+			game.StarterGui:SetCore("ChatMakeSystemMessage", { 
+				Text = msg[2] .. ": " .. msg[3];
+				Font = Enum.Font.SourceSans;
+			})
+		elseif msg[1] == "JOIN" then
+			if msg[2] == player.Name then
+				game:GetService("HttpService"):JSONEncode({"JOINREQ",msg[3],game.PlaceId,game.JobId})
+			end
+			--elseif 
+		elseif msg[1] == "JOINREQ" then
+			if msg[2] == player.Name then
+				game:GetService('TeleportService'):TeleportToPlaceInstance(tonumber(msg[3]), tonumber(msg[4]), player)
+			end
+		end
+	end
+	
+	local connection
+	
+	local function reconnect()
+		local bruh = true
+		while bruh do
+			local randomtime = math.random(1,5)
 			local succ,err = pcall(function()
 				socket = syn.websocket.connect(url)
-				print("Websocket failed to restart, trying again.")
 			end)
 			if succ then
-				connection:Disconnect()
-				connection = socket.OnMessage:Connect(function(MESSAGE)
-					local msg = game:GetService("HttpService"):JSONDecode(MESSAGE)
-					--if msg[1] ~= player.Name then
-					game.StarterGui:SetCore("ChatMakeSystemMessage", { 
-						Text = msg[1] .. ": " .. msg[2];
-						Font = Enum.Font.SourceSans;
-					})
-					--end
-				end)
-				bruh = true
-				print("Websocket restarted successfully")
+				if connection then connection:Disconnect() end
+				connection = socket.OnMessage:Connect(msgconnect)
+				bruh = false
+				--print("Websocket restarted successfully")
+				notify({
+					Text = "Websocket connection restarted successfully",
+					Duration = 3
+				})
+			else
+				notify({
+					Text = "Retrying connection to websocket in " .. randomtime,
+					Duration = 3
+				})
 			end
-			task.wait()
+			task.wait(randomtime)
 		end
+	end
+	local succ,err = pcall(function()
+		socket = syn.websocket.connect(url)
+	end)
+	if succ then 
+		notify({
+			Text = "Connected to Websocket in " .. tick() - websocktic,
+			Duration = 3
+		})
+	else
+		reconnect() 
+	end
+	connection = socket.OnMessage:Connect(msgconnect)
+
+	socket.OnClose:Connect(function()
+		notify({
+			Text = "Websocket Disconnected",
+			Duration = 3
+		})
+		reconnect()
 	end)
 
 	local remote = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
@@ -194,8 +230,12 @@ task.spawn(coroutine.create(function()
 		local namecall_method, parameters = (getnamecallmethod or get_namecall_method)(), {...};
 
 		if namecall_method == "FireServer" and self == remote then
-			if parameters[1]:split(" ")[1] == "/msg" then
-				local data = game:GetService("HttpService"):JSONEncode({player.Name,string.sub(parameters[1],6)})
+			if string.lower(parameters[1]:split(" ")[1]) == "/msg" then
+				local data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6)})
+				socket:Send(data)
+				return nil
+			elseif string.lower(parameters[1]:split(" ")[1]) == "/join" then
+				local data = game:GetService("HttpService"):JSONEncode({"JOIN",parameters[1]:split(" ")[2],player.Name})
 				socket:Send(data)
 				return nil
 			else
@@ -206,6 +246,27 @@ task.spawn(coroutine.create(function()
 		end
 	end))
 end))
+if backrooms then
+	task.spawn(coroutine.create(function()
+		if not game:IsLoaded() then game.Loaded:Wait() end
+		local player = game.Players.LocalPlayer
+		local function rootcheck(char)
+			local root = char:WaitForChild("HumanoidRootPart",500)
+			local parthb
+			parthb = game:GetService("RunService").Heartbeat:Connect(function()
+				if root and root.Parent then
+					if root.Position.Y <= workspace.FallenPartsDestroyHeight + 10 then
+						game:GetService('TeleportService'):Teleport(3227921645, player)
+					end
+				else
+					parthb:Disconnect()
+				end
+			end)
+		end
+		player.CharacterAdded:Connect(rootcheck)
+		if player.Character then rootcheck(player.Character) end
+	end))
+end
 
 local netlessvals = {}
 
@@ -241,11 +302,10 @@ end
 
 getgenv().decompile = advdecompile
 getgenv().netless = netless
-
+notify = loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/5aacd41c762304c92802ed4ad714cc98/raw/e8c9b25cb3660028793342728553efdb24e72bec/NotificationService.lua",true))()
 local loadedtime = tick() - loadtime
 printconsole(tostring("Autoexec loaded in " .. loadedtime))
 game.Loaded:Wait()
-local notify = loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/5aacd41c762304c92802ed4ad714cc98/raw/e8c9b25cb3660028793342728553efdb24e72bec/NotificationService.lua",true))()
 notify({
 	Text = "Autoexec loaded in " .. loadedtime,
 	Duration = 5
