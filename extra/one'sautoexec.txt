@@ -113,12 +113,13 @@ task.spawn(coroutine.create(function()
 				repeat task.wait(0/1) until game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text ~= [[You were kicked from this experience: 
 (Error Code: 267)]]
 				TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
-				game:GetService("GuiService"):ClearError()
 			end))
 
 			TextLabel.Parent = VideoFrame
 			VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
-
+			while task.wait(1) do
+				game:GetService("GuiService"):ClearError()
+			end
 		end
 	end)
 end))
@@ -304,6 +305,7 @@ end
 
 getgenv().decompile = advdecompile
 getgenv().netless = netless
+getgenv().wait = task.wait
 notify = loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/5aacd41c762304c92802ed4ad714cc98/raw/e8c9b25cb3660028793342728553efdb24e72bec/NotificationService.lua",true))()
 local loadedtime = tick() - loadtime
 printconsole(tostring("Autoexec loaded in " .. loadedtime))
