@@ -169,11 +169,11 @@ task.spawn(coroutine.create(function()
 				Font = Enum.Font.SourceSansBold;
 			})
 			local isSuccessful, info = pcall(marketplaceService.GetProductInfo, marketplaceService, game.PlaceId)
-			socket:Send(game:GetService("HttpService"):JSONEncode({"CONNECTINFO",msg[2],player.Name,game.PlaceId,isSuccessful and info.Name or ""}))
+			socket:Send(game:GetService("HttpService"):JSONEncode({"CONNECTINFO",player.Name,game.PlaceId,isSuccessful and info.Name or ""}))
 		elseif msg[1] == "CONNECTINFO" then
-			if msg[2] == player.Name and msg[3] ~= player.Name then
+			if msg[2] ~= player.Name then
 				game.StarterGui:SetCore("ChatMakeSystemMessage", { 
-					Text = msg[3] .. " is playing " .. "(" .. msg[4] .. ") " .. msg[5];
+					Text = msg[2] .. " is playing " .. "(" .. msg[3] .. ") " .. msg[4];
 					Font = Enum.Font.SourceSansBold;
 				})
 			end
@@ -260,6 +260,22 @@ task.spawn(coroutine.create(function()
 					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 0, 0):ToHex()})
 				elseif string.sub(split[2],1,2) == "&b" then
 					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 255):ToHex()})
+				elseif string.sub(split[2],1,2) == "&y" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 255, 0):ToHex()})
+				elseif string.sub(split[2],1,2) == "&c" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 255, 255):ToHex()})
+				elseif string.sub(split[2],1,2) == "&dr" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(128, 0, 0):ToHex()})
+				elseif string.sub(split[2],1,2) == "&p" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 0, 255):ToHex()})
+				elseif string.sub(split[2],1,2) == "&pu" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(128, 0, 255):ToHex()})
+				elseif string.sub(split[2],1,2) == "&o" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 128, 0):ToHex()})
+				elseif string.sub(split[2],1,2) == "&dg" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 128, 0):ToHex()})
+				elseif string.sub(split[2],1,2) == "&db" then
+					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 128):ToHex()})
 				else
 					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6)})
 				end
