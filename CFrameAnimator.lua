@@ -178,7 +178,7 @@ for i,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
 		example.Name = v.Name
 		example.Hat.Value = v
 		example.C0Val.Value = v.Handle.AccessoryWeld.C0
-		example.valuename.Value = v.Handle:FindFirstChildOfClass("SpecialMesh").MeshId
+		example.valuename.Value = v.Handle:FindFirstChildOfClass("SpecialMesh").TextureId
 		values[example.valuename.Value] = {
 			["X"] = 0,
 			["Y"] = 0,
