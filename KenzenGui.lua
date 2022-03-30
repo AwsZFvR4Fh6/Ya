@@ -104,7 +104,7 @@ Fullscreen.Visible = false
 Asset.spawn(function()
 	while wait(1) do
 		Fullscreen.SystemInfo.Ping.Text = math.round(game:GetService("Stats").PerformanceStats.Ping:GetValue()) .. "ms"
-		Fullscreen.SystemInfo.Memory.Text = game:GetService("Stats").PerformanceStats.Memory:GetValue() .. "mb"
+		Fullscreen.SystemInfo.Memory.Text = math.round(game:GetService("Stats").PerformanceStats.Memory:GetValue()) .. "mb"
 	end
 end)
 
