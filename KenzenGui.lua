@@ -97,6 +97,8 @@ Asset.spawn(function()
 	end
 end)
 
+Fullscreen.Visible = false
+
 -- // System Info
 
 Asset.spawn(function()
