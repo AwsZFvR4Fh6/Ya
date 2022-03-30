@@ -268,7 +268,7 @@ local MiscScripts = {
 
 Asset.spawn(function()
 	local MiscScriptsFrame = Fullscreen.Scripts.Frame.ScrollingFrame
-	for i,v in pairs(ReanimateScripts) do
+	for i,v in pairs(MiscScripts) do
 		local Clone = MiscScriptsFrame.TextButton:Clone()
 		Clone.Visible = true
 		Clone.Name = v[1]
