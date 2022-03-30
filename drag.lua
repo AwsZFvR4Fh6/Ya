@@ -1,5 +1,5 @@
-return function(Frame)
-	local frametomove = Frame
+return function(Frame,FrameToMove)
+	local frametomove = FrameToMove
 	local dragToggle,dragInput,dragStart,startPos
 	local dragSpeed = 0
 	local function updateInput(input)
