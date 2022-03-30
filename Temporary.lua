@@ -1,5 +1,6 @@
-local Gui = game:GetObjects("rbxassetid://9234901319")[1]
-if not game.Loaded then game.Loaded:Wait() end
+local Gui = game:GetObjects("rbxassetid://9234973824")[1]
+local DragFunc = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/drag.lua",true))()
+if not game:IsLoaded() then game.Loaded:Wait() end
 local LoadTick = tick()
 
 local wait = task.wait
@@ -84,9 +85,13 @@ Asset.spawn(function()
 	wait(2)
 	for i,v in pairs(Fullscreen:GetDescendants()) do
 		if v:IsA("GuiObject") then
-			table.insert(GuiIndex,v)
-			if not v:GetAttribute("Transparency") then
-				v:SetAttribute("Transparency",0)
+			if v.Name == "Drag" then
+				DragFunc(v,v.Parent)
+			else
+				table.insert(GuiIndex,v)
+				if not v:GetAttribute("Transparency") then
+					v:SetAttribute("Transparency",0)
+				end
 			end
 		end
 	end
@@ -96,8 +101,8 @@ end)
 
 Asset.spawn(function()
 	while wait(1) do
-		Fullscreen.SystemInfo.Ping.Text = game:GetService("Stats").PerformanceStats.Ping:GetValueString()
-		Fullscreen.SystemInfo.Memory.Text = game:GetService("Stats").PerformanceStats.Memory:GetValueString()
+		Fullscreen.SystemInfo.Ping.Text = game:GetService("Stats").PerformanceStats.Ping:GetValue() .. "ms"
+		Fullscreen.SystemInfo.Memory.Text = game:GetService("Stats").PerformanceStats.Memory:GetValueString() .. "mb"
 	end
 end)
 
