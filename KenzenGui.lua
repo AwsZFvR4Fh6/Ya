@@ -1,4 +1,4 @@
-local Gui = game:GetObjects("rbxassetid://9234973824")[1]
+local Gui = game:GetObjects("rbxassetid://9235088606")[1]
 local DragFunc = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/drag.lua",true))()
 if not game:IsLoaded() then game.Loaded:Wait() end
 local LoadTick = tick()
@@ -96,8 +96,6 @@ Asset.spawn(function()
 		end
 	end
 end)
-
-Fullscreen.Visible = false
 
 -- // System Info
 
