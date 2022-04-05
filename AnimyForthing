@@ -221,11 +221,11 @@ local function AnimationLoader()
 	for i, track in pairs (humanoid:GetPlayingAnimationTracks()) do
 		track:Stop()
 	end
-	local randomidle = {180435571,7840378308}
+	local randomidle = {6606119539,8966021183}
 	randomidle = randomidle[math.random(1,2)]
 	anims = {
-		['Idle'] = PreloadAnimation(randomidle,true,character); --5183986020
-		['Walk'] = PreloadAnimation(6606119539,true,character);  --5053650512,180426354
+		['Idle'] = PreloadAnimation(180435571,true,character); --5183986020
+		['Walk'] = PreloadAnimation(randomidle,true,character);  --5053650512,180426354
 		['Run'] = PreloadAnimation(180426354,true,character); --5053715968
 		['Jump'] = PreloadAnimation(125750702,true,character); --4073859368
 		['Fall'] = PreloadAnimation(180436148,true,character); --3323393688
