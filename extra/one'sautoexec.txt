@@ -1,372 +1,443 @@
 local loadtime = tick()
-local kenzengui = true
-local optimizer = false
-local backrooms = false
-local notify
-if optimizer then
-	task.spawn(coroutine.create(function()
-		loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/GameOptimizer/main/src.lua", true))()
-	end))
-end
-local function getsynassetfromurl(URL)
-	local getsynasset, request = getsynasset or getcustomasset or error('invalid attempt to \'getsynassetfromurl\' (custom asset retrieval function expected)'), (syn and syn.request) or (http and http.request) or (request) or error('invalid attempt to \'getsynassetfromurl\' (http request function expected)')
-	local Extension, Types, URL = '', {'.png', '.webm'}, assert(tostring(type(URL)) == 'string', 'invalid argument #1 to \'getsynassetfromurl\' (string [URL] expected, got '..tostring(type(URL))..')') and URL or nil
-	local Response, TempFile = request({
-		Url = URL,
-		Method = 'GET'
-	})
+local AdvSettings = {
+	StartWithGui = true, -- For Kenzen GUI/CMD Bar
+	KenzenGui = true, -- Toggle between GUI and CMD Bar
+	Optimizer = false, -- Optimizes your game, can be useful on some games
+	Backrooms = false, -- Teleports you to backrooms if you fall into the void
+	UseUpToDateFile = false, -- Can load slower, loads from the github, uses default settings
+	AntiJacket = true, -- can cause some lag, but patches the jacket crash script
+	FastLoad = true, -- Replaces the roblox loading screen, makes loading faster
+	ReplaceKickGui = true, -- Replaces the roblox kick gui, allows you to click things while disconnected
+	ReplaceWaitWithTaskWait = true, -- Replaces the unoptimized wait with the chad task.wait
+	ExtraFunctions = true, -- Adds netless(part) and replaces decompile
+	DisableNotifications = false, -- Toggles Onscreen Notifictions
+	WebsocketChat = true, -- Toggles Websocket Chat
+	DisablesPurchasePrompts = true,
+	AntiAFK = true, -- Prevents user from being AFK kicked
+	AntiClientAFK = true, -- Prevents user from being AFK kicked
+}
 
-	if Response.StatusCode == 200 then
-		Extension = Response.Body:sub(2, 4) == 'PNG' and '.png' or Response.Body:sub(25, 28) == 'webm' and '.webm' or nil
+if AdvSettings.UseUpToDateFile then
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/extra/one'sautoexec.txt",true))()
+	printconsole(tostring("Full Load Time in " .. tick() - loadtime))
+else
+	local newcoro = function(fun)
+		return task.spawn(coroutine.create(fun))
 	end
 
-	if Response.StatusCode == 200 and (Extension and table.find(Types, Extension)) then
-		writefile("loadingimage" .. Extension, Response.Body)
-		return getsynasset("loadingimage" .. Extension)
-	elseif Response.StatusCode ~= 200 or not Extension then
-		warn('unexpected \'getsynassetfromurl\' Status Error: ' .. Response.StatusMessage .. ' ('..URL..')')
-	elseif not (Extension) then
-		warn('unexpected \'getsynassetfromurl\' Error: (PNG or webm file expected)')
-	end
-end
-task.spawn(coroutine.create(function()
-	local mt = getrawmetatable(game)
-	local backup = mt.__namecall
-	setreadonly(mt, false)
-
-	mt.__namecall = newcclosure(function(self, ...)
-		local method = getnamecallmethod()
-		local args = {...}
-		if method == "Kick" then
-			printconsole('attempted kick')
-			return wait(9e9)
+	local function isloaded()
+		if not game:IsLoaded() then
+			game.Loaded:Wait()
 		end
-		return backup(self,...)
-	end)
+	end
 
-	setreadonly(mt, true)
-	game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500).Visible = false
-	task.wait(0/1)
-	local fakecha = Instance.new("Model")
-	local fakepart = Instance.new("Part")
-	local fakehum = Instance.new("Humanoid")
-	local vidgui = Instance.new("SurfaceGui")
-	local vid = Instance.new("ImageLabel")
+	local notify
+	local getgenv = getgenv and getgenv() or _G
+	local printconsole = printconsole or print
+	local getsynasset = getsynasset or getcustomasset or nil
 
-	fakepart.Size = Vector3.new(5,1,5)
-	fakepart.CFrame = CFrame.Angles(0,math.rad(-90),0)--CFrame.new(Vector3.new(),workspace.CurrentCamera.CFrame.Position)
-	fakepart.Transparency = 1
+	if AdvSettings.Optimizer then
+		newcoro(function()
+			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/GameOptimizer/main/src.lua", true))()
+		end)
+	end
 
-	fakecha.PrimaryPart = fakepart
-
-	vidgui.Face = Enum.NormalId.Top
-
-	vid.Size = UDim2.new(1,0,1,0)
-	vid.BackgroundTransparency = 1
-	task.spawn(coroutine.create(function()
-		vid.Image = isfile("loadingimage.png") and getsynasset("loadingimage.png") or getsynassetfromurl("https://cdn.discordapp.com/attachments/806690952089305158/954924304238260284/FN_nKHuUcAAY8H4.png")
-	end))
-
-	vid.Parent = vidgui
-	vidgui.Parent = fakepart
-	fakepart.Parent = fakecha
-	fakehum.Parent = fakecha
-	fakecha.Parent = workspace
-	game.Loaded:Wait()
-	fakecha:Destroy()
-end))
-task.spawn(coroutine.create(function()
-	if kenzengui then
-		local loadreturn = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))()
-		printconsole(tostring("GUI loaded in " .. tick() - loadreturn))
-		notify({
-			Text = "GUI loaded in " .. tick() - loadreturn,
-			Duration = 5
+	local function getsynassetfromurl(URL)
+		local getsynasset, request = getsynasset or error('invalid attempt to \'getsynassetfromurl\' (custom asset retrieval function expected)'), (syn and syn.request) or (http and http.request) or (request) or error('invalid attempt to \'getsynassetfromurl\' (http request function expected)')
+		local Extension, Types, URL = '', {'.png', '.webm'}, assert(tostring(type(URL)) == 'string', 'invalid argument #1 to \'getsynassetfromurl\' (string [URL] expected, got '..tostring(type(URL))..')') and URL or nil
+		local Response, TempFile = request({
+			Url = URL,
+			Method = 'GET'
 		})
-	else
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenScript.lua",true))()
+
+		if Response.StatusCode == 200 then
+			Extension = Response.Body:sub(2, 4) == 'PNG' and '.png' or Response.Body:sub(25, 28) == 'webm' and '.webm' or nil
+		end
+
+		if Response.StatusCode == 200 and (Extension and table.find(Types, Extension)) then
+			writefile("loadingimage" .. Extension, Response.Body)
+			return getsynasset("loadingimage" .. Extension)
+		elseif Response.StatusCode ~= 200 or not Extension then
+			warn('unexpected \'getsynassetfromurl\' Status Error: ' .. Response.StatusMessage .. ' ('..URL..')')
+		elseif not (Extension) then
+			warn('unexpected \'getsynassetfromurl\' Error: (PNG or webm file expected)')
+		end
 	end
-end))
-task.spawn(coroutine.create(function()
-	game:GetService("CoreGui"):WaitForChild("RobloxPromptGui",500):WaitForChild("promptOverlay",500).ChildAdded:Connect(function(v)
-		task.wait(0/1)
-		if v.Name == "ErrorPrompt" then
-			game:GetService("GuiService"):ClearError()
-			local VideoFrame,TextLabel = Instance.new("VideoFrame"),Instance.new("TextLabel")
-			VideoFrame.AnchorPoint = Vector2.new(0.5,1)
-			VideoFrame.BackgroundTransparency = 1
-			VideoFrame.Position = UDim2.new(0.5,0,0.8,0)
-			VideoFrame.Size = UDim2.new(0,450,0,225)
-			VideoFrame.ZIndex = 999999999
-			VideoFrame.Looped = true
-			task.spawn(coroutine.create(function()
-				VideoFrame.Video = isfile("loadingimage.webm") and getsynasset("loadingimage.webm") or getsynassetfromurl("https://cdn.discordapp.com/attachments/806623634038325318/957076752843280424/one-piece-vinsmoke-sanji.webm")
-				VideoFrame:Play()
-			end))
 
-			TextLabel.AnchorPoint = Vector2.new(0.5,0)
-			TextLabel.BackgroundTransparency = 1
-			TextLabel.Position = UDim2.new(0.5,0,1,0)
-			TextLabel.Size = UDim2.new(1,0,0.3,0)
-			TextLabel.ZIndex = 999999999
-			TextLabel.Font = Enum.Font.Gotham
-			TextLabel.TextSize = 20
-			TextLabel.Text = "You were kicked from this experience:"
-			TextLabel.TextColor3 = Color3.new(1,1,1)
-			TextLabel.TextStrokeTransparency = 0
-			task.spawn(coroutine.create(function()
-				repeat task.wait(0/1) until game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text ~= [[You were kicked from this experience: 
-(Error Code: 267)]]
-				TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
-			end))
+	newcoro(function()
+		if AdvSettings.AntiClientAFK and newcclosure then
+			local mt = getrawmetatable(game)
+			local backup = mt.__namecall
+			setreadonly(mt, false)
 
-			TextLabel.Parent = VideoFrame
-			VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
-			while task.wait(1) do
-				game:GetService("GuiService"):ClearError()
-			end
+			mt.__namecall = newcclosure(function(self, ...)
+				local method = getnamecallmethod()
+				local args = {...}
+				if method == "Kick" then
+					printconsole('attempted kick')
+					return wait(9e9)
+				end
+				return backup(self,...)
+			end)
+
+			setreadonly(mt, true)
+		end
+		if AdvSettings.FastLoad and not game:IsLoaded() then
+			game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500).Visible = false
+			task.wait(0/1)
+			local fakecha = Instance.new("Model")
+			local fakepart = Instance.new("Part")
+			local fakehum = Instance.new("Humanoid")
+			local vidgui = Instance.new("SurfaceGui")
+			local vid = Instance.new("ImageLabel")
+
+			fakepart.Size = Vector3.new(5,1,5)
+			fakepart.CFrame = CFrame.Angles(0,math.rad(-90),0)--CFrame.new(Vector3.new(),workspace.CurrentCamera.CFrame.Position)
+			fakepart.Transparency = 1
+
+			fakecha.PrimaryPart = fakepart
+
+			vidgui.Face = Enum.NormalId.Top
+
+			vid.Size = UDim2.new(1,0,1,0)
+			vid.BackgroundTransparency = 1
+			newcoro(function()
+				if getsynasset then
+					vid.Image = isfile("loadingimage.png") and getsynasset("loadingimage.png") or getsynassetfromurl("https://cdn.discordapp.com/attachments/806690952089305158/954924304238260284/FN_nKHuUcAAY8H4.png")
+				else
+					vid.Image = "rbxassetid://9184481698"
+				end
+			end)
+
+			vid.Parent = vidgui
+			vidgui.Parent = fakepart
+			fakepart.Parent = fakecha
+			fakehum.Parent = fakecha
+			fakecha.Parent = workspace
+			isloaded()
+			fakecha:Destroy()
 		end
 	end)
-end))
-task.spawn(coroutine.create(function()
-	if not game:IsLoaded() then game.Loaded:Wait() end
-	repeat wait() until game.CoreGui:FindFirstChild("PurchasePrompt")
-	repeat wait() until game.CoreGui.PurchasePrompt:FindFirstChild("ProductPurchaseContainer")
-	local vu = game:GetService("VirtualUser")
-	game.CoreGui.PurchasePrompt:FindFirstChild("ProductPurchaseContainer").Visible = false
-	game:GetService("Players").LocalPlayer.Idled:connect(function()
-		vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-		wait(1)
-		vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-	end)
-	local function antijacket(obj)
-		if obj:IsA("WrapLayer") then
-			obj.Parent:Destroy()
-		end
-	end    
-	workspace.DescendantAdded:Connect(antijacket) for i,v in pairs(workspace:GetDescendants()) do antijacket(v) end
-end))
-task.spawn(coroutine.create(function()
-	--websocket chat
-	if not game:IsLoaded() then game.Loaded:Wait() end
-	repeat wait() until game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
-	repeat wait() until game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest")
-	repeat task.wait() until notify
-	local websocktic = tick()
-	local url = 'wss://webhookyeah.herokuapp.com'
-	local player = game.Players.LocalPlayer
 
-	local socket
-	local marketplaceService = game:GetService("MarketplaceService")
+	if AdvSettings.StartWithGui then
+		newcoro(function()
+			if AdvSettings.KenzenGui then
+				local loadreturn = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))()
+				local loadreturntime = tick() - loadreturn
+				printconsole(tostring("GUI loaded in " .. loadreturntime))
 
-	local function msgconnect(MESSAGE)
-		--print(MESSAGE)
-		local msg = game:GetService("HttpService"):JSONDecode(MESSAGE)
-		if msg[1] == "MSG" then
-			game.StarterGui:SetCore("ChatMakeSystemMessage", { 
-				Text = msg[2] .. ": " .. msg[3];
-				Font = Enum.Font.SourceSans;
-				Color = msg[4] and Color3.fromHex(msg[4]) or Color3.fromRGB(255, 255, 243)
-			})
-		elseif msg[1] == "CONNECT" then
-			game.StarterGui:SetCore("ChatMakeSystemMessage", { 
-				Text = msg[2] .. " [" .. msg[3] .. "] " .. "has connected";
-				Font = Enum.Font.SourceSansSemibold;
-			})
-			local isSuccessful, info = pcall(marketplaceService.GetProductInfo, marketplaceService, game.PlaceId)
-			socket:Send(game:GetService("HttpService"):JSONEncode({"CONNECTINFO",player.Name,game.PlaceId,isSuccessful and info.Name or ""}))
-		elseif msg[1] == "CONNECTINFO" then
-			if msg[2] ~= player.Name then
-				game.StarterGui:SetCore("ChatMakeSystemMessage", { 
-					Text = msg[2] .. " is playing " .. "(" .. msg[3] .. ") " .. msg[4];
-					Font = Enum.Font.SourceSansSemibold;
+				notify({
+					Text = "GUI loaded in " .. loadreturntime,
+					Duration = 5
 				})
+
+			else
+				loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenScript.lua",true))()
 			end
-		elseif msg[1] == "JOIN" then
-			if msg[2] == player.Name then
-				socket:Send(game:GetService("HttpService"):JSONEncode({"JOINREQ",msg[3],game.PlaceId,game.JobId}))
-			end
-			--elseif 
-		elseif msg[1] == "JOINREQ" then
-			if msg[2] == player.Name then
-				game:GetService('TeleportService'):TeleportToPlaceInstance(tonumber(msg[3]), msg[4], player)
-			end
-		end
+		end)
 	end
 
-	local connection
+	if AdvSettings.ReplaceKickGui then
+		newcoro(function()
+			game:GetService("CoreGui"):WaitForChild("RobloxPromptGui",500):WaitForChild("promptOverlay",500).ChildAdded:Connect(function(v)
+				task.wait(0/1)
+				if v.Name == "ErrorPrompt" then
+					game:GetService("GuiService"):ClearError()
+					local VideoFrame,TextLabel = Instance.new("VideoFrame"),Instance.new("TextLabel")
+					VideoFrame.AnchorPoint = Vector2.new(0.5,1)
+					VideoFrame.BackgroundTransparency = 1
+					VideoFrame.Position = UDim2.new(0.5,0,0.8,0)
+					VideoFrame.Size = UDim2.new(0,450,0,225)
+					VideoFrame.ZIndex = 999999999
+					VideoFrame.Looped = true
+					newcoro(function()
+						if getsynasset then
+							VideoFrame.Video = isfile("loadingimage.webm") and getsynasset("loadingimage.webm") or getsynassetfromurl("https://cdn.discordapp.com/attachments/806623634038325318/957076752843280424/one-piece-vinsmoke-sanji.webm")
+						else
+							VideoFrame.Video = "rbxasset://5670785995"
+						end
+						VideoFrame:Play()
+					end)
 
-	local function reconnect()
-		local bruh = true
-		while bruh do
-			local randomtime = math.random(1,5)
+					TextLabel.AnchorPoint = Vector2.new(0.5,0)
+					TextLabel.BackgroundTransparency = 1
+					TextLabel.Position = UDim2.new(0.5,0,1,0)
+					TextLabel.Size = UDim2.new(1,0,0.3,0)
+					TextLabel.ZIndex = 999999999
+					TextLabel.Font = Enum.Font.Gotham
+					TextLabel.TextSize = 20
+					TextLabel.Text = "You were kicked from this experience:"
+					TextLabel.TextColor3 = Color3.new(1,1,1)
+					TextLabel.TextStrokeTransparency = 0
+					newcoro(function()
+						repeat task.wait(0/1) until game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text ~= [[You were kicked from this experience: 
+(Error Code: 267)]]
+						TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
+					end)
+
+					TextLabel.Parent = VideoFrame
+					VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
+					while task.wait(0/1) do
+						game:GetService("GuiService"):ClearError()
+					end
+				end
+			end)
+		end)
+	end
+	newcoro(function()
+		isloaded()
+		if AdvSettings.DisablesPurchasePrompts then
+			game.CoreGui:WaitForChild("PurchasePrompt",500):WaitForChild("ProductPurchaseContainer",500).Visible = false
+		end
+		if AdvSettings.AntiAFK then
+			local vu = game:GetService("VirtualUser")
+			game:GetService("Players").LocalPlayer.Idled:connect(function()
+				vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+				wait(1)
+				vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+			end)
+		end
+		if AdvSettings.AntiJacket then
+			local function antijacket(obj)
+				if obj:IsA("WrapLayer") then
+					obj.Parent:Destroy()
+				end
+			end    
+			workspace.DescendantAdded:Connect(antijacket) for i,v in pairs(workspace:GetDescendants()) do antijacket(v) end
+		end
+	end)
+
+	if AdvSettings.WebsocketChat then
+		newcoro(function()
+			--websocket chat
+			isloaded()
+			repeat task.wait(0/1) until notify
+			local websocktic = tick()
+			local url = 'wss://webhookyeah.herokuapp.com'
+			local player = game.Players.LocalPlayer
+
+			local socket
+			local marketplaceService = game:GetService("MarketplaceService")
+
+			local function msgconnect(MESSAGE)
+				--print(MESSAGE)
+				local msg = game:GetService("HttpService"):JSONDecode(MESSAGE)
+				if msg[1] == "MSG" then
+					game.StarterGui:SetCore("ChatMakeSystemMessage", { 
+						Text = msg[2] .. ": " .. msg[3];
+						Font = Enum.Font.SourceSans;
+						Color = msg[4] and Color3.fromHex(msg[4]) or Color3.fromRGB(255, 255, 243)
+					})
+				elseif msg[1] == "CONNECT" then
+					game.StarterGui:SetCore("ChatMakeSystemMessage", { 
+						Text = msg[2] .. " [" .. msg[3] .. "] " .. "has connected";
+						Font = Enum.Font.SourceSansSemibold;
+					})
+					local isSuccessful, info = pcall(marketplaceService.GetProductInfo, marketplaceService, game.PlaceId)
+					socket:Send(game:GetService("HttpService"):JSONEncode({"CONNECTINFO",player.Name,game.PlaceId,isSuccessful and info.Name or ""}))
+				elseif msg[1] == "CONNECTINFO" then
+					if msg[2] ~= player.Name then
+						game.StarterGui:SetCore("ChatMakeSystemMessage", { 
+							Text = msg[2] .. " is playing " .. "(" .. msg[3] .. ") " .. msg[4];
+							Font = Enum.Font.SourceSansSemibold;
+						})
+					end
+				elseif msg[1] == "JOIN" then
+					if msg[2] == player.Name then
+						socket:Send(game:GetService("HttpService"):JSONEncode({"JOINREQ",msg[3],game.PlaceId,game.JobId}))
+					end
+					--elseif 
+				elseif msg[1] == "JOINREQ" then
+					if msg[2] == player.Name then
+						game:GetService('TeleportService'):TeleportToPlaceInstance(tonumber(msg[3]), msg[4], player)
+					end
+				end
+			end
+
+			local connection
+
+			local function reconnect()
+				local bruh = true
+				while bruh do
+					local randomtime = math.random(1,5)
+					local succ,err = pcall(function()
+						socket = syn.websocket.connect(url)
+					end)
+					if succ then
+						if connection then connection:Disconnect() end
+						connection = socket.OnMessage:Connect(msgconnect)
+						socket:Send(game:GetService("HttpService"):JSONEncode({"CONNECT",player.Name,player.DisplayName}))
+						bruh = false
+						--print("Websocket restarted successfully")
+						notify({
+							Text = "Websocket connection restarted successfully",
+							Duration = 3
+						})
+					else
+						notify({
+							Text = "Retrying connection to websocket in " .. randomtime,
+							Duration = 3
+						})
+					end
+					task.wait(randomtime)
+				end
+			end
 			local succ,err = pcall(function()
 				socket = syn.websocket.connect(url)
 			end)
-			if succ then
-				if connection then connection:Disconnect() end
+			if succ then 
 				connection = socket.OnMessage:Connect(msgconnect)
 				socket:Send(game:GetService("HttpService"):JSONEncode({"CONNECT",player.Name,player.DisplayName}))
-				bruh = false
-				--print("Websocket restarted successfully")
 				notify({
-					Text = "Websocket connection restarted successfully",
+					Text = "Connected to Websocket in " .. tick() - websocktic,
 					Duration = 3
 				})
 			else
+				reconnect() 
+			end
+
+			socket.OnClose:Connect(function()
 				notify({
-					Text = "Retrying connection to websocket in " .. randomtime,
+					Text = "Websocket Disconnected",
 					Duration = 3
 				})
-			end
-			task.wait(randomtime)
-		end
-	end
-	local succ,err = pcall(function()
-		socket = syn.websocket.connect(url)
-	end)
-	if succ then 
-		connection = socket.OnMessage:Connect(msgconnect)
-		socket:Send(game:GetService("HttpService"):JSONEncode({"CONNECT",player.Name,player.DisplayName}))
-		notify({
-			Text = "Connected to Websocket in " .. tick() - websocktic,
-			Duration = 3
-		})
-	else
-		reconnect() 
-	end
+				reconnect()
+			end)
 
-	socket.OnClose:Connect(function()
-		notify({
-			Text = "Websocket Disconnected",
-			Duration = 3
-		})
-		reconnect()
-	end)
+			local remote = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents",500):WaitForChild("SayMessageRequest",500)
+			local remote_hook = nil
+			remote_hook = replaceclosure(remote.FireServer, newcclosure(function(self, ...)
+				return remote_hook(self, ...);
+			end))
 
-	local remote = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
-	local remote_hook = nil
-	remote_hook = replaceclosure(remote.FireServer, newcclosure(function(self, ...)
-		return remote_hook(self, ...);
-	end))
+			local namecall = nil
+			namecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+				local namecall_method, parameters = (getnamecallmethod or get_namecall_method)(), {...};
 
-	local namecall = nil
-	namecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-		local namecall_method, parameters = (getnamecallmethod or get_namecall_method)(), {...};
-
-		if namecall_method == "FireServer" and self == remote then
-			local split = parameters[1]:split(" ")
-			local command = string.lower(split[1])
-			if command == "/msg" then
-				local data
-				if string.sub(split[2],1,1) == ">" or string.sub(split[2],1,2) == "&g" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 255, 0):ToHex()})
-				elseif string.sub(split[2],1,2) == "&r" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 0, 0):ToHex()})
-				elseif string.sub(split[2],1,2) == "&b" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 255):ToHex()})
-				elseif string.sub(split[2],1,2) == "&y" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 255, 0):ToHex()})
-				elseif string.sub(split[2],1,2) == "&c" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 255, 255):ToHex()})
-				elseif string.sub(split[2],1,3) == "&dr" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(128, 0, 0):ToHex()})
-				elseif string.sub(split[2],1,2) == "&p" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 0, 255):ToHex()})
-				elseif string.sub(split[2],1,3) == "&pu" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(128, 0, 255):ToHex()})
-				elseif string.sub(split[2],1,2) == "&o" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 128, 0):ToHex()})
-				elseif string.sub(split[2],1,3) == "&dg" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 128, 0):ToHex()})
-				elseif string.sub(split[2],1,3) == "&db" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 128):ToHex()})
-				elseif string.sub(split[2],1,3) == "&bl" then
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 0):ToHex()})
-				else
-					data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6)})
-				end
-				socket:Send(data)
-				return nil
-			elseif command == "/joinplr" then
-				local data = game:GetService("HttpService"):JSONEncode({"JOIN",parameters[1]:split(" ")[2],player.Name})
-				socket:Send(data)
-				return nil
-			else
-				return namecall(self, unpack(parameters));
-			end
-		else
-			return namecall(self, unpack(parameters));
-		end
-	end))
-end))
-if backrooms then
-	task.spawn(coroutine.create(function()
-		if not game:IsLoaded() then game.Loaded:Wait() end
-		local player = game.Players.LocalPlayer
-		local function rootcheck(char)
-			local root = char:WaitForChild("HumanoidRootPart",500)
-			local parthb
-			parthb = game:GetService("RunService").Heartbeat:Connect(function()
-				if root and root.Parent then
-					if root.Position.Y <= workspace.FallenPartsDestroyHeight + 10 then
-						game:GetService('TeleportService'):Teleport(3227921645, player)
+				if namecall_method == "FireServer" and self == remote then
+					local split = parameters[1]:split(" ")
+					local command = string.lower(split[1])
+					if command == "/msg" then
+						local data
+						if string.sub(split[2],1,1) == ">" or string.sub(split[2],1,2) == "&g" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 255, 0):ToHex()})
+						elseif string.sub(split[2],1,2) == "&r" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 0, 0):ToHex()})
+						elseif string.sub(split[2],1,2) == "&b" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 255):ToHex()})
+						elseif string.sub(split[2],1,2) == "&y" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 255, 0):ToHex()})
+						elseif string.sub(split[2],1,2) == "&c" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 255, 255):ToHex()})
+						elseif string.sub(split[2],1,3) == "&dr" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(128, 0, 0):ToHex()})
+						elseif string.sub(split[2],1,2) == "&p" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 0, 255):ToHex()})
+						elseif string.sub(split[2],1,3) == "&pu" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(128, 0, 255):ToHex()})
+						elseif string.sub(split[2],1,2) == "&o" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(255, 128, 0):ToHex()})
+						elseif string.sub(split[2],1,3) == "&dg" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 128, 0):ToHex()})
+						elseif string.sub(split[2],1,3) == "&db" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 128):ToHex()})
+						elseif string.sub(split[2],1,3) == "&bl" then
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6),Color3.fromRGB(0, 0, 0):ToHex()})
+						else
+							data = game:GetService("HttpService"):JSONEncode({"MSG",player.Name,string.sub(parameters[1],6)})
+						end
+						socket:Send(data)
+						return nil
+					elseif command == "/joinplr" then
+						local data = game:GetService("HttpService"):JSONEncode({"JOIN",parameters[1]:split(" ")[2],player.Name})
+						socket:Send(data)
+						return nil
+					else
+						return namecall(self, unpack(parameters));
 					end
 				else
-					parthb:Disconnect()
+					return namecall(self, unpack(parameters));
 				end
-			end)
-		end
-		player.CharacterAdded:Connect(rootcheck)
-		if player.Character then rootcheck(player.Character) end
-	end))
-end
-
-local netlessvals = {}
-
-local function netless(part)
-	if part:IsA("BasePart") then
-		local BodyVelocity = Instance.new("BodyVelocity",part)
-		BodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge); 
-		BodyVelocity.P = math.huge; 
-		BodyVelocity.Velocity = Vector3.new(-25.05,-25.05,-25.05)
-
-		local BodyAngularVelocity = Instance.new("BodyAngularVelocity",part)
-		BodyAngularVelocity.MaxTorque = Vector3.new(math.huge,math.huge,math.huge); 
-		BodyAngularVelocity.P = math.huge;
-
-		table.insert(netlessvals,part)
-
-		local disconnect = game["Run Service"].Heartbeat:Connect(function()
-			part:ApplyImpulse(Vector3.new(-25.05,-25.05,-25.05))
-		end)
-		part.AncestryChanged:Connect(function()
-			if not part.Parent then 
-				disconnect:Disconnect()
-			end
+			end))
 		end)
 	end
-	return part
-end
 
-local olddecompile = decompile
-local function advdecompile(script)
-	return "--  Advanced Decompiler by ProductionTakeOne#3330 \n" .. string.gsub(string.gsub(olddecompile(script),"l__",""),"__1","")
-end
+	if AdvSettings.Backrooms then
+		newcoro(function()
+			isloaded()
+			local player = game.Players.LocalPlayer
+			local function rootcheck(char)
+				local root = char:WaitForChild("HumanoidRootPart",500)
+				local parthb
+				parthb = game:GetService("RunService").Heartbeat:Connect(function()
+					if root and root.Parent then
+						if root.Position.Y <= workspace.FallenPartsDestroyHeight + 10 then
+							game:GetService('TeleportService'):Teleport(3227921645, player)
+						end
+					else
+						parthb:Disconnect()
+					end
+				end)
+			end
+			player.CharacterAdded:Connect(rootcheck)
+			if player.Character then rootcheck(player.Character) end
+		end)
+	end
 
-getgenv().decompile = advdecompile
-getgenv().netless = netless
-getgenv().wait = task.wait
-notify = loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/5aacd41c762304c92802ed4ad714cc98/raw/e8c9b25cb3660028793342728553efdb24e72bec/NotificationService.lua",true))()
-local loadedtime = tick() - loadtime
-printconsole(tostring("Autoexec loaded in " .. loadedtime))
-game.Loaded:Wait()
-notify({
-	Text = "Autoexec loaded in " .. loadedtime,
-	Duration = 5
-})
-printconsole(tostring("Game loaded in " .. tick() - loadtime))
-notify({
-	Text = "Game loaded in " .. tick() - loadtime,
-	Duration = 5
-})
+	if AdvSettings.ExtraFunctions then
+		local function netless(part)
+			if part:IsA("BasePart") then
+				local BodyVelocity = Instance.new("BodyVelocity",part)
+				BodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge); 
+				BodyVelocity.P = math.huge; 
+				BodyVelocity.Velocity = Vector3.new(-25.05,-25.05,-25.05)
+
+				local BodyAngularVelocity = Instance.new("BodyAngularVelocity",part)
+				BodyAngularVelocity.MaxTorque = Vector3.new(math.huge,math.huge,math.huge); 
+				BodyAngularVelocity.P = math.huge;
+
+				local disconnect = game["Run Service"].Heartbeat:Connect(function()
+					part:ApplyImpulse(Vector3.new(-25.05,-25.05,-25.05))
+				end)
+				part.AncestryChanged:Connect(function()
+					if not part.Parent then 
+						disconnect:Disconnect()
+					end
+				end)
+			end
+			return part
+		end
+
+		local olddecompile = decompile
+		local function advdecompile(script)
+			return "--  Advanced Decompiler by ProductionTakeOne#3330 \n" .. string.gsub(string.gsub(olddecompile(script),"l__",""),"__1","")
+		end
+
+		getgenv.decompile = advdecompile
+		getgenv.netless = netless
+	end
+
+	if AdvSettings.ReplaceWaitWithTaskWait then
+		getgenv.wait = task.wait
+	end
+
+	notify = AdvSettings.DisableNotifications and function() end or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua",true))()
+
+	local loadedtime = tick() - loadtime
+
+	printconsole(tostring("Autoexec loaded in " .. loadedtime))
+
+	isloaded()
+
+	notify({
+		Text = "Autoexec loaded in " .. loadedtime,
+		Duration = 5
+	})
+
+	printconsole(tostring("Game loaded in " .. tick() - loadtime))
+
+	notify({
+		Text = "Game loaded in " .. tick() - loadtime,
+		Duration = 5
+	})
+end
