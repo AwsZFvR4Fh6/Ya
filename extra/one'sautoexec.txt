@@ -15,6 +15,7 @@ local AdvSettings = {
 	DisablesPurchasePrompts = true,
 	AntiAFK = true, -- Prevents user from being AFK kicked
 	AntiClientAFK = true, -- Prevents user from being AFK kicked
+	SaveObjects = true, -- Allows you to use SaveInstance(obj,name) to save objects
 }
 
 if AdvSettings.UseUpToDateFile then
@@ -184,6 +185,11 @@ else
 			end)
 		end)
 	end
+	newcoro(function()
+		if AdvSettings.SaveObjects then
+			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/SaveInstance.txt",true))()
+		end
+	end)
 	newcoro(function()
 		isloaded()
 		if AdvSettings.DisablesPurchasePrompts then
@@ -426,13 +432,13 @@ else
 	local loadedtime = tick() - loadtime
 
 	printconsole(tostring("Autoexec loaded in " .. loadedtime))
-
-	isloaded()
-
+	
 	notify({
 		Text = "Autoexec loaded in " .. loadedtime,
 		Duration = 5
 	})
+
+	isloaded()
 
 	printconsole(tostring("Game loaded in " .. tick() - loadtime))
 
