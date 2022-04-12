@@ -186,6 +186,7 @@ else
 		end)
 	end
 	newcoro(function()
+		isloaded()
 		if AdvSettings.SaveObjects then
 			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/SaveInstance.txt",true))()
 		end
