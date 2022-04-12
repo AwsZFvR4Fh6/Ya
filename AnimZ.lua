@@ -94,11 +94,11 @@ end
 local function LoadAnimation(Asset)
 	local Sequence = game:GetObjects('rbxassetid://'..tostring(Asset))[1]
 	wait(0/1)
-	
+
 	local Keyframes = Sequence:GetKeyframes()
-	
+
 	local Animation = {}
-	
+
 	Animation.Ended = true
 	Animation.Reset = function()
 		Animation.Ended = true
@@ -110,8 +110,8 @@ local function LoadAnimation(Asset)
 	end
 	Animation.Play = function()
 		Animation.Ended = false
-		if Sound.SoundId ~= "" and not Sound.IsPlaying then
-			Sound.Played:Wait()
+		if Sound.SoundId ~= "" and not Sound.Playing then
+			Sound:GetPropertyChangedSignal("Playing"):Wait()
 		end
 		task.spawn(function()
 			repeat
@@ -129,7 +129,7 @@ local function LoadAnimation(Asset)
 									Data.Part = Character[Pose['Name']]
 									Data.CFrame = Pose.CFrame
 									Data.Duration = Keyframes[K+1] and (Keyframes[K+1].Time - Frame.Time) or .5
-									Data.Style = Enum['EasingStyle'][tostring(Pose['EasingStyle']):split('.')[3]]
+									Data.Style = Pose['EasingStyle']
 									Data.Direction = Enum['EasingDirection'][tostring(Pose['EasingDirection']):split('.')[3]]
 									EditCFrame(Data)
 								end
@@ -215,7 +215,7 @@ Global.RunAnimation = function(AnimationID,SoundID)
 		Dancing = true
 		EndPlaying()
 		Animation.Play()
-		Sound:Play()
+		Sound.Playing = true
 	end
 end
 
