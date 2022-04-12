@@ -84,7 +84,7 @@ local function EditCFrame(Data)
 		local ValidStyle = CheckValidStyle(Data.Style)
 		--print(IsConstant)
 		if ValidStyle then
-			TweenService:Create(Joints[Data.Part.Name],TweenInfo.new(Data.Duration,Data.Style,Data.Direction,0,false,0),{Transform = Data.CFrame}):Play()
+			TweenService:Create(Joints[Data.Part.Name],TweenInfo.new(Data.Duration,Enum['EasingStyle'][tostring(Data.Style):split('.')[3]],Data.Direction,0,false,0),{Transform = Data.CFrame}):Play()
 		else
 			Joints[Data.Part.Name].Transform = Data.CFrame
 		end
