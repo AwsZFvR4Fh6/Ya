@@ -1,4 +1,4 @@
-game.Loaded:Wait()
+
 --[[
 	SaveInstance V3.3 - Swift
 	
