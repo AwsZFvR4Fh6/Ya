@@ -200,9 +200,11 @@ Anims['FreeFalling'] = Humanoid.FreeFalling:Connect(function(Active)
 end)
 
 Global.RunAnimation = function(AnimationID,SoundID)
-	if AnimationID == "Stop" then
+	if AnimationID == "Stop" or not AnimationID then
 		Dancing = false
 		EndPlaying()
+		Sound.SoundId = ""
+		Anims["Idle"].Play()
 	else
 		if SoundID then
 			Sound.SoundId = SoundID
