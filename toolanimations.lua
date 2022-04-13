@@ -32,24 +32,39 @@ local function getsynassetfromurl(URL,Name)
 	end
 end
 
+getgenv().Reanimate = false
+
 if getgenv().Preload == nil then getgenv().Preload = false end
 if getgenv().PreloadWait == nil then getgenv().PreloadWait = 0.1 end
 if getgenv().Reanimate == nil then getgenv().Reanimate = true end
 
-local Files = game:GetObjects("rbxassetid://9353862873")[1]
+local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua",true))()--game:GetObjects("rbxassetid://9353862873")[1]
 if getgenv().Preload then
-	local GUI = Files.ScreenGui:Clone()
+	local GUI = Instance.new("ScreenGui")
+	local TextLabel = Instance.new("TextLabel")
+
+	GUI.DisplayOrder = 9999
+	GUI.ResetOnSpawn = false
+
+	TextLabel.BackgroundTransparency = 1
+	TextLabel.ZIndex = 999
+	TextLabel.Position = UDim2.new(0.375, 0,0.021, 0)
+	TextLabel.Font = Enum.Font.PermanentMarker
+	TextLabel.TextScaled = true
+	TextLabel.Text = "Loading Animations"
+
+	TextLabel.Parent = GUI
 	GUI.Parent = game.CoreGui
-	local LoadAmount,NumberToLoad = 0,#Files.Folder:GetChildren()
-	for i,v in pairs(Files.Folder:GetChildren()) do
+	local LoadAmount,NumberToLoad = 0,#Files
+	for i,v in pairs(Files) do
 		if getgenv().PreloadWait > (1/60) then
 			task.wait(getgenv().PreloadWait)
 		end
 		task.spawn(function()
-			local AnimationID,soundid = v.ToolTip,v.SoundID.SoundId
-			if soundid then
+			local AnimationID = v[1]
+			if v[2] ~= "" then
 				local soundwait = Instance.new("Sound",game.Players.LocalPlayer)
-				soundwait.SoundId = v:FindFirstChild("FakeAsset") and getsynassetfromurl(v.FakeAsset.Value,v.ToolTip) or v.SoundID.SoundId
+				soundwait.SoundId = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
 				task.spawn(function()
 					soundwait.Loaded:Wait()
 					soundwait:Destroy()    
@@ -57,7 +72,7 @@ if getgenv().Preload then
 			end
 			if AnimationID then
 				pcall(function()
-					game:GetObjects('rbxassetid://'..AnimationID)
+					game:GetObjects('rbxassetid://'..v[1])
 				end)
 			end
 
@@ -77,20 +92,24 @@ end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua",true))()
 
-for i,v in pairs(Files.Folder:GetChildren()) do
+for i,v in pairs(Files) do
 	task.spawn(function()
-		local tool = v --:Clone()
-		tool.Parent = game.Players.LocalPlayer.Backpack
+		local Tool = Instance.new("Tool")
+		Tool.CanBeDropped = false
+		Tool.RequiresHandle = false
+		Tool.Name = i
+		Tool.Parent = game.Players.LocalPlayer.Backpack
 		task.wait(0/1)
 		local ToolPlaying = false
-		tool.Activated:Connect(function()
+		Tool.Activated:Connect(function()
 			if getgenv().RunAnimation then
-				local SoundID = v:FindFirstChild("FakeAsset") and getsynassetfromurl(v.FakeAsset.Value,v.ToolTip) or v.SoundID.SoundId
+				local SoundID = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
 				ToolPlaying = true
-				getgenv().RunAnimation(v.ToolTip,SoundID)
+				print(v[1],SoundID)
+				getgenv().RunAnimation(v[1],SoundID)
 			end
 		end)
-		tool.Unequipped:Connect(function()
+		Tool.Unequipped:Connect(function()
 			if ToolPlaying then
 				ToolPlaying = false
 				getgenv().RunAnimation()
