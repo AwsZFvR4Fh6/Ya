@@ -32,8 +32,6 @@ local function getsynassetfromurl(URL,Name)
 	end
 end
 
-getgenv().Reanimate = false
-
 if getgenv().Preload == nil then getgenv().Preload = false end
 if getgenv().PreloadWait == nil then getgenv().PreloadWait = 0.1 end
 if getgenv().Reanimate == nil then getgenv().Reanimate = true end
