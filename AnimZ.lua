@@ -208,6 +208,12 @@ Global.RunAnimation = function(AnimationID,SoundID)
 	else
 		if SoundID then
 			Sound.SoundId = SoundID
+			task.spawn(function()
+				if not Sound.IsLoaded then
+					Sound.Loaded:Wait()
+				end
+				Sound.Playing = true
+			end)
 		else
 			Sound.SoundId = ""
 		end
@@ -215,7 +221,6 @@ Global.RunAnimation = function(AnimationID,SoundID)
 		Dancing = true
 		EndPlaying()
 		Animation.Play()
-		Sound.Playing = true
 	end
 end
 
