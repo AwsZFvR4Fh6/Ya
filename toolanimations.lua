@@ -95,7 +95,7 @@ for i,v in pairs(Files) do
 		local Tool = Instance.new("Tool")
 		Tool.CanBeDropped = false
 		Tool.RequiresHandle = false
-		Tool.Name = i
+		Tool.Name = not v[3] and v[2] == "" and "(NS) " .. i or i
 		Tool.Parent = game.Players.LocalPlayer.Backpack
 		task.wait(0/1)
 		local ToolPlaying = false
