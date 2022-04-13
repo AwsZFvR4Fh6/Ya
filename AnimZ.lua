@@ -28,7 +28,7 @@ local Humanoid = Character.Humanoid
 
 local Sound = Create("Sound",{["Volume"] = 1,["RollOffMaxDistance"] = 100,["Looped"] = true,["Parent"] = Root})
 
-local Animations,Dancing = {},nil
+local Animations,Connections,Dancing = {},{},nil
 
 local Joints = {
 	['Torso'] = Root['RootJoint'];
@@ -169,7 +169,6 @@ local Anims = {
 
 wait(0/1)
 
-local Connections = {}
 Anims['Idle'].Play()
 
 Anims['Run'] = Humanoid.Running:Connect(function(Speed)
@@ -225,7 +224,21 @@ Global.RunAnimation = function(AnimationID,SoundID)
 	end
 end
 
-task.spawn(function()
-	Humanoid.Died:Wait()
+table.insert(Connections,Humanoid.Died:Connect(function()
 	Global.RunAnimation = nil
-end)
+	for i,v in pairs(Connections) do
+		v:Disconnect()
+	end
+end))
+
+table.insert(Connections,Player.CharacterAdded:Connect(function()
+	Global.RunAnimation = nil
+	for i,v in pairs(Connections) do
+		v:Disconnect()
+	end
+end))
+
+table.insert(Connections,Anims["Run"])
+table.insert(Connections,Anims["Jumping"])
+table.insert(Connections,Anims["FreeFalling"])
+
