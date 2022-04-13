@@ -212,7 +212,7 @@ Global.RunAnimation = function(AnimationID,SoundID)
 				if not Sound.IsLoaded then
 					Sound.Loaded:Wait()
 				end
-				Sound.TimeLength = 0
+				Sound.TimePosition = 0
 				Sound.Playing = true
 			end)
 		else
