@@ -103,7 +103,6 @@ for i,v in pairs(Files) do
 			if getgenv().RunAnimation then
 				local SoundID = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
 				ToolPlaying = true
-				print(v[1],SoundID)
 				getgenv().RunAnimation(v[1],SoundID)
 			end
 		end)
