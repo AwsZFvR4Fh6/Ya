@@ -112,7 +112,7 @@ return {
 	["Beathoven"] = {"6891205927","","https://cdn.discordapp.com/attachments/963464681987665960/963604016665878578/Beathoven_Fnf_Kapi_Mod.ogg"},
 	["Tootsie Slide"] = {"6885249918",""},
 	["Take The L"] = {"6885273680",""},
-	["Spookeez2"] = {"6885250777","","https://cdn.discordapp.com/attachments/963464681987665960/964502701583007794/Spooky_Month__the_Stars_Ost_-_Scary_Swings.mp3"},
+	["Spookeez2"] = {"6885250777","",""},
 	["Spooky Idle"] = {"6885250254","","https://cdn.discordapp.com/attachments/963464681987665960/964502701583007794/Spooky_Month__the_Stars_Ost_-_Scary_Swings.mp3"},
 	["Sonic2006"] = {"6885251261",""},
 	["Slick"] = {"6885251680",""},
