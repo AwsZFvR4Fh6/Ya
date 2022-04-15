@@ -141,7 +141,7 @@ return {
 	["Manrobics"] = {"6607546691","","https://cdn.discordapp.com/attachments/308098766987329536/963645406212935730/Team_Fortress_2_-_Soundtrack_-_Mannrobotics.ogg"},
 	["PBJT"] = {"6607544473","","https://cdn.discordapp.com/attachments/308098766987329536/963645506574237726/Peanut_Butter_Jelly_Time.ogg"},
 	["Transcendence"] = {"6607507256",""},
-	["RickRoll"] = {"6607525481","","https://files.catbox.moe/bjv5j2.ogg"},
+	["RickRoll"] = {"6607525481","","https://files.catbox.moe/itpbgn.ogg"},
 	["Revenge"] = {"6607539328",""},
 	["Spookeez"] = {"6607541581","","https://cdn.discordapp.com/attachments/963464681987665960/964502701583007794/Spooky_Month__the_Stars_Ost_-_Scary_Swings.mp3"},
 	["breakdance"] = {"6607506359","","https://cdn.discordapp.com/attachments/308098766987329536/963646602906570822/Plants_vs._Zombies_2_-_Neon_Mixtape_Tour_-_Rap_Jam_Official.ogg"},
