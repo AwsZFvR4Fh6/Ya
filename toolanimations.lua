@@ -1,4 +1,5 @@
 --local preloadanimations = true -- enable this if you want to preload all animations (lagspike)
+local notify = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua",true))()
 local function getsynassetfromurl(URL,Name)
 	if not isfolder("FakeAudios") then makefolder("FakeAudios") end
 	Name = "FakeAudios/" .. Name
@@ -6,6 +7,10 @@ local function getsynassetfromurl(URL,Name)
 	if isfile(Name .. ".ogg") then
 		return getsynasset(Name .. ".ogg")
 	else
+		notify({
+			Text = "Downloading Asset data " .. Name .. ".mp3",
+			Duration = 3
+		})
 		local Extension, Types, URL = '', {'.png', '.webm'}, assert(tostring(type(URL)) == 'string', 'invalid argument #1 to \'getsynassetfromurl\' (string [URL] expected, got '..tostring(type(URL))..')') and URL or nil
 		local Response, TempFile = request({
 			Url = URL,
