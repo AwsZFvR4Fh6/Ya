@@ -144,9 +144,6 @@ local ReanimateScripts = {
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/NightsEdgeFling.lua",true))()
 	end},
 	{"Tool Dances",function() 
-		getgenv.reanimate = true
-		getgenv.preloadanimations = true
-		getgenv.loadtime = 0
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua",true))()
 	end},
 	{"Wao3",function() 
