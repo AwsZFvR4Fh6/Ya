@@ -47,7 +47,7 @@ return {
 	["Ievan Polkka"] = {"7770749999","","https://cdn.discordapp.com/attachments/963464681987665960/964506028555268106/Hatsune_Miku_-_Ievan_Polkka.mp3"},
 	["FNF Sage"] = {"7770749167","","https://cdn.discordapp.com/attachments/308098766987329536/963647685628411904/FNF_VS.__v_-tan_OST_-_Sage.ogg"},
 	["ZomBeat"] = {"7770748385","","https://cdn.discordapp.com/attachments/308098766987329536/963646602906570822/Plants_vs._Zombies_2_-_Neon_Mixtape_Tour_-_Rap_Jam_Official.ogg"},
-	["Boogie Bomb"] = {"7770747608","","https://files.catbox.moe/zd9yjq.ogg"},
+	["Boogie Bomb"] = {"7770747608","","https://cdn.discordapp.com/attachments/963464681987665960/964786632291139594/Fortnite_Boogie_Bomb_Music_1min_Loop.mp3"},
 	["Dreams of roses"] = {"7770746360","","https://cdn.discordapp.com/attachments/963464681987665960/964507257809281044/Monika_OSTfnf__Dreams_of_Roses_.mp3"},
 	["Distraction V3"] = {"7770745716","rbxassetid://2835368022"},
 	["Demon"] = {"7770743887",""},
