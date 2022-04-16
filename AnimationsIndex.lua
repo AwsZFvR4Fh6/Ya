@@ -258,4 +258,8 @@ return {
 	["rodeo"] = {"6371769153","","https://cdn.discordapp.com/attachments/308098766987329536/963650069473665064/Lil_Nas_X_-_Rodeo_Official_Instrumental.ogg"},
 	["steve"] = {"9136307764",""},
 	["walking2"] = {"8816478136",""},
+	["Mirage"] = {"9227701851","","https://cdn.discordapp.com/attachments/963464681987665960/964778230248792134/Metallic_Madness_Zone_Act_1_-_Sonic_Mania_OST.mp3"},
+	["FreeFlow"] = {"9287473988","","https://cdn.discordapp.com/attachments/963464681987665960/964778241707614218/Fortnite_-_Free_Flow_Emote_Audio.mp3"},
+	["Koyomi"] = {"9197701141","","https://cdn.discordapp.com/attachments/963464681987665960/964778345441161277/Bakemonogatari_Opening_4_-_Renai_Circulation_RAW.mp3"},
+	["Jumping Jacks"] = {"9228093255","","https://take-me-to.space/vL1QQQp.mp3"},
 }
