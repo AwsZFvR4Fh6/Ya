@@ -21,7 +21,7 @@ return {
 	["Mood"] = {"7867394485","","https://cdn.discordapp.com/attachments/963464681987665960/964502160282906634/24kGoldn_-_Mood_Lyrics_ft._Iann_Dior.mp3"},
 	["bhangra Boogie"] = {"7867396123","","https://cdn.discordapp.com/attachments/963464681987665960/964502350964351036/Fortnite_-_Bhangra_Boogie_Emote_Audio.mp3"},
 	["oh shoof a ratt"] = {"7867372276","","https://cdn.discordapp.com/attachments/308098766987329536/963648060632735814/Oh_shit_A_rat_full_video.ogg"},
-	["sway"] = {"7770766777","","https://files.catbox.moe/q4xs3k.mp3"},
+	["sway"] = {"7770766777",""},
 	["spooky month2"] = {"7770766187","","https://cdn.discordapp.com/attachments/963464681987665960/964502701583007794/Spooky_Month__the_Stars_Ost_-_Scary_Swings.mp3"},
 	["pep moment"] = {"7770756295",""},
 	["meatwad dance"] = {"7770765343","","https://files.catbox.moe/9kgcha.mp3"},
