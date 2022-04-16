@@ -216,7 +216,7 @@ return {
 	["Reflex"] = {"8580057295",""},
 	["Popipo"] = {"8523814889","","https://cdn.discordapp.com/attachments/308098766987329536/963649151508316200/Hatsune_Miku_-_Popipo_Lyrics.ogg"},
 	["Oktober Aid"] = {"8847745334","","https://cdn.discordapp.com/attachments/308098766987329536/963642075939733534/Raxxo_-_Oktober_Aid.ogg"},
-	["Pop And Lock"] = {"8083855559","",""},
+	["Pop And Lock"] = {"8083855559","","https://cdn.discordapp.com/attachments/963464681987665960/964783263623303188/Fortnite_-_Pop_Lock_Emote_Audio.ogg"},
 	["Kalyx"] = {"8758227285",""},
 	["Insanity"] = {"8575452869",""},
 	["Jung Justice"] = {"8853220410","","https://files.catbox.moe/i12g4a.ogg"},
