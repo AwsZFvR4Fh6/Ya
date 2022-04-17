@@ -110,7 +110,6 @@ end)
 
 local ReanimateVariables = {
 	["Fling"] = false,
-	["TorsoFling"] = false,
 	["ShowReal"] = false,
 	["GodMode"] = true,
 	["Tools"] = true,
@@ -121,10 +120,10 @@ local ReanimateVariables = {
 	["DynamicVelocity"] = false,
 	["Network"] = true,
 	["AntiSleep"] = false,
-	["Netless2"] = false,
 	["MovementVelocity"] = false,
-	["R6toR15"] = false,
-	["DynamicVelocityExperimental"] = false,
+	["ArtificialHeartBeat"] = true,
+	["R6"] = true,
+	["PartGUI"] = false,
 }
 
 local ReanimateScripts = {
@@ -145,6 +144,9 @@ local ReanimateScripts = {
 	end},
 	{"Tool Dances",function() 
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua",true))()
+	end},
+	{"R15 Tool Dances",function() 
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/R15AnimationsIndex.lua",true))()
 	end},
 	{"Wao3",function() 
 		getgenv.AutoAnimate = false
@@ -174,11 +176,12 @@ Asset.spawn(function()
 		Clone.Name = i
 		Clone.TextLabel.Text = i
 		if not v then Clone.Selection.Visible = false end
+		getgenv[i] = v
 		Clone.Activated:Connect(function()
 			Clone.Selection.Visible = not Clone.Selection.Visible
 			getgenv[i] = Clone.Selection.Visible
 		end)
-		
+
 		Clone.Parent = ReanimateFrame
 	end
 end)
