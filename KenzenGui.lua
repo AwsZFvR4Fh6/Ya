@@ -146,7 +146,7 @@ local ReanimateScripts = {
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua",true))()
 	end},
 	{"R15 Tool Dances",function() 
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/R15AnimationsIndex.lua",true))()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/R15ToolDances.lua",true))()
 	end},
 	{"Wao3",function() 
 		getgenv.AutoAnimate = false
