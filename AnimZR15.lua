@@ -148,7 +148,7 @@ local function LoadAnimation(Asset)
 									local Data = {}
 									Data.Part = Character[Pose['Name']]
 									Data.CFrame = Pose.CFrame
-									Data.Duration = Keyframes[K+1] and (Keyframes[K+1].Time - Frame.Time) or .5
+									Data.Duration = Keyframes[K+1] and (Keyframes[K+1].Time - Frame.Time) or (1/60)
 									Data.Style = Pose['EasingStyle']
 									Data.Direction = Enum['EasingDirection'][tostring(Pose['EasingDirection']):split('.')[3]]
 									EditCFrame(Data)
