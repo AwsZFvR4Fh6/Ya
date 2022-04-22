@@ -546,7 +546,7 @@ task.spawn(function()
 				or v.Name == "Right Hip" and {["X"] = -0.5,["Y"] = -1,["Z"] = 0.5,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = 0,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
 				or v.Name == "Left Shoulder" and {["X"] = -1.5,["Y"] = 0.5,["Z"] = -0.5,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = 0,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
 				or v.Name == "Right Shoulder" and {["X"] = 1.5,["Y"] = 0.5,["Z"] = -0.5,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = 0,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
-				or v.Name == "Neck" and {["X"] = 0,["Y"] = 1,["Z"] = 0,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = -90,["Y1"] = 0,["Z1"] = 180,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
+				or v.Name == "Neck" and Character.Humanoid.RigType == Enum.HumanoidRigType.R6 and {["X"] = 0,["Y"] = 1,["Z"] = 0,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = -90,["Y1"] = 0,["Z1"] = 180,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
 				or {
 					["X"] = roundDecimals(v.C0.Position.X,2),
 					["Y"] = roundDecimals(v.C0.Position.Y,2),
