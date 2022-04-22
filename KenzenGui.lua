@@ -262,6 +262,9 @@ local MiscScripts = {
 	{"KenzenScript",function() 
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenScript.lua",true))()
 	end},
+	{"Dex",function() 
+		loadstring(game:HttpGetAsync("https://pastebin.com/raw/fPP8bZ8Z",true))()
+	end},
 	{"Infinite Yield",function() 
 		loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 	end},
