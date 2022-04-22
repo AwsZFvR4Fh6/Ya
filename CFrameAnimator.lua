@@ -1,10 +1,8 @@
 local tic = tick()
 
 -- | Initial Setup
-local drag = require(game.ReplicatedStorage.ModuleScript)
+local drag = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/drag.lua",true))()
 local Player = game:GetService("Players").LocalPlayer
-Player.CharacterAdded:Wait()
-task.wait()
 Player.Character.Archivable = true
 local Character = Player.Character:Clone()
 Character.Parent = workspace
