@@ -540,21 +540,29 @@ task.spawn(function()
 				SelectionBox.Adornee = v.Part1
 				Handle.Adornee = v.Part1
 			end)
-			table.insert(Welds,{v,{
-				["X"] = roundDecimals(v.C0.Position.X,2),
-				["Y"] = roundDecimals(v.C0.Position.Y,2),
-				["Z"] = roundDecimals(v.C0.Position.Z,2),
-				["XSin"] = 0,
-				["ZSin"] = 0,
-				["YSin"] = 0,
-				["X1"] = roundDecimals(v.C0.Rotation.X,2),
-				["Y1"] = roundDecimals(v.C0.Rotation.Y,2),
-				["Z1"] = roundDecimals(v.C0.Rotation.Z,2),
-				["X1Sin"] = 0,
-				["Y1Sin"] = 0,
-				["Z1Sin"] = 0,
-				["Sin"] = 1,
-			}})
+			local WeldData = 
+				v.Name == "RootJoint" and {["X"] = 0,["Y"] = 0,["Z"] = 0,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = -90,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
+				or v.Name == "Left Hip" and {["X"] = 0.5,["Y"] = -1,["Z"] = 0.5,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = 0,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
+				or v.Name == "Right Hip" and {["X"] = -0.5,["Y"] = -1,["Z"] = 0.5,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = 0,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
+				or v.Name == "Left Shoulder" and {["X"] = -1.5,["Y"] = 0.5,["Z"] = -0.5,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = 0,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
+				or v.Name == "Right Shoulder" and {["X"] = 1.5,["Y"] = 0.5,["Z"] = -0.5,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = 0,["Y1"] = 0,["Z1"] = 0,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
+				or v.Name == "Neck" and {["X"] = 0,["Y"] = 1,["Z"] = 0,["XSin"] = 0,["ZSin"] = 0,["YSin"] = 0,["X1"] = -90,["Y1"] = 0,["Z1"] = 180,["X1Sin"] = 0,["Y1Sin"] = 0,["Z1Sin"] = 0,["Sin"] = 1,}
+				or {
+					["X"] = roundDecimals(v.C0.Position.X,2),
+					["Y"] = roundDecimals(v.C0.Position.Y,2),
+					["Z"] = roundDecimals(v.C0.Position.Z,2),
+					["XSin"] = 0,
+					["ZSin"] = 0,
+					["YSin"] = 0,
+					["X1"] = roundDecimals(v.C0.Rotation.X,2),
+					["Y1"] = roundDecimals(v.C0.Rotation.Y,2),
+					["Z1"] = roundDecimals(v.C0.Rotation.Z,2),
+					["X1Sin"] = 0,
+					["Y1Sin"] = 0,
+					["Z1Sin"] = 0,
+					["Sin"] = 1,
+				}
+			table.insert(Welds,{v,WeldData})
 		end
 	end
 end)
