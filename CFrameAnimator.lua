@@ -496,11 +496,17 @@ ExportButton.Activated:Connect(function()
 		for i = 1, 5 do
 			InputBox.Text = InputBox.Text .. string.char(math.random(97,122))
 		end
+	elseif isfile(InputBox.Text .. ".anim") then
+		InputBox.Text = ""
+		for i = 1, 5 do
+			InputBox.Text = InputBox.Text .. string.char(math.random(97,122))
+		end
 	end
 	if not isfile(InputBox.Text .. ".anim") then
 		local MasterString = ""
 		for i,v in pairs(Welds) do
-			MasterString = MasterString.."\n" .. string.format(Format, v[1].Name,v[1].Name,v[1].Name .. "C0",
+			local name = v[1].Parent.Parent:IsA("Accessory") and v[1].Parent.Parent.Name or v[1].Part1.Name
+			MasterString = MasterString.."\n" .. string.format(Format, name,name,name .. "C0",
 				v[2]["X"],v[2]["XSin"],v[2]["Sin"],
 				v[2]["Y"],v[2]["YSin"],v[2]["Sin"],
 				v[2]["Z"],v[2]["ZSin"],v[2]["Sin"],
