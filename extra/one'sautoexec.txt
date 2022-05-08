@@ -174,11 +174,16 @@ else
 						repeat task.wait(0/1) until game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text ~= [[You were kicked from this experience: 
 (Error Code: 267)]]
 						TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
+											if string.find(TextLabel.Text,"Teleport") then
+							wait(1)
+							VideoFrame:Destroy()
+							VideoFrame = nil
+						end	
 					end)
 
 					TextLabel.Parent = VideoFrame
 					VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
-					while task.wait(0/1) do
+					while task.wait(0/1) and VideoFrame do
 						game:GetService("GuiService"):ClearError()
 					end
 				end
