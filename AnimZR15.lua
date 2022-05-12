@@ -123,6 +123,7 @@ local function LoadAnimation(Asset)
 	local Sequence = readfile(tostring(Asset) .. ".Anim") or Encode(game:GetObjects('rbxassetid://'..tostring(Asset))[1],tostring(Asset))
 	Sequence = HTTP:JSONDecode(Sequence)
 	wait(0/1)
+	if Global.LoopAnims then Sequence.Loop = true end
 
 	--local Keyframes = Sequence:GetKeyframes()
 	local Keyframes = Sequence.Keyframes
