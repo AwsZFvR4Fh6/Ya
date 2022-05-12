@@ -41,7 +41,7 @@ return function(Animation)
 		AnimationTable[i] = {}
 		AnimationTable[i].Joints = Table
 		AnimationTable[i].Time = v.Time
-		AnimationTable[i].Loop = v.Time
+		AnimationTable[i].Loop = v.Loop
 	end
 	return HTTP:JSONEncode(AnimationTable)
 end
