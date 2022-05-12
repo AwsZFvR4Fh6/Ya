@@ -1,8 +1,15 @@
 --// AnimZ, by ProductionTakeOne#3999
 
-local wait = loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/fe5cbdbc396630374041f0c2d156a747/raw/5491a28fd72ed7e11c9fa3f9141df033df3ed5a9/fastwait.lua"))()
+local wait = loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/fe5cbdbc396630374041f0c2d156a747/raw/5491a28fd72ed7e11c9fa3f9141df033df3ed5a9/fastwait.lua",true))()
+local Encode = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/EncodeAnimation.lua",true))()
 
 local Global = (getgenv and getgenv() or _G)
+local isfile = isfile or readfile and function(name) local a,b = pcall(function() readfile(name) end) if a then return a else return nil end end or function() return nil end
+local readfile = readfile and function(name) if isfile(name) then return readfile(name) end end or function() return nil end
+
+local function DecodeCFrame(tbl)
+	return CFrame.new(unpack(tbl))
+end
 
 local function Create(Name,Data)
 	if Name then
@@ -16,6 +23,7 @@ local function Create(Name,Data)
 	end
 end
 
+local HTTP = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -112,10 +120,12 @@ local function EditCFrame(Data)
 end
 
 local function LoadAnimation(Asset)
-	local Sequence = game:GetObjects('rbxassetid://'..tostring(Asset))[1]
+	local Sequence = readfile(tostring(Asset) .. ".Anim") or Encode(game:GetObjects('rbxassetid://'..tostring(Asset))[1],tostring(Asset))
+	Sequence = HTTP:JSONDecode(Sequence)
 	wait(0/1)
 
-	local Keyframes = Sequence:GetKeyframes()
+	--local Keyframes = Sequence:GetKeyframes()
+	local Keyframes = Sequence.Keyframes
 
 	local Animation = {}
 
@@ -141,16 +151,16 @@ local function LoadAnimation(Asset)
 						if Keyframes[K-1] then
 							Yield(Frame.Time - Keyframes[K-1].Time)
 						end
-						for I = 1,#Frame:GetDescendants() do 
+						for i,Pose in pairs(Frame.Joints) do
 							task.spawn(function()
-								local Pose = Frame:GetDescendants()[I]
-								if TableContains(Joints,Pose.Name) and Character:FindFirstChild(Pose.Name) then 
+								--local Pose = Frame.Joints[I]
+								if TableContains(Joints,i) and Character:FindFirstChild(i) then 
 									local Data = {}
-									Data.Part = Character[Pose['Name']]
-									Data.CFrame = Pose.CFrame
+									Data.Part = Character[i]
+									Data.CFrame = DecodeCFrame(Pose.CFrame)
 									Data.Duration = Keyframes[K+1] and (Keyframes[K+1].Time - Frame.Time) or (1/60)
-									Data.Style = Pose['EasingStyle']
-									Data.Direction = Enum['EasingDirection'][tostring(Pose['EasingDirection']):split('.')[3]]
+									Data.Style = Pose.Style
+									Data.Direction = Enum['EasingDirection'][tostring(Pose.Direction):split('.')[3]]
 									EditCFrame(Data)
 								end
 							end)
