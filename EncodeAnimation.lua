@@ -1,4 +1,5 @@
 local HTTP = game:GetService("HttpService")
+local writefile = writefile or function() return nil end 
 local Joints = {
 	['Torso'] = 'RootJoint',
 	['Left Arm'] = 'Left Shoulder',
@@ -26,7 +27,7 @@ local function EncodeCFrame(cfr)
 	return {cfr:components()}
 end
 
-return function(Animation)
+return function(Animation,Name)
 	local AnimationTable = {}
 	AnimationTable.Keyframes = {}
 	for i,v in pairs(Animation:GetKeyframes()) do
@@ -44,5 +45,7 @@ return function(Animation)
 		AnimationTable.Keyframes[i].Time = v.Time
 	end
 	AnimationTable.Loop = Animation.Loop
-	return HTTP:JSONEncode(AnimationTable)
+	local Encode = HTTP:JSONEncode(AnimationTable)
+	writefile(Name .. ".Anim",Encode)
+	return Encode
 end
