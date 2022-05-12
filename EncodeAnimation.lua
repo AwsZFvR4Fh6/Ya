@@ -35,8 +35,8 @@ return function(Animation,Name)
 		for i,v in pairs(v:GetDescendants()) do
 			if Joints[v.Name] then
 				Table[v.Name] = {}
-				Table[v.Name].Style = v.EasingStyle
-				Table[v.Name].Direction = v.EasingDirection
+				Table[v.Name].Style = tostring(v.EasingStyle)
+				Table[v.Name].Direction = tostring(v.EasingDirection)
 				Table[v.Name].CFrame = EncodeCFrame(v.CFrame)
 			end
 		end
