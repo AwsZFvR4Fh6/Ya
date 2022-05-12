@@ -32,7 +32,7 @@ return function(Animation)
 		local Table = {}
 		for i,v in pairs(v:GetDescendants()) do
 			if Joints[v.Name] then
-				Table[v.Name] = EncodeCFrame(v.CFrame)
+				Table[Joints[v.Name]] = EncodeCFrame(v.CFrame)
 			end
 		end
 		AnimationTable[i] = {}
