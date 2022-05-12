@@ -28,6 +28,7 @@ end
 
 return function(Animation)
 	local AnimationTable = {}
+	AnimationTable.Keyframes = {}
 	for i,v in pairs(Animation:GetKeyframes()) do
 		local Table = {}
 		for i,v in pairs(v:GetDescendants()) do
@@ -38,9 +39,9 @@ return function(Animation)
 				Table[v.Name].CFrame = EncodeCFrame(v.CFrame)
 			end
 		end
-		AnimationTable[i] = {}
-		AnimationTable[i].Joints = Table
-		AnimationTable[i].Time = v.Time
+		AnimationTable.Keyframes[i] = {}
+		AnimationTable.Keyframes[i].Joints = Table
+		AnimationTable.Keyframes[i].Time = v.Time
 	end
 	AnimationTable.Loop = Animation.Loop
 	return HTTP:JSONEncode(AnimationTable)
