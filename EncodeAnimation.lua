@@ -32,12 +32,16 @@ return function(Animation)
 		local Table = {}
 		for i,v in pairs(v:GetDescendants()) do
 			if Joints[v.Name] then
-				Table[Joints[v.Name]] = EncodeCFrame(v.CFrame)
+				Table[v.Name] = {}
+				Table[v.Name].Style = v.EasingStyle
+				Table[v.Name].Direction = v.EasingDirection
+				Table[v.Name].CFrame = EncodeCFrame(v.CFrame)
 			end
 		end
 		AnimationTable[i] = {}
 		AnimationTable[i].Joints = Table
 		AnimationTable[i].Time = v.Time
+		AnimationTable[i].Loop = v.Time
 	end
 	return HTTP:JSONEncode(AnimationTable)
 end
