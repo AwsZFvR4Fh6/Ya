@@ -1,5 +1,6 @@
 --local preloadanimations = true -- enable this if you want to preload all animations (lagspike)
 local notify = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua",true))()
+local wait = fwait or task.wait
 local function getsynassetfromurl(URL,Name)
 	if not isfolder("FakeAudios") then makefolder("FakeAudios") end
 	Name = "FakeAudios/" .. Name
@@ -61,7 +62,7 @@ if getgenv().Preload then
 	local LoadAmount,NumberToLoad = 0,#Files
 	for i,v in pairs(Files) do
 		if getgenv().PreloadWait > (1/60) then
-			task.wait(getgenv().PreloadWait)
+			wait(getgenv().PreloadWait)
 		end
 		task.spawn(function()
 			local AnimationID = v[1]
@@ -83,14 +84,14 @@ if getgenv().Preload then
 			print(loadamount,NumberToLoad)
 		end)
 	end
-	repeat task.wait(0/1) until loadamount == NumberToLoad
+	repeat wait(0/1) until loadamount == NumberToLoad
 	GUI:Destroy()
 end
 
 if getgenv().Reanimate then
 	getgenv().AutoAnimate = false
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/newnetlessreanimate.lua",true))()
-	task.wait(0/1)
+	wait(0/1)
 end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua",true))()
@@ -102,7 +103,7 @@ for i,v in pairs(Files) do
 		Tool.RequiresHandle = false
 		Tool.Name = not v[3] and v[2] == "" and "(NS) " .. i or i
 		Tool.Parent = game.Players.LocalPlayer.Backpack
-		task.wait(0/1)
+		wait(0/1)
 		local ToolPlaying = false
 		Tool.Activated:Connect(function()
 			if getgenv().RunAnimation then
