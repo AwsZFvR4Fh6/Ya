@@ -13,10 +13,11 @@ local AdvSettings = {
 	WebsocketChat = true, -- Toggles Websocket Chat
 	DisablesPurchasePrompts = true,
 	AntiAFK = true, -- Prevents user from being AFK kicked
-	AntiClientAFK = false, -- Prevents user from being AFK kicked
+	AntiClientAFK = true, -- Prevents user from being AFK kicked
 	SaveObjects = true, -- Allows you to use SaveInstance(obj,name) to save objects
 	AddGlobal = true,
 	FastWait = true, -- Adds fwait()
+	LayeredAntiCrash = true,
 }
 
 if AdvSettings.UseUpToDateFile then
@@ -150,12 +151,21 @@ else
 				task.wait(0/1)
 				if v.Name == "ErrorPrompt" then
 					game:GetService("GuiService"):ClearError()
+					local ErrorText = v:FindFirstChild("ErrorMessage",true)
+					v.Visible = false
 					local VideoFrame,TextLabel = Instance.new("VideoFrame"),Instance.new("TextLabel")
+					local TextButton = Instance.new("TextButton")
+					TextButton.AnchorPoint = Vector2.new(0,0)
+					TextButton.Size = UDim2.new(1,0,1,0)
+					TextButton.ZIndex = 999999999
+					TextButton.Text = ""
+					TextButton.Transparency = 1
+					
 					VideoFrame.AnchorPoint = Vector2.new(0.5,1)
 					VideoFrame.BackgroundTransparency = 1
 					VideoFrame.Position = UDim2.new(0.5,0,0.8,0)
 					VideoFrame.Size = UDim2.new(0,450,0,225)
-					VideoFrame.ZIndex = 999999999
+					VideoFrame.ZIndex = 999999998
 					VideoFrame.Looped = true
 					newcoro(function()
 						if getsynasset then
@@ -170,23 +180,33 @@ else
 					TextLabel.BackgroundTransparency = 1
 					TextLabel.Position = UDim2.new(0.5,0,1,0)
 					TextLabel.Size = UDim2.new(1,0,0.3,0)
-					TextLabel.ZIndex = 999999999
+					TextLabel.ZIndex = 999999998
 					TextLabel.Font = Enum.Font.Gotham
 					TextLabel.TextSize = 20
-					TextLabel.Text = "You were kicked from this experience:"
+					TextLabel.Text = ErrorText.Text
 					TextLabel.TextColor3 = Color3.new(1,1,1)
 					TextLabel.TextStrokeTransparency = 0
 					newcoro(function()
-						TextLabel:GetPropertyChangedSignal("Text"):Wait()
-						TextLabel:GetPropertyChangedSignal("Text"):Wait()
-						TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
+						ErrorText.Changed:Connect(function()
+							TextLabel.Text = ErrorText.Text
+						end)
+						--repeat task.wait(0/1) until TextLabel.Text ~= txt
+						--TextLabel:GetPropertyChangedSignal("Text"):Wait()
+						--TextLabel:GetPropertyChangedSignal("Text"):Wait()
+						--TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
 					end)
-
+					
+					TextButton.Activated:Connect(function()
+						VideoFrame:Destroy()
+					end)
+					
+					TextButton.Parent = VideoFrame
 					TextLabel.Parent = VideoFrame
 					VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
-					while task.wait(0/1) do
+					repeat
 						game:GetService("GuiService"):ClearError()
-					end
+						task.wait(0/1)
+					until not VideoFrame
 				end
 			end)
 		end)
@@ -389,6 +409,17 @@ else
 		end)
 	end
 
+	if AdvSettings.LayeredAntiCrash then
+		newcoro(function()
+			workspace.DescendantAdded:Connect(function(Wrap)
+				if Wrap:IsA("WrapLayer") then
+					task.wait(0/1)
+					Wrap.Parent:Destroy()
+				end
+			end)
+		end)
+	end
+
 	if AdvSettings.ExtraFunctions then
 		local function netless(part)
 			if part:IsA("BasePart") then
@@ -425,11 +456,11 @@ else
 	if AdvSettings.ReplaceWaitWithTaskWait then
 		getgenv.wait = task.wait
 	end
-	
+
 	if AdvSettings.AddGlobal then
 		getgenv.Global = getgenv
 	end
-	
+
 	if AdvSettings.FastWait then
 		task.spawn(function()
 			local Bind = Instance.new("BindableEvent")
