@@ -90,7 +90,7 @@ end
 
 if getgenv().Reanimate then
 	getgenv().AutoAnimate = false
-	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/ZendeyReanimate.lua", true))()
+	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/newnetlessreanimate.lua", true))()
 	wait(0/1)
 end
 
