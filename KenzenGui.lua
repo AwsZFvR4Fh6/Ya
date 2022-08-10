@@ -535,12 +535,12 @@ do -- [[ Commands ]]
 		end},
 		["datalimit"] = {{"Number"},function(args)
 			if tonumber(args[2]) then
-				NetworkClient:SetOutgoingKBPSLimit(args[1])
+				NetworkClient:SetOutgoingKBPSLimit(tonumber(args[2]))
 			end
 		end},
 		["replicationlag"] = {{"Number"},function(args)
 			if tonumber(args[2]) then
-				settings():GetService("NetworkSettings").IncomingReplicationLag = args[1]
+				settings():GetService("NetworkSettings").IncomingReplicationLag = tonumber(args[2])
 			end
 		end},
 		["goto"] = {{"Player"},function(args)
@@ -828,6 +828,7 @@ do -- [[ Commands ]]
 			newlabel.Font = Enum.Font.Gotham
 			newlabel.TextSize = 14
 			newlabel.TextColor3 = Color3.new(1,1,1)
+			newlabel.ZIndex = i
 		end--script.TextLabel:Clone()
 		local txt = i
 		for i,v in pairs(v[1]) do
