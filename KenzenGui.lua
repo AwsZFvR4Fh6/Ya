@@ -785,7 +785,7 @@ do -- [[ Commands ]]
 				Player.Character:MoveTo(origpos.Position)
 			end
 		end},
-		["psr"] = {{},function(args)
+		["psr"] = {{"Number"},function(args)
 			local psr = tonumber(args[2]) or 30
 			setfflag("S2PhysicsSenderRate", psr)
 		end},
