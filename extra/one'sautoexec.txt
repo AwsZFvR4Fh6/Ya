@@ -432,6 +432,7 @@ else
 	if AdvSettings.FixedPlayerChatFunction then
 		newcoro(function()
 			isloaded()
+			getgenv.ToggleChatFix = true
 			local Players = game:GetService("Players")
 			local LocalPlayer =
 				Players.LocalPlayer or
@@ -451,13 +452,15 @@ else
 			local ChatBar = LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame"):WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
 
 			local function Chat(Message)
-				local Text = ChatBar.Text
+				if getgenv.ToggleChatFix then
+					local Text = ChatBar.Text
 
-				ChatBar:SetTextFromInput(Message)
+					ChatBar:SetTextFromInput(Message)
 
-				Players:Chat(Message)
+					Players:Chat(Message)
 
-				ChatBar:SetTextFromInput(Text)
+					ChatBar:SetTextFromInput(Text)
+				end
 			end
 
 			local __namecall
@@ -467,7 +470,8 @@ else
 					self == Players and
 					getnamecallmethod() == "Chat" and
 					checkcaller() and
-					debug.info(3, "f") ~= Chat
+					debug.info(3, "f") ~= Chat and 
+					getgenv.ToggleChatFix
 				then
 					return Chat(...)
 				end
