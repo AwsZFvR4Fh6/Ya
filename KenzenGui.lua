@@ -828,7 +828,7 @@ do -- [[ Commands ]]
 			newlabel.Font = Enum.Font.Gotham
 			newlabel.TextSize = 14
 			newlabel.TextColor3 = Color3.new(1,1,1)
-			newlabel.ZIndex = i
+			newlabel.LayoutOrder = i
 		end--script.TextLabel:Clone()
 		local txt = i
 		for i,v in pairs(v[1]) do
