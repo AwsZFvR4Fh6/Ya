@@ -922,8 +922,11 @@ do -- [[ Toggle ]]
 			end
 		end
 	end)
-	TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
-	TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.1,0.1)}):Play()
+	task.spawn(function()
+		fwait(.1)
+		TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
+		TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.1,0.1)}):Play()
+	end)
 end
 
 GUI.Parent = game:GetService("CoreGui")
