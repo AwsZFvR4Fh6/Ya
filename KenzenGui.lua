@@ -27,7 +27,7 @@ if not fwait and not Event then
 		pcall(function() setfflag("NewRunServiceSignals", "true") end) 
 		pcall(function() setfflag("NewRunServiceSignals", true) end) 
 	end
-	
+
 	local Bind = Instance.new("BindableEvent")
 	for i,v in ipairs({RunService.Heartbeat,RunService.Stepped,RunService.RenderStepped,RunService.PreAnimation}) do
 		local Tick = tick()
@@ -70,10 +70,10 @@ do -- [[ Commands ]]
 	local function check4property(obj, prop)
 		return ({pcall(function()if(typeof(obj[prop])=="Instance")then error()end end)})[1]
 	end
-	
+
 	local Commands,Visible,RealChar
 	local noclipping,Flying = false,false
-	
+
 	Commands = {
 		["print"] = {{"Value"},function(args)
 			print(args[2])
@@ -199,11 +199,11 @@ do -- [[ Commands ]]
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-					
+
 					Storage["SitRunning"] = copyplr.Character.Humanoid.Running:Connect(function(sp)
 						speed = sp
 					end)
-					
+
 					Storage["Headsit"] = Event:Connect(function()
 						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass('Humanoid').Sit == true and copyplr and copyplr.Character then
 							Player.Character.HumanoidRootPart.CFrame = CFrame.new(copyplr.Character.HumanoidRootPart.Position + (copyplr.Character.Humanoid.MoveDirection * ((speed/16)+game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()/10))) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,1.6,1.15)
@@ -235,17 +235,17 @@ do -- [[ Commands ]]
 							bang:AdjustSpeed(5)
 						end
 					end
-					
+
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-					
+
 					Player.CharacterAdded:Connect(function()
 						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
 						bang:Stop()
 					end)
-					
+
 					Storage["Banging"] = Event:Connect(function()
 						if Player.Character:FindFirstChild("HumanoidRootPart") and copyplr and copyplr.Character then
 							Player.Character.HumanoidRootPart.CFrame = copyplr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,1)
@@ -283,11 +283,11 @@ do -- [[ Commands ]]
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-					
+
 					Storage["BangRunning"] = copyplr.Character.Humanoid.Running:Connect(function(sp)
 						speed = sp
 					end)
-					
+
 					Player.CharacterAdded:Connect(function()
 						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
@@ -319,6 +319,32 @@ do -- [[ Commands ]]
 				if v.playing < v.maxPlayers and v.id ~= game.JobId then
 					game:service'TeleportService':TeleportToPlaceInstance(game.PlaceId, v.id)
 				end
+			end
+		end},
+		["serverhopsmallest"] = {{},function(args)
+			local sl = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
+			local minimum,id = 100,nil
+			for i,v in pairs(sl.data) do
+				if v.playing < v.maxPlayers and v.id ~= game.JobId and v.playing < minimum then
+					minimum = v.playing
+					id = v.id
+				end
+			end
+			if id then
+				game:service'TeleportService':TeleportToPlaceInstance(game.PlaceId, id)
+			end
+		end},
+		["serverhoplargest"] = {{},function(args)
+			local sl = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
+			local maximum,id = 0,nil
+			for i,v in pairs(sl.data) do
+				if v.playing < v.maxPlayers and v.id ~= game.JobId and v.playing > maximum then
+					maximum = v.playing
+					id = v.id
+				end
+			end
+			if id then
+				game:service'TeleportService':TeleportToPlaceInstance(game.PlaceId, id)
 			end
 		end},
 		["serverhop2"] = {{},function(args)
@@ -363,7 +389,7 @@ do -- [[ Commands ]]
 					FakeChar:Destroy()
 				end
 			end
-			
+
 		end},
 		["visible"] = {{},function()
 			if Visible then
@@ -406,7 +432,7 @@ do -- [[ Commands ]]
 				Player.Character = char
 				newChar:Destroy()
 			end
-			
+
 		end},
 		["fly"] = {{},function()
 			if not Flying then
@@ -441,7 +467,7 @@ do -- [[ Commands ]]
 				end
 
 				Character.Humanoid.PlatformStand = true
-				
+
 				Storage["FlyInputBegan"] = UserInputService.InputBegan:Connect(function(Key)
 					if Key.KeyCode == Enum.KeyCode.W then
 						Controls.Forward = 1
@@ -457,7 +483,7 @@ do -- [[ Commands ]]
 						Controls.Down = -1*2
 					end
 				end)
-				
+
 				Storage["FlyInputEnd"] = UserInputService.InputEnded:Connect(function(Key)
 					if Key.KeyCode == Enum.KeyCode.W then
 						Controls.Forward = 0
@@ -473,7 +499,7 @@ do -- [[ Commands ]]
 						Controls.Down = 0
 					end
 				end)
-				
+
 				while Flying do
 					local Speed = Controls.Left == 0 and  Controls.Right == 0 and Controls.Forward == 0 and  Controls.Back == 0 and  Controls.Down == 0 and Controls.Up == 0 and 0 or 50
 					if (Controls.Left + Controls.Right) ~= 0 or (Controls.Forward + Controls.Back) ~= 0 or (Controls.Down + Controls.Up) ~= 0 then
@@ -484,7 +510,7 @@ do -- [[ Commands ]]
 					BodyGyro.CFrame = workspace.CurrentCamera.CoordinateFrame
 					fwait()
 				end
-				
+
 				BodyGyro:destroy()
 				BodyVelocity:destroy()
 				Player.Character.Humanoid.PlatformStand = false
@@ -553,11 +579,11 @@ do -- [[ Commands ]]
 		end},
 		["jp"] = {{"Number"},function(args)
 			local jpower = args[2] and tonumber(args[2]) or 50
-				if Player.Character:FindFirstChildOfClass('Humanoid').UseJumpPower then
+			if Player.Character:FindFirstChildOfClass('Humanoid').UseJumpPower then
 				Player.Character:FindFirstChildOfClass('Humanoid').JumpPower = jpower
-				else
+			else
 				Player.Character:FindFirstChildOfClass('Humanoid').JumpHeight  = jpower
-				end
+			end
 		end},
 		["speed"] = {{"Number"},function(args)
 			local jpower = args[2] and tonumber(args[2]) or 16
@@ -634,32 +660,32 @@ do -- [[ Commands ]]
 			local Plr = ShortName(args[2])
 			local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
 			if Plr and tool then
-				
-					tool.Parent = Player.Backpack
-					local Target = Plr.Character
-					local Character = Player.Character
 
-					local Humanoid = Character.Humanoid do
-						local FakeHum = Humanoid:Clone()
-						Humanoid.Name = ""
-						FakeHum.Parent = Character
-						Humanoid:Destroy()
-					end
+				tool.Parent = Player.Backpack
+				local Target = Plr.Character
+				local Character = Player.Character
 
-					tool.Parent = Character
+				local Humanoid = Character.Humanoid do
+					local FakeHum = Humanoid:Clone()
+					Humanoid.Name = ""
+					FakeHum.Parent = Character
+					Humanoid:Destroy()
+				end
 
-					local Root = Character.HumanoidRootPart
-					local TRoot = Target.HumanoidRootPart
+				tool.Parent = Character
 
-					repeat
-						Root.CFrame = TRoot.CFrame * CFrame.new(math.random(-1,1)/10,math.random(-1,1)/10,math.random(-1,1)/10)
+				local Root = Character.HumanoidRootPart
+				local TRoot = Target.HumanoidRootPart
+
+				repeat
+					Root.CFrame = TRoot.CFrame * CFrame.new(math.random(-1,1)/10,math.random(-1,1)/10,math.random(-1,1)/10)
 					fwait()
-					until tool.Parent == workspace.Imakid12345
+				until tool.Parent == workspace.Imakid12345
 
-					repeat
-						Root.CFrame = CFrame.new(999999, workspace.FallenPartsDestroyHeight + 1,999999)
-						fwait()
-					until not Root or not TRoot or not Root.Parent or not TRoot.Parent
+				repeat
+					Root.CFrame = CFrame.new(999999, workspace.FallenPartsDestroyHeight + 1,999999)
+					fwait()
+				until not Root or not TRoot or not Root.Parent or not TRoot.Parent
 			end
 		end},
 		["kill2"] = {{"Player"},function(args)
@@ -700,14 +726,14 @@ do -- [[ Commands ]]
 
 					return Grip
 				end
-				
+
 				local Target = Plr.Character
 				local origpos = Player.Character.HumanoidRootPart.CFrame
 				Player.Character.HumanoidRootPart.CFrame *= CFrame.new(0,math.huge,0)--= CFrame.new(8, 12, -25)
 				task.wait(0.2)
 				workspace.FallenPartsDestroyHeight = 0/0
 				tool.Handle.CanCollide = false
-			
+
 				local attWeld = AttachTool(Player.Character:FindFirstChild("Right Hand") or Player.Character:FindFirstChild("RightArm"),tool,CFrame.new(-1,-6,0) * CFrame.Angles(math.rad(-90),0,0))
 
 				Target.Humanoid.PlatformStand = true
@@ -802,7 +828,7 @@ do -- [[ Commands ]]
 			GUI.TextBox.Frame.Frame.Visible = not GUI.TextBox.Frame.Frame.Visible
 		end},
 	}
-	
+
 	GUI.TextBox.FocusLost:Connect(function(EnterPressed)
 		if EnterPressed then
 			local Args = string.split(GUI.TextBox.Text," ")
@@ -812,7 +838,7 @@ do -- [[ Commands ]]
 		end
 		GUI.TextBox.Text = ""
 	end)
-	
+
 	Player.Chatted:Connect(function(msg)
 		if string.sub(msg,1,1) == "!" then
 			msg = string.sub(msg,2)
@@ -822,7 +848,7 @@ do -- [[ Commands ]]
 			end
 		end
 	end)
-	
+
 	for i,v in pairs(Commands) do
 		local newlabel = Instance.new("TextLabel"); do
 			newlabel.BackgroundTransparency = 1
@@ -882,7 +908,7 @@ end
 do -- [[ Aimkid KeyChain ]]
 	local lastY = 0
 	local val = 0
-	
+
 	task.spawn(function() 
 		while GUI do
 			local Fram = RunService.RenderStepped:Wait()/(1/60)*0.6
@@ -907,7 +933,7 @@ do -- [[ Aimkid KeyChain ]]
 			end
 			GUI.TextBox.Frame.Frame.Rotation = val
 			lastY = math.deg(Y)
-			
+
 		end 
 	end)
 end
