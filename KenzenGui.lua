@@ -1,6 +1,7 @@
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
+local LoadTick = tick()
 local GUI = game:GetObjects("rbxassetid://10541085796")[1]
 
 local RunService = game:GetService("RunService")
@@ -926,3 +927,4 @@ do -- [[ Toggle ]]
 end
 
 GUI.Parent = game:GetService("CoreGui")
+return LoadTick
