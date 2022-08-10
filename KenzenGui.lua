@@ -13,7 +13,7 @@ local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = Player:GetMouse()
 
-local Toggle = true
+local Toggle = false
 local Global = getgenv and getgenv() or shared
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
 
@@ -921,6 +921,8 @@ do -- [[ Toggle ]]
 			end
 		end
 	end)
+	TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
+	TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.1,0.1)}):Play()
 end
 
 GUI.Parent = game:GetService("CoreGui")
