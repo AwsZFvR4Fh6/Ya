@@ -540,7 +540,7 @@ do -- [[ Commands ]]
 		end},
 		["replicationlag"] = {{"Number"},function(args)
 			if tonumber(args[2]) then
-				settings():GetService("NetworkSettings").IncomingReplicationLag = tonumber(args[2])
+				settings():GetService("NetworkSettings").IncomingReplicationLag = tonumber(args[2])/1000
 			end
 		end},
 		["goto"] = {{"Player"},function(args)
@@ -928,6 +928,24 @@ do -- [[ Toggle ]]
 		TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
 		TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.1,0.1)}):Play()
 	end)
+end
+
+do -- [[ Settings ]]
+	local Settings = Global.AidKid or {
+		MainColor = Color3.fromRGB(57, 0, 98),
+		SecondaryColor = Color3.fromRGB(47, 0, 84),
+		Image = "rbxassetid://4840955387" -- must use image id
+	}
+	for i,v in pairs(GUI:GetDescendants()) do
+		if not v:IsA("UIListLayout") then
+			if v.BackgroundColor3 == Color3.fromRGB(57, 0, 98) then
+				v.BackgroundColor3 = Settings.MainColor
+			elseif v.BackgroundColor3 == Color3.fromRGB(47, 0, 84) then
+				v.BackgroundColor3 = Settings.SecondaryColor
+			end
+		end
+	end
+	GUI.TextBox.Frame.Frame.ImageLabel.ImageLabel.Image = Settings.Image
 end
 
 GUI.Parent = game:GetService("CoreGui")
