@@ -13,11 +13,18 @@ local AdvSettings = {
 	WebsocketChat = true, -- Toggles Websocket Chat
 	DisablesPurchasePrompts = true,
 	AntiAFK = true, -- Prevents user from being AFK kicked
-	AntiClientAFK = true, -- Prevents user from being AFK kicked
+	AntiClientKick = false, -- Prevents user from being AFK kicked
 	SaveObjects = true, -- Allows you to use SaveInstance(obj,name) to save objects
 	AddGlobal = true,
 	FastWait = true, -- Adds fwait()
 	LayeredAntiCrash = true,
+	FixedPlayerChatFunction = true,
+}
+
+local GUISettings = {
+	MainColor = Color3.fromRGB(57, 0, 98),
+	SecondaryColor = Color3.fromRGB(47, 0, 84),
+	Image = "rbxassetid://4840955387" -- must use image id
 }
 
 if AdvSettings.UseUpToDateFile then
@@ -35,7 +42,7 @@ else
 	end
 
 	local notify
-	local getgenv = getgenv and getgenv() or _G
+	local getgenv = getgenv and getgenv() or shared
 	local printconsole = printconsole or print
 	local getsynasset = getsynasset or getcustomasset or nil
 	local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
@@ -69,7 +76,7 @@ else
 	end
 
 	newcoro(function()
-		if AdvSettings.AntiClientAFK and newcclosure then
+		if AdvSettings.AntiClientKick and newcclosure then
 			local mt = getrawmetatable(game)
 			local backup = mt.__namecall
 			setreadonly(mt, false)
@@ -87,10 +94,11 @@ else
 			setreadonly(mt, true)
 		end
 		if AdvSettings.FastLoad and not game:IsLoaded("Workspace") then
-			game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500).BackgroundTransparency = 1--.Visible = false
-			game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500).Active = false
-			game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500).Changed:Connect(function()
-				game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500).BackgroundTransparency = 1
+			local BlackFrame = game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500)
+			BlackFrame.BackgroundTransparency = 1--.Visible = false
+			BlackFrame.Active = false
+			BlackFrame.Changed:Connect(function()
+				BlackFrame.BackgroundTransparency = 1
 			end)
 			task.wait(0/1)
 			local fakecha = Instance.new("Model")
@@ -130,6 +138,7 @@ else
 	if AdvSettings.StartWithGui then
 		newcoro(function()
 			if AdvSettings.KenzenGui then
+				getgenv.AidKid = GUISettings
 				local loadreturn = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))()
 				local loadreturntime = tick() - loadreturn
 				printconsole(tostring("GUI loaded in " .. loadreturntime))
@@ -160,7 +169,7 @@ else
 					TextButton.ZIndex = 999999999
 					TextButton.Text = ""
 					TextButton.Transparency = 1
-					
+
 					VideoFrame.AnchorPoint = Vector2.new(0.5,1)
 					VideoFrame.BackgroundTransparency = 1
 					VideoFrame.Position = UDim2.new(0.5,0,0.8,0)
@@ -195,11 +204,11 @@ else
 						--TextLabel:GetPropertyChangedSignal("Text"):Wait()
 						--TextLabel.Text = game:GetService("CoreGui").RobloxPromptGui.promptOverlay:FindFirstChild("ErrorMessage",true).Text
 					end)
-					
+
 					TextButton.Activated:Connect(function()
 						VideoFrame:Destroy()
 					end)
-					
+
 					TextButton.Parent = VideoFrame
 					TextLabel.Parent = VideoFrame
 					VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
@@ -420,6 +429,54 @@ else
 		end)
 	end
 
+	if AdvSettings.FixedPlayerChatFunction then
+		newcoro(function()
+			isloaded()
+			local Players = game:GetService("Players")
+			local LocalPlayer =
+				Players.LocalPlayer or
+				Players:GetPropertyChangedSignal("LocalPlayer"):Wait() and Players.LocalPlayer
+
+			local function WaitForInstance(Ancestor, ...)
+				local DescendantNames = {...}
+				local Descendant = Ancestor
+
+				for _, DescendantName in ipairs(DescendantNames) do
+					Descendant = Descendant:WaitForChild(DescendantName)
+				end
+
+				return Descendant
+			end
+
+			local ChatBar = LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame"):WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
+
+			local function Chat(Message)
+				local Text = ChatBar.Text
+
+				ChatBar:SetTextFromInput(Message)
+
+				Players:Chat(Message)
+
+				ChatBar:SetTextFromInput(Text)
+			end
+
+			local __namecall
+
+			__namecall = hookmetamethod(game, "__namecall", function(self, ...)
+				if
+					self == Players and
+					getnamecallmethod() == "Chat" and
+					checkcaller() and
+					debug.info(3, "f") ~= Chat
+				then
+					return Chat(...)
+				end
+
+				return __namecall(self, ...)
+			end)
+		end)
+	end
+
 	if AdvSettings.ExtraFunctions then
 		local function netless(part)
 			if part:IsA("BasePart") then
@@ -486,6 +543,7 @@ else
 				end
 			end
 			getgenv.fwait = FastWait
+			getgenv.Event = Bind.Event
 		end)
 	end
 
