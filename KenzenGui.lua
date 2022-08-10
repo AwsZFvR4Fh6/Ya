@@ -388,11 +388,13 @@ do -- [[ Commands ]]
 			if game.PlaceId == 7115420363 then
 				game:GetService("ReplicatedStorage").Respawn:FireServer()
 			elseif game.PlaceId == 9307193325 or game.PlaceId == 5100950559 then
+				Global.ToggleChatFix = false
 				local ChatBar = Player:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame"):WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
 				local Text = ChatBar.Text
 				ChatBar:SetTextFromInput("-gr")
 				Players:Chat("-gr")
 				ChatBar:SetTextFromInput(Text)
+				Global.ToggleChatFix = true
 			else
 				local char = RealChar or Player.Character
 				if char:FindFirstChildOfClass("Humanoid") then char:FindFirstChildOfClass("Humanoid"):ChangeState(15) end
