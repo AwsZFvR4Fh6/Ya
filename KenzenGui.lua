@@ -325,7 +325,7 @@ do -- [[ Commands ]]
 			local sl = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
 			local minimum,id = 100,nil
 			for i,v in pairs(sl.data) do
-				if v.playing < v.maxPlayers and v.id ~= game.JobId and v.playing < minimum then
+				if v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing < minimum then
 					minimum = v.playing
 					id = v.id
 				end
@@ -338,7 +338,7 @@ do -- [[ Commands ]]
 			local sl = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
 			local maximum,id = 0,nil
 			for i,v in pairs(sl.data) do
-				if v.playing < v.maxPlayers and v.id ~= game.JobId and v.playing > maximum then
+				if v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing > maximum then
 					maximum = v.playing
 					id = v.id
 				end
