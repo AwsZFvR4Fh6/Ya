@@ -421,6 +421,8 @@ do -- [[ Commands ]]
 				Players:Chat("-gr")
 				ChatBar:SetTextFromInput(Text)
 				Global.ToggleChatFix = true
+			elseif Player.Character:FindFirstChild(Player.Name) then
+				Player.Character.Head:Destroy()
 			else
 				local char = RealChar or Player.Character
 				if char:FindFirstChildOfClass("Humanoid") then char:FindFirstChildOfClass("Humanoid"):ChangeState(15) end
