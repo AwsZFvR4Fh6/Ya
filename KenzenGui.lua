@@ -685,7 +685,7 @@ do -- [[ Commands ]]
 				repeat
 					Root.CFrame = TRoot.CFrame * CFrame.new(math.random(-1,1)/10,math.random(-1,1)/10,math.random(-1,1)/10)
 					fwait()
-				until tool.Parent == workspace.Imakid12345
+				until tool.Parent == Target
 
 				repeat
 					Root.CFrame = CFrame.new(999999, workspace.FallenPartsDestroyHeight + 1,999999)
