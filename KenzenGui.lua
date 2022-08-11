@@ -1,3 +1,4 @@
+local Version = 1.05
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -17,6 +18,7 @@ local Mouse = Player:GetMouse()
 local Toggle = false
 local Global = getgenv and getgenv() or shared
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
+local printconsole = printconsole or print
 
 local Storage = {}
 
@@ -984,4 +986,5 @@ do -- [[ Settings ]]
 end
 
 GUI.Parent = game:GetService("CoreGui")
+printconsole(Version)
 return LoadTick
