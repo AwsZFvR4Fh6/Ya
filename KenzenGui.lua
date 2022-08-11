@@ -432,7 +432,12 @@ do -- [[ Commands ]]
 				Player.Character = char
 				newChar:Destroy()
 			end
-
+		end},
+		["refresh"] = {{},function()
+			local pos = Player.Character.HumanoidRootPart.CFrame
+			Commands["respawn"][2]()
+			Player.CharacterAdded:Wait()
+			Player.Character:WaitForChild("HumanoidRootPart",500).CFrame = pos
 		end},
 		["fly"] = {{},function()
 			if not Flying then
