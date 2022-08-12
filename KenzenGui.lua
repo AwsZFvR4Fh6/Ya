@@ -1,4 +1,4 @@
-local Version = "1.06"
+local Version = "1.06.1"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -262,10 +262,10 @@ do -- [[ Commands ]]
 				end
 			end
 		end},
-		["joinplr"] = {{"Player","GameID"},function(args)
+		["joinplr"] = {{"PlayerID","GameID"},function(args)
 			local request = (syn and syn.request) or (http and http.request) or (request) or error('invalid attempt to \'getsynassetfromurl\' (http request function expected)')
 			local GameID = tonumber(args[3]) or game.PlaceId
-			local PlayerID = Players:GetUserIdFromNameAsync(args[1])
+			local PlayerID = tonumber(args[2]) and args[2] or Players:GetUserIdFromNameAsync(args[2])
 			local image_url = HTTP:JSONDecode(request({Url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=".. PlayerID .. "&size=150x150&format=Png&isCircular=false"}).Body).data[1].imageUrl
 			local Servers = {}
 			local cursor = nil
