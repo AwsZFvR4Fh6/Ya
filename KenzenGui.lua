@@ -10,6 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local NetworkClient = game:GetService("NetworkClient")
+local HTTP = game:GetService("HttpService")
 
 local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -259,6 +260,57 @@ do -- [[ Commands ]]
 						end
 					end)
 				end
+			end
+		end},
+		["joinplr"] = {{"Player","GameID"},function(args)
+			local request = (syn and syn.request) or (http and http.request) or (request) or error('invalid attempt to \'getsynassetfromurl\' (http request function expected)')
+			local GameID = tonumber(args[3]) or game.PlaceId
+			local PlayerID = Players:GetUserIdFromNameAsync(args[1])
+			local image_url = HTTP:JSONDecode(request({Url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=".. PlayerID .. "&size=150x150&format=Png&isCircular=false"}).Body).data[1].imageUrl
+			local Servers = {}
+			local cursor = nil
+
+			local index = 0
+			while true do
+				local data = request({
+					Url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Desc&limit=100%s", GameID, cursor and "&cursor=" .. cursor or "")
+				})
+				data = HTTP:JSONDecode(data.Body)
+				index = index + 1
+				cursor = data.nextPageCursor
+				task.spawn(function()
+					for _, server in pairs(data.data) do
+						local server_data = {}
+						for i = 1, #server.playerTokens do
+							table.insert(server_data, {
+								token = server.playerTokens[i],
+								type = "AvatarHeadshot",
+								size = "150x150",
+								requestId = server.id
+							})
+						end
+						local post_request = request({
+							Url = "https://thumbnails.roblox.com/v1/batch",
+							Method = "POST",
+							Body = HTTP:JSONEncode(server_data),
+							Headers = {
+								["Content-Type"] = "application/json"
+							}
+						})
+						local post_data = HTTP:JSONDecode(post_request.Body).data
+						if not post_data then
+							return
+						end
+						if post_data[index] then
+							printconsole("searching server " .. post_data[index].requestId .. "\n")
+						end
+						for _, v in next, post_data do
+							if v.imageUrl == image_url then
+								game:GetService("TeleportService"):TeleportToPlaceInstance(GameID, v.requestId)
+							end
+						end
+					end
+				end)
 			end
 		end},
 		["bangpredict"] = {{"Player"},function(args)
