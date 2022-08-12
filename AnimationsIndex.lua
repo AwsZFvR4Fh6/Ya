@@ -112,7 +112,7 @@ return {
 	["Beathoven"] = {"6891205927","","https://cdn.discordapp.com/attachments/963464681987665960/963604016665878578/Beathoven_Fnf_Kapi_Mod.ogg"},
 	["Tootsie Slide"] = {"6885249918",""},
 	["Take The L"] = {"6885273680",""},
-	["Spookeez2"] = {"6885250777","",""},
+	["Spookeez2"] = {"6885250777","","https://cdn.discordapp.com/attachments/963464681987665960/964502701583007794/Spooky_Month__the_Stars_Ost_-_Scary_Swings.mp3"},
 	["Spooky Idle"] = {"6885250254","","https://cdn.discordapp.com/attachments/963464681987665960/964502701583007794/Spooky_Month__the_Stars_Ost_-_Scary_Swings.mp3"},
 	["Sonic2006"] = {"6885251261",""},
 	["Slick"] = {"6885251680",""},
@@ -262,4 +262,9 @@ return {
 	["FreeFlow"] = {"9287473988","","https://cdn.discordapp.com/attachments/963464681987665960/964778241707614218/Fortnite_-_Free_Flow_Emote_Audio.mp3"},
 	["Koyomi"] = {"9197701141","","https://cdn.discordapp.com/attachments/963464681987665960/964778345441161277/Bakemonogatari_Opening_4_-_Renai_Circulation_RAW.mp3"},
 	["Jumping Jacks"] = {"9228093255","","https://take-me-to.space/vL1QQQp.mp3"},
+	["peanuts"] = {"10152765201","","https://cdn.discordapp.com/attachments/806623634038325318/1007793230567456799/Peanuts-Theme.mp3"},
+	["troll"] = {"10178231876","","https://cdn.discordapp.com/attachments/806623634038325318/1007793208010489956/Epic_Troll_Song_Remix.mp3"},
+	["gangnam style"] = {"10181005270","","https://cdn.discordapp.com/attachments/806623634038325318/1007793242181476452/Gangnam_Style_.mp3"},
+	["griddy"] = {"10384315127","","https://take-me-to.space/96w3Omy.mp3"},
+	["Distraction"] = {"10384569824","","https://cdn.discordapp.com/attachments/806623634038325318/1007793608897875999/distraction_dance_meme_but_its_a_remix.mp3"},
 }
