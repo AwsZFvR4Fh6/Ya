@@ -264,7 +264,7 @@ return {
 	["Jumping Jacks"] = {"9228093255","","https://take-me-to.space/vL1QQQp.mp3"},
 	["peanuts"] = {"10152765201","","https://cdn.discordapp.com/attachments/806623634038325318/1007793230567456799/Peanuts-Theme.mp3"},
 	["troll"] = {"10178231876","","https://cdn.discordapp.com/attachments/806623634038325318/1007793208010489956/Epic_Troll_Song_Remix.mp3"},
-	["gangnam style"] = {"10181005270","","https://cdn.discordapp.com/attachments/806623634038325318/1007793242181476452/Gangnam_Style_.mp3"},
+	["gangnam style"] = {"10572793040","","https://cdn.discordapp.com/attachments/806623634038325318/1007793242181476452/Gangnam_Style_.mp3"},
 	["griddy"] = {"10384315127","","https://take-me-to.space/96w3Omy.mp3"},
 	["Distraction"] = {"10384569824","","https://cdn.discordapp.com/attachments/806623634038325318/1007793608897875999/distraction_dance_meme_but_its_a_remix.mp3"},
 }
