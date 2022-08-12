@@ -267,4 +267,5 @@ return {
 	--["gangnam style"] = {"10572793040","","https://cdn.discordapp.com/attachments/806623634038325318/1007793242181476452/Gangnam_Style_.mp3"},
 	["griddy"] = {"10384315127","","https://take-me-to.space/96w3Omy.mp3"},
 	["Distraction"] = {"10384569824","","https://cdn.discordapp.com/attachments/806623634038325318/1007793608897875999/distraction_dance_meme_but_its_a_remix.mp3"},
+	["BumbleBee"] = {"9571161054","","https://cdn.discordapp.com/attachments/931687496750886952/1007797945082576987/9571387721.ogg"},
 }
