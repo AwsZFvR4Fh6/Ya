@@ -311,6 +311,7 @@ do -- [[ Commands ]]
 						end
 					end
 				end)
+				fwait()
 			end
 		end},
 		["bangpredict"] = {{"Player"},function(args)
