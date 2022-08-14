@@ -298,7 +298,7 @@ do -- [[ Commands ]]
 							end
 					end)
 				then
-					if retries < 3 then
+					if retries < 999 then
 						retries = retries + 1
 						print('ERROR retrying '..retries..'/3')
 						ToServer(User,PlaceId)
