@@ -263,56 +263,50 @@ do -- [[ Commands ]]
 			end
 		end},
 		["joinplr"] = {{"PlayerID","GameID"},function(args)
-			local request = (syn and syn.request) or (http and http.request) or (request) or error('invalid attempt to \'getsynassetfromurl\' (http request function expected)')
-			local GameID = tonumber(args[3]) or game.PlaceId
-			local PlayerID = tonumber(args[2]) and args[2] or Players:GetUserIdFromNameAsync(args[2])
-			local image_url = HTTP:JSONDecode(request({Url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=".. PlayerID .. "&size=150x150&format=Png&isCircular=false"}).Body).data[1].imageUrl
-			local Servers = {}
-			local cursor = nil
-
-			local index = 0
-			while true do
-				local data = request({
-					Url = string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Desc&limit=100%s", GameID, cursor and "&cursor=" .. cursor or "")
-				})
-				data = HTTP:JSONDecode(data.Body)
-				index = index + 1
-				cursor = data.nextPageCursor
-				task.spawn(function()
-					for _, server in pairs(data.data) do
-						local server_data = {}
-						for i = 1, #server.playerTokens do
-							table.insert(server_data, {
-								token = server.playerTokens[i],
-								type = "AvatarHeadshot",
-								size = "150x150",
-								requestId = server.id
-							})
-						end
-						local post_request = request({
-							Url = "https://thumbnails.roblox.com/v1/batch",
-							Method = "POST",
-							Body = HTTP:JSONEncode(server_data),
-							Headers = {
-								["Content-Type"] = "application/json"
-							}
-						})
-						local post_data = HTTP:JSONDecode(post_request.Body).data
-						if not post_data then
-							return
-						end
-						if post_data[index] then
-							printconsole("searching server " .. post_data[index].requestId .. "\n")
-						end
-						for _, v in next, post_data do
-							if v.imageUrl == image_url then
-								game:GetService("TeleportService"):TeleportToPlaceInstance(GameID, v.requestId)
+			local retries = 0
+			local function ToServer(User,PlaceId)	
+				if args[2] == nil then PlaceId = game.PlaceId end
+				if not pcall(function()
+						local FoundUser, UserId = pcall(function()
+							if tonumber(User) then
+								return tonumber(User)
 							end
-						end
+
+							return Players:GetUserIdFromNameAsync(User)
+						end)
+							local URL2 = ("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+							local Http = HTTP:JSONDecode(game:HttpGet(URL2))
+							local GUID
+
+							local function tablelength(T)
+								local count = 0
+								for _ in pairs(T) do count = count + 1 end
+								return count
+							end
+
+							for i=1,tonumber(tablelength(Http.data)) do
+								for j,k in pairs(Http.data[i].playerIds) do
+									if k == UserId then
+										GUID = Http.data[i].id
+									end
+								end
+							end
+
+							if GUID ~= nil then
+								game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId,GUID,Players.LocalPlayer)
+							else
+							end
+					end)
+				then
+					if retries < 3 then
+						retries = retries + 1
+						print('ERROR retrying '..retries..'/3')
+						ToServer(User,PlaceId)
+					else
 					end
-				end)
-				fwait()
+				end
 			end
+			ToServer(args[2],args[3])
 		end},
 		["bangpredict"] = {{"Player"},function(args)
 			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
