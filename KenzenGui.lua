@@ -1,4 +1,4 @@
-local Version = "1.06.2"
+local Version = "1.06.3"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
