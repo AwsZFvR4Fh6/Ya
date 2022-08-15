@@ -116,5 +116,5 @@ for i,v in pairs(Files) do
 		end
 	end)
 	Tool.Parent = game.Players.LocalPlayer.Backpack
-	fwait(0/1)
+	wait(0/1)
 end
