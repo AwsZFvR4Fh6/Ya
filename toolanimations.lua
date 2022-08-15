@@ -97,26 +97,24 @@ end
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua",true))()
 
 for i,v in pairs(Files) do
-	task.spawn(function()
-		local Tool = Instance.new("Tool")
-		Tool.CanBeDropped = false
-		Tool.RequiresHandle = false
-		Tool.Name = not v[3] and v[2] == "" and "(NS) " .. i or i
-		Tool.Parent = game.Players.LocalPlayer.Backpack
-		wait(0/1)
-		local ToolPlaying = false
-		Tool.Activated:Connect(function()
-			if getgenv().RunAnimation then
-				local SoundID = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
-				ToolPlaying = true
-				getgenv().RunAnimation(v[1],SoundID)
-			end
-		end)
-		Tool.Unequipped:Connect(function()
-			if ToolPlaying then
-				ToolPlaying = false
-				getgenv().RunAnimation()
-			end
-		end)
+	local Tool = Instance.new("Tool")
+	Tool.CanBeDropped = false
+	Tool.RequiresHandle = false
+	Tool.Name = not v[3] and v[2] == "" and "(NS) " .. i or i
+	local ToolPlaying = false
+	Tool.Activated:Connect(function()
+		if getgenv().RunAnimation then
+			local SoundID = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
+			ToolPlaying = true
+			getgenv().RunAnimation(v[1],SoundID)
+		end
 	end)
+	Tool.Unequipped:Connect(function()
+		if ToolPlaying then
+			ToolPlaying = false
+			getgenv().RunAnimation()
+		end
+	end)
+	Tool.Parent = game.Players.LocalPlayer.Backpack
+	fwait(0/1)
 end
