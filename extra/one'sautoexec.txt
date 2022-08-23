@@ -528,20 +528,21 @@ else
 			local RunService = game:GetService("RunService")
 			pcall(function() setfflag("NewRunServiceSignals", "true") end) 
 			pcall(function() setfflag("NewRunServiceSignals", true) end) 
+			local VarTick = tick()
 			for i,v in ipairs({RunService.Heartbeat,RunService.Stepped,RunService.RenderStepped,RunService.PreAnimation}) do
-				local Tick = tick()
 				v:Connect(function()
-					Bind:Fire(tick()-Tick)
-					Tick = tick()
+					Bind:Fire(tick()-VarTick)
+					VarTick = tick()
 				end)
 			end
 			local function FastWait(Num)
 				if Num and Num > 0 then
-					local Tick = tick()
+					local Tick = 0
 					repeat
 						Tick += Bind.Event:Wait()
 					until Tick >= Num
 					return Tick
+					
 				else
 					return Bind.Event:Wait()
 				end
