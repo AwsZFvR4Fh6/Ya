@@ -1,4 +1,4 @@
-local Version = "1.071"
+local Version = "1.072"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -55,16 +55,6 @@ if not fwait and not Event then
 	Event = Bind.Event
 end
 
-local function PredictPos(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
-	local DIST = (Pos1 - (_Pos3 or Pos2)).Magnitude + (DISTOff or 0)
-	local TOA = (DIST / Velocity1.Magnitude) + (TOAOff or 0)
-	local POS = Pos2 + (Velocity2 * TOA)
-	return POS
-end
-
-local function FixYAxis(Velocity)
-	return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
-end
 
 do -- [[ Commands ]]
 	local function ShortName(Name)
@@ -79,9 +69,26 @@ do -- [[ Commands ]]
 				return plr
 			end
 		end
+		for _,plr in pairs(workspace:GetPlayers()) do
+			if plr ~= Player and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) then
+				return plr
+			end
+		end
 	end
 	local function check4property(obj, prop)
 		return ({pcall(function()if(typeof(obj[prop])=="Instance")then error()end end)})[1]
+	end
+	
+
+	local function PredictPos(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
+		local DIST = (Pos1 - (_Pos3 or Pos2)).Magnitude + (DISTOff or 0)
+		local TOA = (DIST / Velocity1.Magnitude) + (TOAOff or 0)
+		local POS = Pos2 + (Velocity2 * TOA)
+		return POS
+	end
+
+	local function FixYAxis(Velocity)
+		return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
 	end
 
 	local Commands,Visible,RealChar
@@ -416,7 +423,7 @@ do -- [[ Commands ]]
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-					
+
 
 					Player.CharacterAdded:Connect(function()
 						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
