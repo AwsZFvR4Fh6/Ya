@@ -1,4 +1,4 @@
-local Version = "1.073"
+local Version = "1.074"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -78,7 +78,7 @@ do -- [[ Commands ]]
 	local function check4property(obj, prop)
 		return ({pcall(function()if(typeof(obj[prop])=="Instance")then error()end end)})[1]
 	end
-	
+
 
 	local function PredictPos(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
 		local DIST = (Pos1 - (_Pos3 or Pos2)).Magnitude + (DISTOff or 0)
@@ -432,7 +432,7 @@ do -- [[ Commands ]]
 
 					Storage["Banging"] = Event:Connect(function()
 						if Player.Character:FindFirstChild("HumanoidRootPart") and copyplr and copyplr.Character then
-							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue():GetValue()/1000)) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,0,1)
+							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()/1000)) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,0,1)
 							Player.Character.HumanoidRootPart.Position = LastPos	
 						else
 							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
