@@ -1,4 +1,4 @@
-local Version = "1.075"
+local Version = "1.076"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -259,7 +259,7 @@ do -- [[ Commands ]]
 					Storage["Headsit"] = Event:Connect(function()
 						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass('Humanoid').Sit == true and copyplr and copyplr.Character then
 							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+GetPing(1000))) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,1.6,1.15)
-							Player.Character.HumanoidRootPart.Position = LastPos	
+							Player.Character.HumanoidRootPart.CFrame = LastPos	
 						else
 							BodyVelocity:Destroy()
 							if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
@@ -436,7 +436,7 @@ do -- [[ Commands ]]
 					Storage["Banging"] = Event:Connect(function()
 						if Player.Character:FindFirstChild("HumanoidRootPart") and copyplr and copyplr.Character then
 							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+GetPing(1000))) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,0,1)
-							Player.Character.HumanoidRootPart.Position = LastPos	
+							Player.Character.HumanoidRootPart.CFrame = LastPos	
 						else
 							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 							if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
