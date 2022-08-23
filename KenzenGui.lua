@@ -1,4 +1,4 @@
-local Version = "1.072"
+local Version = "1.073"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -69,7 +69,7 @@ do -- [[ Commands ]]
 				return plr
 			end
 		end
-		for _,plr in pairs(workspace:GetPlayers()) do
+		for _,plr in pairs(workspace:GetChildren()) do
 			if plr ~= Player and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) then
 				return plr
 			end
