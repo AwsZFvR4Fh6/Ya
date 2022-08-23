@@ -1,4 +1,4 @@
-local Version = "1.06.3"
+local Version = "1.07"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -55,6 +55,16 @@ if not fwait and not Event then
 	Event = Bind.Event
 end
 
+local function PredictPos(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
+	local DIST = (Pos1 - (_Pos3 or Pos2)).Magnitude + (DISTOff or 0)
+	local TOA = (DIST / Velocity1.Magnitude) + (TOAOff or 0)
+	local POS = Pos2 + (Velocity2 * TOA)
+	return POS
+end
+
+local function FixYAxis(Velocity)
+	return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
+end
 
 do -- [[ Commands ]]
 	local function ShortName(Name)
@@ -191,7 +201,7 @@ do -- [[ Commands ]]
 				end
 			end
 		end},
-		["headsitpredict"] = {{"Player"},function(args)
+		["headsitpredict2"] = {{"Player"},function(args)
 			if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
 			if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
 			if args[2] then
@@ -219,13 +229,43 @@ do -- [[ Commands ]]
 				end
 			end
 		end},
-		["bang"] = {{"Player"},function(args)
-			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-			if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
+		["headsitpredict"] = {{"Player"},function(args)
+			if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
+			if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					local bang
+					local speed = 0
+					local LastPos
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					Storage["SitRunning"] = copyplr.Character.Humanoid.Running:Connect(function(sp)
+						speed = sp
+					end)
+
+					Storage["Headsit"] = Event:Connect(function()
+						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass('Humanoid').Sit == true and copyplr and copyplr.Character then
+							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue():GetValue()/1000)) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,0,1)
+							Player.Character.HumanoidRootPart.Position = LastPos	
+						else
+							BodyVelocity:Destroy()
+							if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
+							if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
+						end
+					end)
+				end
+			end
+		end},
+		["bang"] = {{"Player"},function(args)
+			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
+			if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
+			if Storage["BangAnim"] then Storage["BangAnim"]:Stop() Storage["BangAnim"] = nil end
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
 					local bangAnim = Instance.new("Animation") do
 						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 							bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -233,9 +273,9 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						bang = Player.Character.Humanoid:LoadAnimation(bangAnim) do
-							bang:Play(.1, 1, 1)
-							bang:AdjustSpeed(5)
+						Storage["BangAnim"] = Player.Character.Humanoid:LoadAnimation(bangAnim) do
+							Storage["BangAnim"]:Play(.1, 1, 1)
+							Storage["BangAnim"]:AdjustSpeed(5)
 						end
 					end
 
@@ -246,7 +286,6 @@ do -- [[ Commands ]]
 					Player.CharacterAdded:Connect(function()
 						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-						bang:Stop()
 					end)
 
 					Storage["Banging"] = Event:Connect(function()
@@ -256,7 +295,7 @@ do -- [[ Commands ]]
 							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 							if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
 							BodyVelocity:Destroy()
-							bang:Stop()
+							Storage["BangAnim"]:Stop()
 						end
 					end)
 				end
@@ -274,28 +313,28 @@ do -- [[ Commands ]]
 
 							return Players:GetUserIdFromNameAsync(User)
 						end)
-							local URL2 = ("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
-							local Http = HTTP:JSONDecode(game:HttpGet(URL2))
-							local GUID
+						local URL2 = ("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+						local Http = HTTP:JSONDecode(game:HttpGet(URL2))
+						local GUID
 
-							local function tablelength(T)
-								local count = 0
-								for _ in pairs(T) do count = count + 1 end
-								return count
-							end
+						local function tablelength(T)
+							local count = 0
+							for _ in pairs(T) do count = count + 1 end
+							return count
+						end
 
-							for i=1,tonumber(tablelength(Http.data)) do
-								for j,k in pairs(Http.data[i].playerIds) do
-									if k == UserId then
-										GUID = Http.data[i].id
-									end
+						for i=1,tonumber(tablelength(Http.data)) do
+							for j,k in pairs(Http.data[i].playerIds) do
+								if k == UserId then
+									GUID = Http.data[i].id
 								end
 							end
+						end
 
-							if GUID ~= nil then
-								game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId,GUID,Players.LocalPlayer)
-							else
-							end
+						if GUID ~= nil then
+							game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId,GUID,Players.LocalPlayer)
+						else
+						end
 					end)
 				then
 					if retries < 999 then
@@ -308,14 +347,14 @@ do -- [[ Commands ]]
 			end
 			ToServer(args[2],args[3])
 		end},
-		["bangpredict"] = {{"Player"},function(args)
+		["bangpredict2"] = {{"Player"},function(args)
 			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 			if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
+			if Storage["BangAnim"] then Storage["BangAnim"]:Stop() Storage["BangAnim"] = nil end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
 					local speed = 0
-					local bang
 					local bangAnim = Instance.new("Animation") do
 						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 							bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -323,9 +362,9 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						bang = Player.Character.Humanoid:LoadAnimation(bangAnim) do
-							bang:Play(.1, 1, 1)
-							bang:AdjustSpeed(5)
+						Storage["BangAnim"] = Player.Character.Humanoid:LoadAnimation(bangAnim) do
+							Storage["BangAnim"]:Play(.1, 1, 1)
+							Storage["BangAnim"]:AdjustSpeed(5)
 						end
 					end
 
@@ -333,14 +372,10 @@ do -- [[ Commands ]]
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 
-					Storage["BangRunning"] = copyplr.Character.Humanoid.Running:Connect(function(sp)
-						speed = sp
-					end)
 
 					Player.CharacterAdded:Connect(function()
 						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-						bang:Stop()
 					end)
 
 					Storage["Banging"] = Event:Connect(function()
@@ -350,7 +385,53 @@ do -- [[ Commands ]]
 							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
 							if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
 							BodyVelocity:Destroy()
-							bang:Stop()
+							Storage["BangAnim"]:Stop()
+						end
+					end)
+				end
+			end
+		end},
+		["bangpredict"] = {{"Player"},function(args)
+			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
+			if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
+			if Storage["BangAnim"] then Storage["BangAnim"]:Stop() Storage["BangAnim"] = nil end
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					local speed = 0
+					local LastPos
+					local bangAnim = Instance.new("Animation") do
+						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+							bangAnim.AnimationId = "rbxassetid://5918726674"
+						else
+							bangAnim.AnimationId = "rbxassetid://148840371"
+						end
+
+						Storage["BangAnim"] = Player.Character.Humanoid:LoadAnimation(bangAnim) do
+							Storage["BangAnim"]:Play(.1, 1, 1)
+							Storage["BangAnim"]:AdjustSpeed(5)
+						end
+					end
+
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+					
+
+					Player.CharacterAdded:Connect(function()
+						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
+						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
+					end)
+
+					Storage["Banging"] = Event:Connect(function()
+						if Player.Character:FindFirstChild("HumanoidRootPart") and copyplr and copyplr.Character then
+							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue():GetValue()/1000)) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,0,1)
+							Player.Character.HumanoidRootPart.Position = LastPos	
+						else
+							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
+							if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
+							BodyVelocity:Destroy()
+							Storage["BangAnim"]:Stop()
 						end
 					end)
 				end
