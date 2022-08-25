@@ -1,4 +1,4 @@
-local Version = "1.078"
+local Version = "1.079"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -972,7 +972,7 @@ do -- [[ Commands ]]
 		end},
 		["chatserverinfo"] = {{},function()
 			if Global.ServerInfo then
-				fwait(GetPing(750))
+				task.wait(GetPing(750))
 				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country, "All")
 			end
 		end},
