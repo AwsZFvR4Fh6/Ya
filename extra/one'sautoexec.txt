@@ -12,13 +12,14 @@ local AdvSettings = {
 	DisableNotifications = false, -- Toggles Onscreen Notifictions
 	WebsocketChat = false, -- Toggles Websocket Chat
 	DisablesPurchasePrompts = true,
-	AntiAFK = true, -- Prevents user from being AFK kicked
+	AntiAFK = false, -- Prevents user from being AFK kicked
 	AntiClientKick = false, -- Prevents user from being AFK kicked
 	SaveObjects = true, -- Allows you to use SaveInstance(obj,name) to save objects
 	AddGlobal = true,
 	FastWait = true, -- Adds fwait()
 	LayeredAntiCrash = true,
 	FixedPlayerChatFunction = true,
+	GetServerRegion = true,
 }
 
 local GUISettings = {
@@ -142,12 +143,12 @@ else
 				local loadreturn = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))()
 				local loadreturntime = tick() - loadreturn
 				printconsole(tostring("GUI loaded in " .. loadreturntime))
-
+--[[
 				notify({
 					Text = "GUI loaded in " .. loadreturntime,
 					Duration = 5
 				})
-
+]]
 			else
 				loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenScript.lua",true))()
 			end
@@ -453,6 +454,7 @@ else
 
 			local function Chat(Message)
 				if getgenv.ToggleChatFix then
+					print(1)
 					local Text = ChatBar.Text
 
 					ChatBar:SetTextFromInput(Message)
@@ -542,7 +544,7 @@ else
 						Tick += Bind.Event:Wait()
 					until Tick >= Num
 					return Tick
-					
+
 				else
 					return Bind.Event:Wait()
 				end
@@ -551,18 +553,46 @@ else
 			getgenv.Event = Bind.Event
 		end)
 	end
+	
+	if AdvSettings.GetServerRegion then
+		task.spawn(function()
+			local peer,replicator = game:GetService("NetworkClient").ConnectionAccepted:Wait()
+			repeat task.wait(0/1) until notify
+			local data = game:GetService("HttpService"):JSONDecode(game:HttpGet("http://ip-api.com/json/" .. peer:sub(1, peer:find("|")-1)))
+			--print("Country: " .. data.country)
+			--print("Region: " .. data.regionName)
+			--print("City: " .. data.city)
+			local ServerInfo = {
+				Country = data.country,
+				CountryCode = data.countrycode,
+				State = data.regionName,
+				StateCode = data.region,
+				City = data.city,
+				ZIP = data.zip,
+				Latitude = data.lat,
+				Longitude = data.lon,
+				TimeZone = data.timezone,
+				IP = data.query,
+			}
+			notify({
+				Text = "Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country,
+				Duration = 10
+			})
+			getgenv.ServerInfo = ServerInfo
+		end)
+	end
 
 	notify = AdvSettings.DisableNotifications and function() end or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua",true))()
 
 	local loadedtime = tick() - loadtime
 
 	printconsole(tostring("Autoexec loaded in " .. loadedtime))
-
+--[[
 	notify({
 		Text = "Autoexec loaded in " .. loadedtime,
 		Duration = 5
 	})
-
+]]
 	isloaded()
 
 	printconsole(tostring("Game loaded in " .. tick() - loadtime))
