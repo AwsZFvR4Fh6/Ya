@@ -1,4 +1,4 @@
-local Version = "1.077"
+local Version = "1.078"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -32,8 +32,8 @@ if not fwait and not Event then
 	end
 
 	local Bind = Instance.new("BindableEvent")
+	local Tick = tick()
 	for i,v in ipairs({RunService.Heartbeat,RunService.Stepped,RunService.RenderStepped,RunService.PreAnimation}) do
-		local Tick = tick()
 		v:Connect(function()
 			Bind:Fire(tick()-Tick)
 			Tick = tick()
@@ -972,6 +972,7 @@ do -- [[ Commands ]]
 		end},
 		["chatserverinfo"] = {{},function()
 			if Global.ServerInfo then
+				fwait(GetPing(750))
 				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country, "All")
 			end
 		end},
