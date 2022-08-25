@@ -1,4 +1,4 @@
-local Version = "1.076"
+local Version = "1.077"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -965,12 +965,21 @@ do -- [[ Commands ]]
 			local psr = tonumber(args[2]) or 30
 			setfflag("S2PhysicsSenderRate", psr)
 		end},
+		["printserverinfo"] = {{},function()
+			if Global.ServerInfo then
+				printconsole("Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country)		
+			end
+		end},
+		["chatserverinfo"] = {{},function()
+			if Global.ServerInfo then
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country, "All")
+			end
+		end},
 		["boothprint"] = {{},function()
 			for i,v in pairs(workspace["Booth Blocks"]:GetChildren()) do
 				print(v:WaitForChild("Board"):WaitForChild("BoothGui"):WaitForChild("BoothFrame"):WaitForChild("Description").Text)
 			end
-		end,
-		},
+		end},
 		["aimkid"] = {{},function(args)
 			GUI.TextBox.Frame.Frame.Visible = not GUI.TextBox.Frame.Frame.Visible
 		end},
