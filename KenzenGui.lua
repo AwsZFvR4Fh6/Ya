@@ -1,4 +1,4 @@
-local Version = "1.08"
+local Version = "1.085"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -253,18 +253,136 @@ do -- [[ Commands ]]
 				v:WaitForChild("Korblox Deathspeaker Right Leg"):Destroy()
 			end)
 		end},
+		["hjobsit"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					CFrameAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["hjobsitpredict2"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					OldPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["hjobsitpredict"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["sniffsit"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					CFrameAttach(copyplr,CFrame.new(0,-2.3,1.05))
+
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["sniffsitpredict2"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					OldPredictionAttach(copyplr,CFrame.new(0,-2.3,1.05))
+
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["sniffsitpredict"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,1.05))
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
 		["headsit"] = {{"Player"},function(args)
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
 					CFrameAttach(copyplr,CFrame.new(0,1.6,1.15))
-					
+
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					
+
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-					
+
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 						if not Seated then
 							BodyVelocity:Destroy()
@@ -324,9 +442,9 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						Player.Character.Humanoid:LoadAnimation(bangAnim); do
-							Storage["BangAnim"]:Play(.1, 1, 1)
-							Storage["BangAnim"]:AdjustSpeed(5)
+						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
+							Anim:Play(.1, 1, 1)
+							Anim:AdjustSpeed(5)
 						end
 					end
 
@@ -394,9 +512,9 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						Player.Character.Humanoid:LoadAnimation(bangAnim); do
-							Storage["BangAnim"]:Play(.1, 1, 1)
-							Storage["BangAnim"]:AdjustSpeed(5)
+						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
+							Anim:Play(.1, 1, 1)
+							Anim:AdjustSpeed(5)
 						end
 					end
 
@@ -418,9 +536,9 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						Player.Character.Humanoid:LoadAnimation(bangAnim) do
-							Storage["BangAnim"]:Play(.1, 1, 1)
-							Storage["BangAnim"]:AdjustSpeed(5)
+						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim) do
+							Anim:Play(.1, 1, 1)
+							Anim:AdjustSpeed(5)
 						end
 					end
 
