@@ -1,4 +1,4 @@
-local Version = "1.079"
+local Version = "1.08"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -78,7 +78,7 @@ do -- [[ Commands ]]
 	local function check4property(obj, prop)
 		return ({pcall(function()if(typeof(obj[prop])=="Instance")then error()end end)})[1]
 	end
-	
+
 	local function GetPing(Divider)
 		return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()/Divider
 	end
@@ -92,6 +92,70 @@ do -- [[ Commands ]]
 
 	local function FixYAxis(Velocity)
 		return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
+	end
+	
+	local function ClearAttachConnections()
+		if Storage["AttachConnections"] then
+			for i,v in pairs(Storage["AttachConnections"]) do
+				v:Disconnect()
+			end
+		end
+		Storage["AttachConnections"] = {}
+	end
+	
+	local function BoopedPredictionAttach(ToPlr,CF)
+		ClearAttachConnections()
+		table.insert(Storage["AttachConnections"],Event:Connect(function()
+			if Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
+				Player.Character.HumanoidRootPart.CFrame = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), ToPlr.Character.HumanoidRootPart.Position, FixYAxis(ToPlr.Character.HumanoidRootPart.Velocity), nil, .4+GetPing(1000))) * (ToPlr.Character.HumanoidRootPart.CFrame-ToPlr.Character.HumanoidRootPart.Position) * CF
+			else
+				if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+					Player.Character.HumanoidRootPart.BodyVelocity:Destroy()
+				end
+				ClearAttachConnections()
+			end
+		end))
+		table.insert(Storage["AttachConnections"],Player.CharacterAdded:Connect(function()
+			ClearAttachConnections()
+		end))
+	end
+	
+	local function OldPredictionAttach(ToPlr,CF)
+		ClearAttachConnections()
+		local speed = 0
+		ToPlr.Character.Humanoid.Running:Connect(function(sp)
+			speed = sp
+		end)
+		table.insert(Storage["AttachConnections"],Event:Connect(function()
+			if Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
+				Player.Character.HumanoidRootPart.CFrame = CFrame.new(ToPlr.Character.HumanoidRootPart.Position + (ToPlr.Character.Humanoid.MoveDirection * ((speed/16)+GetPing(10)))) * (ToPlr.Character.HumanoidRootPart.CFrame-ToPlr.Character.HumanoidRootPart.Position) * CF
+			else
+				if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+					Player.Character.HumanoidRootPart.BodyVelocity:Destroy()
+				end
+				ClearAttachConnections()
+			end
+		end))
+		table.insert(Storage["AttachConnections"],Player.CharacterAdded:Connect(function()
+			ClearAttachConnections()
+		end))
+	end
+	
+	local function CFrameAttach(ToPlr,CF)
+		ClearAttachConnections()
+		table.insert(Storage["AttachConnections"],Event:Connect(function()
+			if Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
+				Player.Character.HumanoidRootPart.CFrame = ToPlr.Character.HumanoidRootPart.CFrame * CF
+			else
+				if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+					Player.Character.HumanoidRootPart.BodyVelocity:Destroy()
+				end
+				ClearAttachConnections()
+			end
+		end))
+		table.insert(Storage["AttachConnections"],Player.CharacterAdded:Connect(function()
+			ClearAttachConnections()
+		end))
 	end
 
 	local Commands,Visible,RealChar
@@ -190,92 +254,69 @@ do -- [[ Commands ]]
 			end)
 		end},
 		["headsit"] = {{"Player"},function(args)
-			if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
-			if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
+					CFrameAttach(copyplr,CFrame.new(0,1.6,1.15))
+					
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+					
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-					Storage["Headsit"] = Event:Connect(function()
-						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass('Humanoid').Sit == true and copyplr and copyplr.Character then
-							Player.Character.HumanoidRootPart.CFrame = copyplr.Character.HumanoidRootPart.CFrame *CFrame.new(0,1.6,1.15)
-						else
+					
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
 							BodyVelocity:Destroy()
-							if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
-							if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
+							ClearAttachConnections()
 						end
-					end)
+					end))
 				end
 			end
 		end},
 		["headsitpredict2"] = {{"Player"},function(args)
-			if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
-			if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					local speed = 0
+					OldPredictionAttach(copyplr,CFrame.new(0,1.6,1.15))
+					
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-
-					Storage["SitRunning"] = copyplr.Character.Humanoid.Running:Connect(function(sp)
-						speed = sp
-					end)
-
-					Storage["Headsit"] = Event:Connect(function()
-						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass('Humanoid').Sit == true and copyplr and copyplr.Character then
-							Player.Character.HumanoidRootPart.CFrame = CFrame.new(copyplr.Character.HumanoidRootPart.Position + (copyplr.Character.Humanoid.MoveDirection * ((speed/16)+GetPing(10)))) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,1.6,1.15)
-						else
+					
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
 							BodyVelocity:Destroy()
-							if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
-							if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
+							ClearAttachConnections()
 						end
-					end)
+					end))
 				end
 			end
 		end},
 		["headsitpredict"] = {{"Player"},function(args)
-			if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
-			if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					local speed = 0
-					local LastPos
+					BoopedPredictionAttach(copyplr,CFrame.new(0,1.6,1.15))
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-
-					Storage["SitRunning"] = copyplr.Character.Humanoid.Running:Connect(function(sp)
-						speed = sp
-					end)
-
-					Storage["Headsit"] = Event:Connect(function()
-						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character:FindFirstChildOfClass('Humanoid').Sit == true and copyplr and copyplr.Character then
-							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+GetPing(1000))) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,1.6,1.15)
-							Player.Character.HumanoidRootPart.CFrame = LastPos	
-						else
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
 							BodyVelocity:Destroy()
-							if Storage["Headsit"] then Storage["Headsit"]:Disconnect() end
-							if Storage["SitRunning"] then Storage["SitRunning"]:Disconnect() end
+							ClearAttachConnections()
 						end
-					end)
+					end))
 				end
 			end
 		end},
 		["bang"] = {{"Player"},function(args)
-			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-			if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-			if Storage["BangAnim"] then Storage["BangAnim"]:Stop() Storage["BangAnim"] = nil end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
+					CFrameAttach(copyplr,CFrame.new(0,0,1))
 					local bangAnim = Instance.new("Animation") do
 						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 							bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -283,7 +324,7 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						Storage["BangAnim"] = Player.Character.Humanoid:LoadAnimation(bangAnim) do
+						Player.Character.Humanoid:LoadAnimation(bangAnim); do
 							Storage["BangAnim"]:Play(.1, 1, 1)
 							Storage["BangAnim"]:AdjustSpeed(5)
 						end
@@ -292,22 +333,6 @@ do -- [[ Commands ]]
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-
-					Player.CharacterAdded:Connect(function()
-						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-					end)
-
-					Storage["Banging"] = Event:Connect(function()
-						if Player.Character:FindFirstChild("HumanoidRootPart") and copyplr and copyplr.Character then
-							Player.Character.HumanoidRootPart.CFrame = copyplr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,1)
-						else
-							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-							if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-							BodyVelocity:Destroy()
-							Storage["BangAnim"]:Stop()
-						end
-					end)
 				end
 			end
 		end},
@@ -358,13 +383,10 @@ do -- [[ Commands ]]
 			ToServer(args[2],args[3])
 		end},
 		["bangpredict2"] = {{"Player"},function(args)
-			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-			if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-			if Storage["BangAnim"] then Storage["BangAnim"]:Stop() Storage["BangAnim"] = nil end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					local speed = 0
+					OldPredictionAttach(copyplr,CFrame.new(0,0,1))
 					local bangAnim = Instance.new("Animation") do
 						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 							bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -372,7 +394,7 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						Storage["BangAnim"] = Player.Character.Humanoid:LoadAnimation(bangAnim) do
+						Player.Character.Humanoid:LoadAnimation(bangAnim); do
 							Storage["BangAnim"]:Play(.1, 1, 1)
 							Storage["BangAnim"]:AdjustSpeed(5)
 						end
@@ -381,35 +403,14 @@ do -- [[ Commands ]]
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-
-
-					Player.CharacterAdded:Connect(function()
-						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-					end)
-
-					Storage["Banging"] = Event:Connect(function()
-						if Player.Character:FindFirstChild("HumanoidRootPart") and copyplr and copyplr.Character then
-							Player.Character.HumanoidRootPart.CFrame = CFrame.new(copyplr.Character.HumanoidRootPart.Position + (copyplr.Character.Humanoid.MoveDirection * ((speed/16)+GetPing(10)))) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,0,1)
-						else
-							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-							if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-							BodyVelocity:Destroy()
-							Storage["BangAnim"]:Stop()
-						end
-					end)
 				end
 			end
 		end},
 		["bangpredict"] = {{"Player"},function(args)
-			if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-			if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-			if Storage["BangAnim"] then Storage["BangAnim"]:Stop() Storage["BangAnim"] = nil end
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					local speed = 0
-					local LastPos
+					BoopedPredictionAttach(copyplr,CFrame.new(0,0,1))
 					local bangAnim = Instance.new("Animation") do
 						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 							bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -417,7 +418,7 @@ do -- [[ Commands ]]
 							bangAnim.AnimationId = "rbxassetid://148840371"
 						end
 
-						Storage["BangAnim"] = Player.Character.Humanoid:LoadAnimation(bangAnim) do
+						Player.Character.Humanoid:LoadAnimation(bangAnim) do
 							Storage["BangAnim"]:Play(.1, 1, 1)
 							Storage["BangAnim"]:AdjustSpeed(5)
 						end
@@ -426,24 +427,6 @@ do -- [[ Commands ]]
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart
 					end
-
-
-					Player.CharacterAdded:Connect(function()
-						if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-						if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-					end)
-
-					Storage["Banging"] = Event:Connect(function()
-						if Player.Character:FindFirstChild("HumanoidRootPart") and copyplr and copyplr.Character then
-							LastPos = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), copyplr.Character.HumanoidRootPart.Position, FixYAxis(copyplr.Character.HumanoidRootPart.Velocity), nil, .4+GetPing(1000))) * (copyplr.Character.HumanoidRootPart.CFrame-copyplr.Character.HumanoidRootPart.Position) * CFrame.new(0,0,1)
-							Player.Character.HumanoidRootPart.CFrame = LastPos	
-						else
-							if Storage["Banging"] then Storage["Banging"]:Disconnect() end
-							if Storage["BangRunning"] then Storage["BangRunning"]:Disconnect() end
-							BodyVelocity:Destroy()
-							Storage["BangAnim"]:Stop()
-						end
-					end)
 				end
 			end
 		end},
@@ -835,145 +818,19 @@ do -- [[ Commands ]]
 				until not Root or not TRoot or not Root.Parent or not TRoot.Parent
 			end
 		end},
-		["kill2"] = {{"Player"},function(args)
-			local Plr = ShortName(args[2])
-			local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
-			if Plr and tool then
-				local function AttachTool(RightArm,Tool,CF)
-					for i,v in pairs(Tool:GetDescendants()) do
-						if not (v:IsA("BasePart") or v:IsA("Mesh") or v:IsA("SpecialMesh")) then
-							v:Destroy()
-						end
-					end
-
-					local Grip = Instance.new("Weld"); do
-						Grip.Name = "RightGrip"
-						Grip.Part0 = RightArm
-						Grip.Part1 = Tool.Handle
-						Grip.C0 = CF
-						Grip.C1 = Tool.Grip
-						Grip.Parent = RightArm
-					end
-
-					Tool.Parent = Player.Backpack
-					Tool.Parent = Player.Character.Humanoid
-					Tool.Parent = Player.Character
-					Tool.Handle:BreakJoints()
-					Tool.Parent = Player.Backpack
-					Tool.Parent = Player.Character.Humanoid
-
-					Grip = Instance.new("Weld"); do
-						Grip.Name = "RightGrip"
-						Grip.Part0 = RightArm
-						Grip.Part1 = Tool.Handle
-						Grip.C0 = CF
-						Grip.C1 = Tool.Grip
-						Grip.Parent = RightArm
-					end
-
-					return Grip
-				end
-
-				local Target = Plr.Character
-				local origpos = Player.Character.HumanoidRootPart.CFrame
-				Player.Character.HumanoidRootPart.CFrame *= CFrame.new(0,math.huge,0)--= CFrame.new(8, 12, -25)
-				task.wait(0.2)
-				workspace.FallenPartsDestroyHeight = 0/0
-				tool.Handle.CanCollide = false
-
-				local attWeld = AttachTool(Player.Character:FindFirstChild("Right Hand") or Player.Character:FindFirstChild("RightArm"),tool,CFrame.new(-1,-6,0) * CFrame.Angles(math.rad(-90),0,0))
-
-				Target.Humanoid.PlatformStand = true
-				for i=1,20 do
-					firetouchinterest(Target.HumanoidRootPart,tool.Handle,0)
-				end
-
-
-				--task.wait(.2)
-				--Player.Character.HumanoidRootPart.CFrame *= CFrame.new(0,math.huge,0)
-
-				task.wait(1)
-				attWeld:Destroy()
-				task.wait(.1)
-				Player.Character:MoveTo(origpos.Position)
-			end
-		end},
-		["plazakick"] = {{"Player"},function(args)
-			local Plr = ShortName(args[2])
-			local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
-			if Plr and tool then
-				local function AttachTool(RightArm,Tool,CF)
-					for i,v in pairs(Tool:GetDescendants()) do
-						if not (v:IsA("BasePart") or v:IsA("Mesh") or v:IsA("SpecialMesh")) then
-							v:Destroy()
-						end
-					end
-
-					local Grip = Instance.new("Weld"); do
-						Grip.Name = "RightGrip"
-						Grip.Part0 = RightArm
-						Grip.Part1 = Tool.Handle
-						Grip.C0 = CF
-						Grip.C1 = Tool.Grip
-						Grip.Parent = RightArm
-					end
-
-					Tool.Parent = Player.Backpack
-					Tool.Parent = Player.Character.Humanoid
-					Tool.Parent = Player.Character
-					Tool.Handle:BreakJoints()
-					Tool.Parent = Player.Backpack
-					Tool.Parent = Player.Character.Humanoid
-
-					Grip = Instance.new("Weld"); do
-						Grip.Name = "RightGrip"
-						Grip.Part0 = RightArm
-						Grip.Part1 = Tool.Handle
-						Grip.C0 = CF
-						Grip.C1 = Tool.Grip
-						Grip.Parent = RightArm
-					end
-
-					return Grip
-				end
-
-				local Target = Plr.Character
-				local origpos = Player.Character.HumanoidRootPart.CFrame
-				Player.Character.HumanoidRootPart.CFrame = CFrame.new(8, 12, -25)
-				task.wait(0.2)
-				workspace.FallenPartsDestroyHeight = 0/0
-				tool.Handle.CanCollide = false
-
-				local attWeld = AttachTool(Player.Character:FindFirstChild("Right Hand") or Player.Character:FindFirstChild("RightArm"),tool,CFrame.new(-1,-6,0) * CFrame.Angles(math.rad(-90),0,0))
-
-				Target.Humanoid.PlatformStand = true
-				for i=1,20 do
-					firetouchinterest(Target.HumanoidRootPart,tool.Handle,0)
-				end
-
-
-				--task.wait(.2)
-				--Player.Character.HumanoidRootPart.CFrame *= CFrame.new(0,math.huge,0)
-
-				task.wait(1)
-				attWeld:Destroy()
-				task.wait(.1)
-				Player.Character:MoveTo(origpos.Position)
-			end
-		end},
 		["psr"] = {{"Number"},function(args)
 			local psr = tonumber(args[2]) or 30
 			setfflag("S2PhysicsSenderRate", psr)
 		end},
 		["printserverinfo"] = {{},function()
 			if Global.ServerInfo then
-				printconsole("Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country)		
+				printconsole("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country)		
 			end
 		end},
 		["chatserverinfo"] = {{},function()
 			if Global.ServerInfo then
 				task.wait(GetPing(750))
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country, "All")
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country, "All")
 			end
 		end},
 		["boothprint"] = {{},function()
