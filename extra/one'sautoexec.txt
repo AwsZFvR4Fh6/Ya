@@ -58,7 +58,7 @@ else
 	
 	if Settings["ToggleGUI"] then task.spawn(function()
 		Global.AidKid = Settings["GUISettings"]
-		printconsole(tostring("GUI loaded in " .. math.abs(tick() - loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true)))()))
+		printconsole(tostring("GUI loaded in " .. math.abs(tick() - loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))())))
 	end) end
 	
 	if Settings["Backrooms"] then task.spawn(function()
