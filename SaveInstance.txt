@@ -594,7 +594,7 @@ function func_SPlace(name)
 end
 
 if useGetgenv and getgenv then
-	getgenv().SaveInstance = func_SInstance
+	getgenv().saveobject = func_SInstance
 	getgenv().SavePlace = func_SPlace
 else
 	_G.SInstance = func_SInstance
