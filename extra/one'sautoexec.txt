@@ -33,13 +33,13 @@ else
 	local printconsole = printconsole or print
 	local request = (syn and syn.request) or (http and http.request) or (request)
 	local notify,Event
-	
+
 	-- :: Functions
-	
+
 	local function IsGameLoaded()
 		if not game:IsLoaded("Workspace") then game.Loaded:Wait() end
 	end
-	
+
 	local function GetLinkedAsset(Link)
 		local Name = string.split(Link,"/"); Name = Name[#Name]
 		local File
@@ -53,14 +53,14 @@ else
 		end
 		return File
 	end
-	
+
 	-- :: Code
-	
+
 	if Settings["ToggleGUI"] then task.spawn(function()
-		Global.AidKid = Settings["GUISettings"]
-		printconsole(tostring("GUI loaded in " .. math.abs(tick() - loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))())))
-	end) end
-	
+			Global.AidKid = Settings["GUISettings"]
+			printconsole(tostring("GUI loaded in " .. math.abs(tick() - loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))())))
+		end) end
+
 	if Settings["Backrooms"] then task.spawn(function()
 			IsGameLoaded()
 			local Player = game:GetService("Players").LocalPlayer
@@ -79,7 +79,7 @@ else
 				end)
 			end
 		end) end
-	
+
 	if Settings["FastLoad"] then task.spawn(function()
 			local BlackFrame = game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500); do
 				BlackFrame.BackgroundTransparency = 1
@@ -105,7 +105,7 @@ else
 			end
 			IsGameLoaded(); Part:Destroy()
 		end) end
-	
+
 	if Settings["KickGui"] then task.spawn(function()
 			game:GetService("CoreGui"):WaitForChild("RobloxPromptGui",500):WaitForChild("promptOverlay",500).ChildAdded:Connect(function(v)
 				if v.Name == "ErrorPrompt" then
@@ -154,7 +154,7 @@ else
 				end
 			end)
 		end) end
-	
+
 	if Settings["ReplaceWait"] then task.spawn(function()
 			Global.wait = function(Time)
 				if Time then
@@ -164,10 +164,10 @@ else
 				end
 			end
 		end) end
-	
+
 	if Settings["ExtraGlobals"] then task.spawn(function()
 			task.spawn(function() IsGameLoaded() loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/SaveInstance.txt",true))() end)
-			
+
 			Global.netless = function(Part)
 				if Part:IsA("BasePart") then
 					local BodyVelocity = Instance.new("BodyVelocity"); do
@@ -182,7 +182,7 @@ else
 						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
 						BodyAngularVelocity.Parent = Part
 					end
-					
+
 					local HB
 					HB = game:GetService("RunService").Heartbeat:Connect(function()
 						if Part and Part:IsDescendantOf(workspace) then
@@ -196,7 +196,7 @@ else
 				end
 				return Part
 			end
-			
+
 			do -- // fwait/Event
 				local Bind = Instance.new("BindableEvent")
 				do
@@ -226,9 +226,9 @@ else
 				Global.Event = Bind.Event
 				Event = Bind.Event
 			end
-			
+
 			Global.Global = Global
-			
+
 			task.spawn(function() -- // ServerInfo
 				local peer,replicator = game:GetService("NetworkClient").ConnectionAccepted:Wait()
 				repeat task.wait(0/1) until notify
@@ -253,7 +253,7 @@ else
 				end
 				Global.ServerInfo = ServerInfo
 			end)
-			
+
 			task.spawn(function() -- // SmartLerp
 				repeat task.wait(0/1) until Event
 				local RunService = game:GetService("RunService")
@@ -296,14 +296,14 @@ else
 
 				Global.SmartLerp = SmartLerp
 			end)
-			
+
 			do -- // decompile
 				local OldDecomp = decompile
 				Global.decompile = function(script)
 					return "--  Advanced Decompiler by ProductionTakeOne#3330 \n" .. string.gsub(string.gsub(OldDecomp(script),"l__",""),"__1","")
 				end
 			end
-			
+
 			task.spawn(function() -- // Players:Chat
 				IsGameLoaded()
 				Global.ToggleChatFix = true
@@ -324,26 +324,26 @@ else
 					end; return __namecall(self, ...)
 				end)
 			end)
-			
+
 			Global.getsynasset = getsynasset
-			
+
 			task.spawn(function() -- // Notify
 				repeat task.wait(0/1) until notify
 				if notify ~= "Disabled" then
 					Global.Notify = notify
 				end
 			end)
-			
+
 		end) end
-	
+
 	task.spawn(function() -- // Notifications
 		notify = Settings["Notifications"] and loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua",true))() or "Disabled"
 	end)
-	
+
 	if Settings["DisablePrompts"] then task.spawn(function()
 			game:GetService("CoreGui"):WaitForChild("PurchasePrompt",500):WaitForChild("ProductPurchaseContainer",500).Visible = false
 		end) end
-	
+
 	if Settings["AntiAFK"] then task.spawn(function()
 			IsGameLoaded()
 			local vu = game:GetService("VirtualUser")
@@ -353,7 +353,7 @@ else
 				vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 			end)
 		end) end
-	
+
 	if Settings["AntiKick"] then task.spawn(function()
 			local mt = getrawmetatable(game)
 			local backup = mt.__namecall
@@ -371,7 +371,7 @@ else
 
 			setreadonly(mt, true)
 		end) end
-	
+
 	if Settings["RemovedLayered"] then task.spawn(function()
 			workspace.DescendantAdded:Connect(function(Wrap)
 				if Wrap:IsA("WrapLayer") then
@@ -380,7 +380,7 @@ else
 				end
 			end)
 		end) end
-	
+
 	if Settings["ChatFilterLabel"] then task.spawn(function()
 			IsGameLoaded()
 			local Player = game:GetService("Players").LocalPlayer
@@ -407,13 +407,13 @@ else
 				end
 			end)
 		end) end
-	
+
 	local loadedtime = tick() - LoadTick
-	
+
 	printconsole(tostring("Autoexec loaded in " .. loadedtime))
-	
+
 	IsGameLoaded()
-	
+
 	printconsole(tostring("Game loaded in " .. tick() - LoadTick))
 
 	if notify ~= "Disabled" then notify({Text = "Game loaded in " .. tick() - LoadTick,Duration = 5}) end
