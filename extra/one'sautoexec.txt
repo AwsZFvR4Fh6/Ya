@@ -1,7 +1,7 @@
 local LoadTick = tick()
 
 local Settings = {
-	["AutomaticUpdates"] = true, -- slower, uses default settings
+	["AutomaticUpdates"] = false, -- slower, uses default settings
 	["ToggleGUI"] = true, -- Toggles Aimkid GUI
 	["Backrooms"] = false, -- Teleports you to the backrooms if you fall into the void
 	["FastLoad"] = true, -- Changes roblox loading GUI
