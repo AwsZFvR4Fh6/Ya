@@ -1,4 +1,4 @@
-local Version = "1.085"
+local Version = "1.086"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -93,7 +93,7 @@ do -- [[ Commands ]]
 	local function FixYAxis(Velocity)
 		return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
 	end
-	
+
 	local function ClearAttachConnections()
 		if Storage["AttachConnections"] then
 			for i,v in pairs(Storage["AttachConnections"]) do
@@ -102,7 +102,7 @@ do -- [[ Commands ]]
 		end
 		Storage["AttachConnections"] = {}
 	end
-	
+
 	local function BoopedPredictionAttach(ToPlr,CF)
 		ClearAttachConnections()
 		table.insert(Storage["AttachConnections"],Event:Connect(function()
@@ -119,7 +119,7 @@ do -- [[ Commands ]]
 			ClearAttachConnections()
 		end))
 	end
-	
+
 	local function OldPredictionAttach(ToPlr,CF)
 		ClearAttachConnections()
 		local speed = 0
@@ -140,7 +140,7 @@ do -- [[ Commands ]]
 			ClearAttachConnections()
 		end))
 	end
-	
+
 	local function CFrameAttach(ToPlr,CF)
 		ClearAttachConnections()
 		table.insert(Storage["AttachConnections"],Event:Connect(function()
@@ -253,7 +253,7 @@ do -- [[ Commands ]]
 				v:WaitForChild("Korblox Deathspeaker Right Leg"):Destroy()
 			end)
 		end},
-		["hjobsit"] = {{"Player"},function(args)
+		["bangsit"] = {{"Player"},function(args)
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
@@ -262,7 +262,110 @@ do -- [[ Commands ]]
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["bangsitpredict"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["bangsitpredict2"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					OldPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
+					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							BodyVelocity:Destroy()
+							ClearAttachConnections()
+						end
+					end))
+				end
+			end
+		end},
+		["hjobsit"] = {{"Player"},function(args)
+			if args[2] then
+				local copyplr = ShortName(args[2])
+				if copyplr then
+					CFrameAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
+
+					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
+					
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+					
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
@@ -282,7 +385,17 @@ do -- [[ Commands ]]
 
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
@@ -301,7 +414,17 @@ do -- [[ Commands ]]
 					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 						if not Seated then
@@ -321,7 +444,17 @@ do -- [[ Commands ]]
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
@@ -341,7 +474,17 @@ do -- [[ Commands ]]
 
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
@@ -360,7 +503,17 @@ do -- [[ Commands ]]
 					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,1.05))
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 						if not Seated then
@@ -380,7 +533,17 @@ do -- [[ Commands ]]
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
@@ -397,12 +560,22 @@ do -- [[ Commands ]]
 				local copyplr = ShortName(args[2])
 				if copyplr then
 					OldPredictionAttach(copyplr,CFrame.new(0,1.6,1.15))
-					
+
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
 					end
-					
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
+					end
+
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 						if not Seated then
 							BodyVelocity:Destroy()
@@ -419,7 +592,17 @@ do -- [[ Commands ]]
 					BoopedPredictionAttach(copyplr,CFrame.new(0,1.6,1.15))
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 						if not Seated then
@@ -449,7 +632,17 @@ do -- [[ Commands ]]
 					end
 
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 				end
 			end
@@ -519,7 +712,17 @@ do -- [[ Commands ]]
 					end
 
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 				end
 			end
@@ -543,7 +746,17 @@ do -- [[ Commands ]]
 					end
 
 					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart
+						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+						BodyVelocity.P = math.huge; 
+						BodyVelocity.Velocity = Vector3.new()
+						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+					end
+
+					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+						BodyAngularVelocity.P = math.huge; 
+						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 					end
 				end
 			end
