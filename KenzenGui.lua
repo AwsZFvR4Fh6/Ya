@@ -1,4 +1,4 @@
-local Version = "1.086"
+local Version = "1.087"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -257,7 +257,7 @@ do -- [[ Commands ]]
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					CFrameAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+					CFrameAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
 
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 
@@ -288,7 +288,7 @@ do -- [[ Commands ]]
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+					BoopedPredictionAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
 
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 
@@ -319,7 +319,7 @@ do -- [[ Commands ]]
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					OldPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
+					OldPredictionAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
 
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 
@@ -350,7 +350,7 @@ do -- [[ Commands ]]
 			if args[2] then
 				local copyplr = ShortName(args[2])
 				if copyplr then
-					CFrameAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
+					CFrameAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
 
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
 					
