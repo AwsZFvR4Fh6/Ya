@@ -46,6 +46,13 @@ return function(Animation,Name)
 	end
 	AnimationTable.Loop = Animation.Loop
 	local Encode = HTTP:JSONEncode(AnimationTable)
-	writefile(Name .. ".Anim",Encode)
+	if isfolder then
+		if not isfolder("FakeAudios") then
+			makefolder("FakeAudios")
+		end
+		writefile("FakeAudios" .. Name .. ".Anim",Encode)
+	else
+		writefile(Name .. ".Anim",Encode)
+	end
 	return Encode
 end
