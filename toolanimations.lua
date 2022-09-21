@@ -22,7 +22,7 @@ local function getsynassetfromurl(URL,Name)
 			Extension = Response.Body:sub(2, 4) == 'PNG' and '.png' or Response.Body:sub(25, 28) == 'webm' and '.webm' or nil
 		end
 
-		if Response.StatusCode == 200 then--and (Extension and table.find(Types, Extension)) then
+		if Response.StatusCode == 200 then --and (Extension and table.find(Types, Extension)) then
 			for i = 1, 15 do
 				local Letter, Lower = string.char(math.random(65, 90)), math.random(1, 5) == 3 and true or false
 			end
