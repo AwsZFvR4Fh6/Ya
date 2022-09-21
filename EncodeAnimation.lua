@@ -50,7 +50,7 @@ return function(Animation,Name)
 		if not isfolder("FakeAudios") then
 			makefolder("FakeAudios")
 		end
-		writefile("FakeAudios" .. Name .. ".Anim",Encode)
+		writefile("FakeAudios/" .. Name .. ".Anim",Encode)
 	else
 		writefile(Name .. ".Anim",Encode)
 	end
