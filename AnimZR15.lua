@@ -120,7 +120,7 @@ local function EditCFrame(Data)
 end
 
 local function LoadAnimation(Asset)
-	local Sequence = readfile(tostring(Asset) .. ".Anim") or Encode(game:GetObjects('rbxassetid://'..tostring(Asset))[1],tostring(Asset))
+	local Sequence = isfolder and isfolder("FakeAudios") and readfile("FakeAudios/" .. tostring(Asset) .. ".Anim") or readfile(tostring(Asset) .. ".Anim") or Encode(game:GetObjects('rbxassetid://'..tostring(Asset))[1],tostring(Asset))
 	Sequence = HTTP:JSONDecode(Sequence)
 	wait(0/1)
 	if Global.LoopAnims then Sequence.Loop = true end
