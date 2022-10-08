@@ -284,4 +284,5 @@ return {
 	["Ride the Pony"] = {"9747436807","","https://cdn.discordapp.com/attachments/308098766987329536/1022062766959378452/Y2Mate.is_-_Fortnite_-_Ride_The_Pony_-_Emote_Music_Audio-x2tsk0LgCGE-128k-1660302829029.mp3"},
 	["Eden"] = {"10064162695",""},
 	["Roy"] = {"10644368857","","https://cdn.discordapp.com/attachments/308098766987329536/1022063518805151804/Y2Mate.is_-_Yvng_Swag_-_Hit_My_Phone_OFFICIAL_AUDIO-ro7qAnfNtw8-160k-1660302382313.mp3"},
+	["California Girls"] = {"11192981846","","https://cdn.discordapp.com/attachments/1012463121836814447/1027582975698812990/Progamer.mp3"},
 }
