@@ -206,6 +206,9 @@ do -- [[ Commands ]]
 		["antifling"] = {{},function(args)
 			loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/phys/main/antifling.lua",true))()
 		end},
+		["explorer"] = {{},function(args)
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/awesome-explorer/main/source.lua", true))()
+		end},
 		["dex"] = {{},function(args)
 			loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/ExProDex-V2/main/src.lua", true))()
 		end},
