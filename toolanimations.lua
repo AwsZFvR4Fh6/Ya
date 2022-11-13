@@ -1,6 +1,35 @@
 --local preloadanimations = true -- enable this if you want to preload all animations (lagspike)
-local notify = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua",true))()
+local notify = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua", false))()
 local wait = fwait or task.wait
+
+local CachedServices = {}
+local function GetService(s)
+    if not CachedServices[s] then
+        local temp = game:GetService(tostring(s))
+        if temp then
+            CachedServices[s] = temp
+            return CachedServices[s]
+        end
+    else
+        return CachedServices[s]
+    end
+end
+
+local Players = GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack") or LocalPlayer:WaitForChild("Backpack", math.huge)
+local CoreGui = GetService("CoreGui")
+
+local cloneref = cloneref or function(ref) 
+    return ref
+end
+
+pcall(function()
+    if not getgenv().gethiddengui then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/gethiddengui/main/src.lua", false))()
+    end
+end)
+
 local function getsynassetfromurl(URL,Name)
 	if not isfolder("FakeAudios") then makefolder("FakeAudios") end
 	Name = "FakeAudios/" .. Name
@@ -42,12 +71,14 @@ if getgenv().Preload == nil then getgenv().Preload = false end
 if getgenv().PreloadWait == nil then getgenv().PreloadWait = 0.1 end
 if getgenv().Reanimate == nil then getgenv().Reanimate = true end
 
-local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua",true))()--game:GetObjects("rbxassetid://9353862873")[1]
+local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua", true))()--game:GetObjects("rbxassetid://9353862873")[1]
 if getgenv().Preload then
-	local GUI = Instance.new("ScreenGui")
-	local TextLabel = Instance.new("TextLabel")
+	local GUI = cloneref(Instance.new("ScreenGui"))
+	local TextLabel = cloneref(Instance.new("TextLabel"))
 
 	GUI.DisplayOrder = 9999
+	GUI.LayoutOrder = 9999
+	pcall(function() sethiddenproperty("OnTopOfCoreBlur", false) end)
 	GUI.ResetOnSpawn = false
 
 	TextLabel.BackgroundTransparency = 1
@@ -56,23 +87,32 @@ if getgenv().Preload then
 	TextLabel.Font = Enum.Font.PermanentMarker
 	TextLabel.TextScaled = true
 	TextLabel.Text = "Loading Animations"
-
+	pcall(function()
+	    if syn and syn.protect_gui and not gethui then
+	        syn.protect_gui(TextLabel)
+	    end
+	end)
+	pcall(function()
+	    if syn and syn.protect_gui and not gethui then
+	        syn.protect_gui(GUI)
+	    end
+	end)
 	TextLabel.Parent = GUI
-	GUI.Parent = game.CoreGui
+	GUI.Parent = gethiddengui and gethiddengui() or gethui and gethui() or CoreGui:FindFirstChildOfClass("ScreenGui") or CoreGui:FindFirstChildOfClass("Folder") or CoreGui
 	local LoadAmount,NumberToLoad = 0,#Files
 	for i,v in pairs(Files) do
 		if getgenv().PreloadWait > (1/60) then
 			wait(getgenv().PreloadWait)
 		end
-		task.spawn(function()
+		task.spawn(coroutine.create(function()
 			local AnimationID = v[1]
 			if v[2] ~= "" then
 				local soundwait = Instance.new("Sound",game.Players.LocalPlayer)
 				soundwait.SoundId = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
-				task.spawn(function()
+				task.spawn(coroutine.create(function()
 					soundwait.Loaded:Wait()
 					soundwait:Destroy()    
-				end)
+				end))
 			end
 			if AnimationID then
 				pcall(function()
@@ -82,19 +122,19 @@ if getgenv().Preload then
 
 			loadamount = loadamount + 1
 			print(loadamount,NumberToLoad)
-		end)
+		end))
 	end
-	repeat wait(0/1) until loadamount == NumberToLoad
-	GUI:Destroy()
+	repeat wait(0) until loadamount == NumberToLoad
+	pcall(function() GUI:Destroy() end)
 end
 
 if getgenv().Reanimate then
 	getgenv().AutoAnimate = false
 	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/newnetlessreanimate.lua", true))()
-	wait(0/1)
+	wait(0)
 end
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua", true))()
 
 for i,v in pairs(Files) do
 	local Tool = Instance.new("Tool")
@@ -115,6 +155,6 @@ for i,v in pairs(Files) do
 			getgenv().RunAnimation()
 		end
 	end)
-	Tool.Parent = game.Players.LocalPlayer.Backpack
-	wait(0/1)
+	Tool.Parent = Backpack
+	wait(0)
 end
