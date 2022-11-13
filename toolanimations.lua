@@ -71,7 +71,7 @@ if getgenv().Preload == nil then getgenv().Preload = false end
 if getgenv().PreloadWait == nil then getgenv().PreloadWait = 0.1 end
 if getgenv().Reanimate == nil then getgenv().Reanimate = true end
 
-local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua", false))()--game:GetObjects("rbxassetid://9353862873")[1]
+local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua", true))()--game:GetObjects("rbxassetid://9353862873")[1]
 if getgenv().Preload then
 	local GUI = cloneref(Instance.new("ScreenGui"))
 	local TextLabel = cloneref(Instance.new("TextLabel"))
@@ -130,11 +130,11 @@ end
 
 if getgenv().Reanimate then
 	getgenv().AutoAnimate = false
-	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/newnetlessreanimate.lua", false))()
+	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/newnetlessreanimate.lua", true))()
 	wait(0)
 end
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua", false))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua", true))()
 
 for i,v in pairs(Files) do
 	local Tool = Instance.new("Tool")
