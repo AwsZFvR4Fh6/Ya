@@ -44,7 +44,7 @@ local Joints = {}; do
 		end
 	end
 end
-	
+
 --[[{
 	['Torso'] = Root['RootJoint'];
 	['Left Arm'] = Torso['Left Shoulder'];
@@ -163,11 +163,13 @@ local function LoadAnimation(Asset)
 	return Animation
 end
 
-local function EndPlaying()
+local function EndPlaying(StopSound)
 	for i,v in pairs(Animations) do
 		if not v.Ended then
 			v.Reset()
-			Sound.SoundId = ""
+			if StopSound then
+				Sound.SoundId = ""
+			end
 			--wait(0/1)
 		end
 	end
