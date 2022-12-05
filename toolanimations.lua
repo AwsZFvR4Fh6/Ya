@@ -4,6 +4,7 @@ local Settings = {
 	Preload = false,
 	PreloadWait = true,
 	Reanimate = true,
+	R15 = false,
 }
 
 local notify = Global.ErrorNotify or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/Notifications.lua",true))()
@@ -35,7 +36,7 @@ local function getsynassetfromurl(URL,Name)
 	end
 end
 
-local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua", true))()
+local Files = loadstring(game:HttpGet(Settings.R15 and "https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/R15AnimationsIndex.lua" or "https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua", true))()
 
 if Settings.Preload then
 	local LoadAmount,Amount = 0,#Files
@@ -90,7 +91,13 @@ end
 
 if Settings.Reanimate then
 	Global.AutoAnimate = false
-	Global.R15ToR6M2 = true
+	if Settings.R15 then
+		Global.R15ToR6 = false
+		Global.R15ToR6M2 = false
+	else
+		Global.R15ToR6 = true
+		Global.R15ToR6M2 = true
+	end
 	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/ZendeyReanimate.lua", true))()
 end
 
