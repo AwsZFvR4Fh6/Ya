@@ -1,6 +1,6 @@
 local Global = getgenv and getgenv() or shared
 
-local Settings = {
+local Settings = Global.ToolDancesSettings or {
 	Preload = false,
 	PreloadWait = true,
 	Reanimate = true,
