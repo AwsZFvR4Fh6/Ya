@@ -1,4 +1,4 @@
-local Version = "1.087"
+local Version = "1.09"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -222,14 +222,22 @@ do -- [[ Commands ]]
 			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/ZendeyReanimate.lua", true))()
 		end},
 		["tooldances"] = {{},function(args)
-			Global.AutoAnimate = false
-			Global.R15ToR6 = true
+			Global.ToolDancesSettings = {
+				Preload = false,
+				PreloadWait = true,
+				Reanimate = true,
+				R15 = false,
+			}
 			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua", true))()
 		end},
 		["r15tooldances"] = {{},function(args)
-			Global.AutoAnimate = false
-			Global.R15ToR6 = false
-			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/R15ToolDances.lua", true))()
+			Global.ToolDancesSettings = {
+				Preload = false,
+				PreloadWait = true,
+				Reanimate = true,
+				R15 = true,
+			}
+			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua", true))()
 		end},
 		["f3x"] = {{},function(args)
 			loadstring(game:GetObjects("rbxassetid://4698064966")[1].Source)()
@@ -356,14 +364,14 @@ do -- [[ Commands ]]
 					CFrameAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
 
 					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					
+
 					local BodyVelocity = Instance.new("BodyVelocity"); do
 						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
 						BodyVelocity.P = math.huge; 
 						BodyVelocity.Velocity = Vector3.new()
 						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
 					end
-					
+
 					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
 						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
 						BodyAngularVelocity.P = math.huge; 
@@ -1107,7 +1115,7 @@ do -- [[ Commands ]]
 				x = x.FindFirstAncestorWhichIsA(x, "Part")
 				if x then
 					if firetouchinterest then
-						return task.spawn(function()
+						return task.defer(function()
 							firetouchinterest(x, Root, 1, wait() and firetouchinterest(x, Root, 0))
 						end)
 					end
@@ -1257,7 +1265,7 @@ do -- [[ Aimkid KeyChain ]]
 	local lastY = 0
 	local val = 0
 
-	task.spawn(function() 
+	task.defer(function() 
 		while GUI do
 			local Fram = RunService.RenderStepped:Wait()/(1/60)*0.6
 			local X, Y, Z = Camera.CFrame:ToOrientation()
@@ -1299,7 +1307,7 @@ do -- [[ Toggle ]]
 			end
 		end
 	end)
-	task.spawn(function()
+	task.defer(function()
 		fwait(.1)
 		TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
 		TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.1,0.1)}):Play()
