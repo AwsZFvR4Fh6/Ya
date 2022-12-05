@@ -1,160 +1,123 @@
---local preloadanimations = true -- enable this if you want to preload all animations (lagspike)
-local notify = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L8X/notificationstuff/main/src.lua", false))()
-local wait = fwait or task.wait
+local Global = getgenv and getgenv() or shared
 
-local CachedServices = {}
-local function GetService(s)
-    if not CachedServices[s] then
-        local temp = game:GetService(tostring(s))
-        if temp then
-            CachedServices[s] = temp
-            return CachedServices[s]
-        end
-    else
-        return CachedServices[s]
-    end
-end
+local Settings = {
+	Preload = false,
+	PreloadWait = true,
+	Reanimate = true,
+}
 
-local Players = GetService("Players")
+local notify = Global.ErrorNotify or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/Notifications.lua",true))()
+local Encode = Global.Encoding or loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/EncodeAnimation.lua",true))()
+local fwait = fwait or task.wait
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
-local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack") or LocalPlayer:WaitForChild("Backpack", math.huge)
-local CoreGui = GetService("CoreGui")
-
-local cloneref = cloneref or function(ref) 
-    return ref
-end
-
-pcall(function()
-    if not getgenv().gethiddengui then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/gethiddengui/main/src.lua", false))()
-    end
-end)
+local Backpack = LocalPlayer:WaitForChild("Backpack")
 
 local function getsynassetfromurl(URL,Name)
-	if not isfolder("FakeAudios") then makefolder("FakeAudios") end
-	Name = "FakeAudios/" .. Name
-	local getsynasset, request = getsynasset or getcustomasset or error('invalid attempt to \'getsynassetfromurl\' (custom asset retrieval function expected)'), (syn and syn.request) or (http and http.request) or (request) or error('invalid attempt to \'getsynassetfromurl\' (http request function expected)')
-	if isfile(Name .. ".ogg") then
-		return getsynasset(Name .. ".ogg")
-	else
-		notify({
-			Text = "Downloading Asset data " .. Name .. ".mp3",
-			Duration = 3
-		})
-		local Extension, Types, URL = '', {'.png', '.webm'}, assert(tostring(type(URL)) == 'string', 'invalid argument #1 to \'getsynassetfromurl\' (string [URL] expected, got '..tostring(type(URL))..')') and URL or nil
-		local Response, TempFile = request({
-			Url = URL,
-			Method = 'GET'
-		})
-
-		if Response.StatusCode == 200 then
-			Extension = Response.Body:sub(2, 4) == 'PNG' and '.png' or Response.Body:sub(25, 28) == 'webm' and '.webm' or nil
-		end
-
-		if Response.StatusCode == 200 then --and (Extension and table.find(Types, Extension)) then
-			for i = 1, 15 do
-				local Letter, Lower = string.char(math.random(65, 90)), math.random(1, 5) == 3 and true or false
-			end
-
-			writefile(Name..".ogg", Response.Body)
-
-			return getsynasset(Name..".ogg")
-		elseif Response.StatusCode ~= 200 or not Extension then
-			warn('unexpected \'getsynassetfromurl\' Status Error: ' .. Response.StatusMessage .. ' ('..URL..')')
-		elseif not (Extension) then
-			warn('unexpected \'getsynassetfromurl\' Error: (PNG or webm file expected)')
+	if isfolder and not isfolder("FakeAudios") then makefolder("FakeAudios") end
+	Name = "FakeAudios/" .. Name .. ".ogg"
+	local getsynasset, request = getsynasset or getcustomasset, (syn and syn.request) or (http and http.request) or (request)
+	if getsynasset and request then
+		if isfile(Name) then
+			return getsynasset(Name)
+		else
+			local NameSplit = string.split(URL,"/"); notify({
+				Text = "Downloading: " .. NameSplit[#NameSplit],
+				Duration = 3
+			})
+			pcall(function()
+				writefile(Name, request({Url = URL,Method = 'GET'}).Body)
+			end)
+			return isfile(Name) and getsynasset(Name)
 		end
 	end
 end
 
-if getgenv().Preload == nil then getgenv().Preload = false end
-if getgenv().PreloadWait == nil then getgenv().PreloadWait = 0.1 end
-if getgenv().Reanimate == nil then getgenv().Reanimate = true end
+local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua", true))()
 
-local Files = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimationsIndex.lua", true))()--game:GetObjects("rbxassetid://9353862873")[1]
-if getgenv().Preload then
-	local GUI = cloneref(Instance.new("ScreenGui"))
-	local TextLabel = cloneref(Instance.new("TextLabel"))
-
-	GUI.DisplayOrder = 9999
-	GUI.LayoutOrder = 9999
-	pcall(function() sethiddenproperty("OnTopOfCoreBlur", false) end)
-	GUI.ResetOnSpawn = false
-
-	TextLabel.BackgroundTransparency = 1
-	TextLabel.ZIndex = 999
-	TextLabel.Position = UDim2.new(0.375, 0,0.021, 0)
-	TextLabel.Font = Enum.Font.PermanentMarker
-	TextLabel.TextScaled = true
-	TextLabel.Text = "Loading Animations"
-	pcall(function()
-	    if syn and syn.protect_gui and not gethui then
-	        syn.protect_gui(TextLabel)
-	    end
-	end)
-	pcall(function()
-	    if syn and syn.protect_gui and not gethui then
-	        syn.protect_gui(GUI)
-	    end
-	end)
-	TextLabel.Parent = GUI
-	GUI.Parent = gethiddengui and gethiddengui() or gethui and gethui() or CoreGui:FindFirstChildOfClass("ScreenGui") or CoreGui:FindFirstChildOfClass("Folder") or CoreGui
-	local LoadAmount,NumberToLoad = 0,#Files
-	for i,v in pairs(Files) do
-		if getgenv().PreloadWait > (1/60) then
-			wait(getgenv().PreloadWait)
+if Settings.Preload then
+	local LoadAmount,Amount = 0,#Files
+	
+	local GUI,TextLabel = Instance.new("ScreenGui"),nil; do
+		GUI.ResetOnSpawn = false
+		GUI.Parent = gethiddengui and gethiddengui() or gethui and gethui() or CoreGui:FindFirstChildOfClass("ScreenGui") or CoreGui:FindFirstChildOfClass("Folder") or CoreGui
+		TextLabel = Instance.new("TextLabel"); do
+			TextLabel.BackgroundTransparency = 1
+			TextLabel.Position = UDim2.new(0.375, 0,0.021, 0)
+			TextLabel.Font = Enum.Font.PermanentMarker
+			TextLabel.TextScaled = true
+			TextLabel.Text = "Preloading assets, (0/" .. tostring(Amount) .. ")"
+			TextLabel.Parent = GUI
 		end
-		task.spawn(coroutine.create(function()
-			local AnimationID = v[1]
-			if v[2] ~= "" then
-				local soundwait = Instance.new("Sound",game.Players.LocalPlayer)
-				soundwait.SoundId = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
-				task.spawn(coroutine.create(function()
-					soundwait.Loaded:Wait()
-					soundwait:Destroy()    
-				end))
-			end
-			if AnimationID then
-				pcall(function()
-					game:GetObjects('rbxassetid://'..v[1])
+	end
+	
+	for AnimName,TableAssets in pairs(Files) do -- TableAssets[1] = animid, TableAssets[2] = rbxassetid, TableAssets[3] = mp3 link
+		local TempFunction = function()
+			local Sound = TableAssets[3] and getsynassetfromurl(TableAssets[3],TableAssets[1]) or TableAssets[2] ~= "" and "rbxassetid://" .. TableAssets[2]; if Sound then
+				local TempSound = Instance.new("Sound"); task.defer(function()
+					TempSound.SoundId = Sound
+					TempSound.Parent = game:GetService("SoundService")
+					TempSound.Loaded:Wait()
+					TempSound:Destroy()
 				end)
 			end
-
-			loadamount = loadamount + 1
-			print(loadamount,NumberToLoad)
-		end))
+			
+			pcall(function()
+				if not isfile("FakeAudios/" .. TableAssets[1] .. ".Anim") then
+					Encode(game:GetObjects('rbxassetid://'..TableAssets[1])[1],TableAssets[1])
+				end
+			end)
+			
+			LoadAmount += 1
+			TextLabel.Text = "Preloading assets, (" .. tostring(LoadAmount) .. "/" .. tostring(Amount) .. ")"
+		end
+		if Settings.PreloadWait then
+			TempFunction()
+		else
+			task.defer(TempFunction)
+		end
 	end
-	repeat wait(0) until loadamount == NumberToLoad
-	pcall(function() GUI:Destroy() end)
+	
+	repeat fwait() until LoadAmount >= Amount
+	GUI:Destroy()
 end
 
-if getgenv().Reanimate then
-	getgenv().AutoAnimate = false
-	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/newnetlessreanimate.lua", true))()
-	wait(0)
+if Settings.Preload then
+	fwait(1) -- to make sure claims dont break
+end
+
+if Settings.Reanimate then
+	Global.AutoAnimate = false
+	Global.R15ToR6M2 = true
+	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/ZendeyReanimate.lua", true))()
 end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/AnimZ.lua", true))()
 
 for i,v in pairs(Files) do
-	local Tool = Instance.new("Tool")
-	Tool.CanBeDropped = false
-	Tool.RequiresHandle = false
-	Tool.Name = not v[3] and v[2] == "" and "(NS) " .. i or i
+	local Tool = Instance.new("Tool"); do
+		Tool.CanBeDropped = false
+		Tool.RequiresHandle = false
+		Tool.Name = not v[3] and v[2] == "" and "[NS] " .. i or i
+		Tool.Parent = Backpack
+	end
+	
 	local ToolPlaying = false
+	
 	Tool.Activated:Connect(function()
-		if getgenv().RunAnimation then
+		if Global.RunAnimation then
 			local SoundID = v[3] and getsynassetfromurl(v[3],v[1]) or v[2]
 			ToolPlaying = true
-			getgenv().RunAnimation(v[1],SoundID)
+			Global.RunAnimation(v[1],SoundID)
 		end
 	end)
 	Tool.Unequipped:Connect(function()
 		if ToolPlaying then
 			ToolPlaying = false
-			getgenv().RunAnimation()
+			Global.RunAnimation()
 		end
 	end)
-	Tool.Parent = Backpack
-	wait(0)
+	fwait()
 end
