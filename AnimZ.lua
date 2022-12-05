@@ -3,7 +3,7 @@
 local wait = fwait or loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/fe5cbdbc396630374041f0c2d156a747/raw/5491a28fd72ed7e11c9fa3f9141df033df3ed5a9/fastwait.lua",true))()
 local Encode = loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/EncodeAnimation.lua",true))()
 
-local Global = (getgenv and getgenv() or _G)
+local Global = (getgenv and getgenv() or shared)
 local isfile = isfile or readfile and function(name) local a,b = pcall(function() readfile(name) end) if a then return a else return nil end end or function() return nil end
 local readfile = readfile and function(name) if isfile(name) then return readfile(name) end end or function() return nil end
 
@@ -31,21 +31,28 @@ local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 local Character = Player.Character
 local Root = Character.HumanoidRootPart
-local Torso = Character.Torso
 local Humanoid = Character.Humanoid
 
 local Sound = Create("Sound",{["Volume"] = 1,["RollOffMaxDistance"] = 100,["Looped"] = true,["Parent"] = Root})
 
-local Animations,Connections,Dancing = {},{},nil
+local Animations,Connections,Dancing,RunningSpeed = {},{},nil,0
 
-local Joints = {
+local Joints = {}; do
+	for i,v in pairs(Character:GetDescendants()) do
+		if v:IsA("Motor6D") and v.Part0 and v.Part1 then
+			Joints[v.Part1.Name] = v
+		end
+	end
+end
+	
+--[[{
 	['Torso'] = Root['RootJoint'];
 	['Left Arm'] = Torso['Left Shoulder'];
 	['Right Arm'] = Torso['Right Shoulder'];
 	['Left Leg'] = Torso['Left Hip'];
 	['Right Leg'] = Torso['Right Hip'];
 	['Head'] = Torso['Neck']
-}
+}]]
 
 -- ripped from the original; I have no idea why this works better then a task.wait
 if not RunService:FindFirstChild('Delta') then
@@ -102,7 +109,7 @@ end
 local function LoadAnimation(Asset)
 	local Sequence = isfolder and isfolder("FakeAudios") and readfile("FakeAudios/" .. tostring(Asset) .. ".Anim") or readfile(tostring(Asset) .. ".Anim") or Encode(game:GetObjects('rbxassetid://'..tostring(Asset))[1],tostring(Asset))
 	Sequence = HTTP:JSONDecode(Sequence)
-	wait(0/1)
+	--wait(0/1)
 	if Global.LoopAnims then Sequence.Loop = true end
 
 	--local Keyframes = Sequence:GetKeyframes()
@@ -115,7 +122,7 @@ local function LoadAnimation(Asset)
 		Animation.Ended = true
 		for i,v in pairs(Joints) do
 			if Character:FindFirstChild(i) and v then
-				v.Transform = CFrame.new()
+				--v.Transform = CFrame.new()
 			end
 		end
 	end
@@ -133,7 +140,7 @@ local function LoadAnimation(Asset)
 							Yield(Frame.Time - Keyframes[K-1].Time)
 						end
 						for i,Pose in pairs(Frame.Joints) do
-							task.spawn(function()
+							task.defer(function()
 								--local Pose = Frame.Joints[I]
 								if TableContains(Joints,i) and Character:FindFirstChild(i) then 
 									local Data = {}
@@ -160,7 +167,8 @@ local function EndPlaying()
 	for i,v in pairs(Animations) do
 		if not v.Ended then
 			v.Reset()
-			wait(0/1)
+			Sound.SoundId = ""
+			--wait(0/1)
 		end
 	end
 end
@@ -178,42 +186,45 @@ local Anims = {
 	['Fall'] = LoadAnimation(180436148); --3323393688
 }
 
-wait(0/1)
+--wait(0/1)
 
 Anims['Idle'].Play()
 
-Anims['Run'] = Humanoid.Running:Connect(function(Speed)
+table.insert(Connections,Humanoid.Running:Connect(function(Speed)
+	RunningSpeed = Speed
 	if not Dancing and Speed > 6 and Anims['Walk'].Ended then
-		EndPlaying()
-		Sound.SoundId = ""
+		EndPlaying(true)
 		Anims['Walk'].Play()
 	elseif not Dancing and Speed < 6 and not Anims['Walk'].Ended then
-		EndPlaying()
-		Sound.SoundId = ""
+		EndPlaying(true)
 		Anims['Idle'].Play()
 	end
-end)
+end))
 
-Anims['Jumping'] = Humanoid.Jumping:Connect(function(Active)
+table.insert(Connections,Humanoid.Jumping:Connect(function(Active)
 	if not Dancing and Active and Anims['Jump'].Ended then
-		EndPlaying()
-		Sound.SoundId = ""
+		EndPlaying(true)
 		Anims['Jump'].Play()
 	end
-end)
-Anims['FreeFalling'] = Humanoid.FreeFalling:Connect(function(Active)
+end))
+table.insert(Connections,Humanoid.FreeFalling:Connect(function(Active)
 	if not Dancing and Active and Anims['Jump'].Ended then
-		EndPlaying()
-		Sound.SoundId = ""
+		EndPlaying(true)
 		Anims['Fall'].Play()
 	end
-end)
+end))
+
+table.insert(Connections,Humanoid.StateChanged:Connect(function(Old,New)
+	if not Dancing and New == Enum.HumanoidStateType.Landed and Anims['Fall'].Ended then
+		EndPlaying(true)
+		Anims[RunningSpeed > 6 and 'Walk' or 'Idle'].Play()
+	end
+end))
 
 Global.RunAnimation = function(AnimationID,SoundID)
 	if AnimationID == "Stop" or not AnimationID then
 		Dancing = false
-		EndPlaying()
-		Sound.SoundId = ""
+		EndPlaying(true)
 		Anims["Idle"].Play()
 	else
 		if SoundID then
@@ -248,8 +259,3 @@ table.insert(Connections,Player.CharacterAdded:Connect(function()
 		v:Disconnect()
 	end
 end))
-
-table.insert(Connections,Anims["Run"])
-table.insert(Connections,Anims["Jumping"])
-table.insert(Connections,Anims["FreeFalling"])
-
