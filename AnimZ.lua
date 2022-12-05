@@ -40,7 +40,9 @@ local Animations,Connections,Dancing,RunningSpeed = {},{},nil,0
 local Joints = {}; do
 	for i,v in pairs(Character:GetDescendants()) do
 		if v:IsA("Motor6D") and v.Part0 and v.Part1 then
-			Joints[v.Part1.Name] = v
+			if Global.RealRig and not v:IsDescendantOf(Global.RealRig) or not Global.RealRig then
+				Joints[v.Part1.Name] = v
+			end
 		end
 	end
 end
