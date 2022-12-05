@@ -165,13 +165,10 @@ local function LoadAnimation(Asset)
 	return Animation
 end
 
-local function EndPlaying(StopSound)
+local function EndPlaying()
 	for i,v in pairs(Animations) do
 		if not v.Ended then
 			v.Reset()
-			if StopSound then
-				Sound.SoundId = ""
-			end
 			--wait(0/1)
 		end
 	end
@@ -197,30 +194,35 @@ Anims['Idle'].Play()
 table.insert(Connections,Humanoid.Running:Connect(function(Speed)
 	RunningSpeed = Speed
 	if not Dancing and Speed > 6 and Anims['Walk'].Ended then
-		EndPlaying(true)
+		EndPlaying()
+		Sound.SoundId = ""
 		Anims['Walk'].Play()
 	elseif not Dancing and Speed < 6 and not Anims['Walk'].Ended then
-		EndPlaying(true)
+		EndPlaying()
+		Sound.SoundId = ""
 		Anims['Idle'].Play()
 	end
 end))
 
 table.insert(Connections,Humanoid.Jumping:Connect(function(Active)
 	if not Dancing and Active and Anims['Jump'].Ended then
-		EndPlaying(true)
+		EndPlaying()
+		Sound.SoundId = ""
 		Anims['Jump'].Play()
 	end
 end))
 table.insert(Connections,Humanoid.FreeFalling:Connect(function(Active)
 	if not Dancing and Active and Anims['Jump'].Ended then
-		EndPlaying(true)
+		EndPlaying()
+		Sound.SoundId = ""
 		Anims['Fall'].Play()
 	end
 end))
 
 table.insert(Connections,Humanoid.StateChanged:Connect(function(Old,New)
 	if not Dancing and New == Enum.HumanoidStateType.Landed and Anims['Fall'].Ended then
-		EndPlaying(true)
+		EndPlaying()
+		Sound.SoundId = ""
 		Anims[RunningSpeed > 6 and 'Walk' or 'Idle'].Play()
 	end
 end))
@@ -228,7 +230,8 @@ end))
 Global.RunAnimation = function(AnimationID,SoundID)
 	if AnimationID == "Stop" or not AnimationID then
 		Dancing = false
-		EndPlaying(true)
+		EndPlaying()
+		Sound.SoundId = ""
 		Anims["Idle"].Play()
 	else
 		if SoundID then
