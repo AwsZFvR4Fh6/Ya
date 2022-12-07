@@ -5,8 +5,13 @@ local Settings = Global.ToolDancesSettings or {
 	PreloadWait = true,
 	Reanimate = true,
 	R15 = false,
+	GetObjectsPatch = false,
 }
 
+Global.HookGetObjects = Settings.GetObjectsPatch; do
+	loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/GetObjectsPatcher.lua",true))()
+end
+	
 local notify = Global.ErrorNotify or loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/Notifications.lua",true))()
 local Encode = Global.Encoding or loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/EncodeAnimation.lua",true))()
 local fwait = fwait or task.wait
@@ -46,12 +51,12 @@ if Settings.Preload then
 	local GUI, TextLabel = cloneref(Instance.new("ScreenGui")), nil; do
 		GUI.ResetOnSpawn = false
 		GUI.DisplayOrder = 10000
-		
+
 		if syn and not gethui then pcall(syn.protect_gui, GUI) end
 		if sethiddenproperty then pcall(sethiddenproperty, GUI, "OnTopOfCoreBlur", true) end
-		
+
 		GUI.Parent = gethiddengui and gethiddengui() or gethui and gethui() or CoreGui:FindFirstChildOfClass("ScreenGui") or CoreGui:FindFirstChildOfClass("Folder") or CoreGui
-		
+
 		TextLabel = cloneref(Instance.new("TextLabel")); do
 			TextLabel.BackgroundTransparency = 1
 			TextLabel.Position = UDim2.new(0.375, 0,0.021, 0)
@@ -67,9 +72,9 @@ if Settings.Preload then
 			local Sound = TableAssets[3] and getsynassetfromurl(TableAssets[3], TableAssets[1]) or TableAssets[2] ~= "" and "rbxassetid://" .. TableAssets[2]; if Sound then
 				local TempSound = cloneref(Instance.new("Sound")); task.defer(function()
 					TempSound.SoundId = Sound
-					
+
 					if syn and not gethui then pcall(syn.protect_gui, TempSound) end
-					
+
 					TempSound.Parent = cloneref(game:GetService("SoundService"))
 					TempSound.Loaded:Wait()
 					TempSound:Destroy()
@@ -78,7 +83,8 @@ if Settings.Preload then
 
 			pcall(function()
 				if not isfile("FakeAudios/"..TableAssets[1]..".Anim") then
-					Encode(game:GetObjects('rbxassetid://'..TableAssets[1])[1], TableAssets[1])
+					--Encode(game:GetObjects('rbxassetid://'..TableAssets[1])[1], TableAssets[1])
+					Encode(Global.GetObjects('rbxassetid://'..TableAssets[1])[1], TableAssets[1])
 				end
 			end)
 
@@ -86,7 +92,7 @@ if Settings.Preload then
 			TextLabel.Text = "Preloading assets, (" .. tostring(LoadAmount) .. "/" .. tostring(Amount) .. ")"
 		end
 		if Settings.PreloadWait then
-			TempFunction
+			TempFunction()
 		else
 			task.defer(TempFunction)
 		end
