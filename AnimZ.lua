@@ -2,6 +2,7 @@
 
 --local wait = fwait or loadstring(game:HttpGet("https://gist.githubusercontent.com/CenteredSniper/fe5cbdbc396630374041f0c2d156a747/raw/5491a28fd72ed7e11c9fa3f9141df033df3ed5a9/fastwait.lua",true))()
 local Encode = Global.Encoding or loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/EncodeAnimation.lua",true))()
+loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/GetObjectsPatcher.lua",true))()
 
 local Global = (getgenv and getgenv() or shared)
 local isfile = isfile or readfile and function(name) local a,b = pcall(function() readfile(name) end) if a then return a else return nil end end or function() return nil end
@@ -109,7 +110,7 @@ local function EditCFrame(Data)
 end
 
 local function LoadAnimation(Asset)
-	local Sequence = isfolder and isfolder("FakeAudios") and readfile("FakeAudios/" .. tostring(Asset) .. ".Anim") or readfile(tostring(Asset) .. ".Anim") or Encode(game:GetObjects('rbxassetid://'..tostring(Asset))[1],tostring(Asset))
+	local Sequence = isfolder and isfolder("FakeAudios") and readfile("FakeAudios/" .. tostring(Asset) .. ".Anim") or readfile(tostring(Asset) .. ".Anim") or Encode(Global.GetObjects('rbxassetid://'..tostring(Asset))[1],tostring(Asset))
 	Sequence = HTTP:JSONDecode(Sequence)
 	--wait(0/1)
 	if Global.LoopAnims then Sequence.Loop = true end
