@@ -52,7 +52,7 @@ if Settings.Preload then
 		    pcall(syn.protect_gui, GUI)
 		end
 		if SetHiddenProperty then
-		    pcall(SetHiddenProperty, GUI, "OnTopOfCoreBlur, true)
+		    pcall(SetHiddenProperty, GUI, "OnTopOfCoreBlur", true)
 		end
 		GUI.Parent = gethiddengui and gethiddengui() or gethui and gethui() or CoreGui:FindFirstChildOfClass("ScreenGui") or CoreGui:FindFirstChildOfClass("Folder") or CoreGui
 		TextLabel = cloneref(Instance.new("TextLabel")); do
