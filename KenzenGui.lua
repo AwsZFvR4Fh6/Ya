@@ -1,4 +1,4 @@
-local Version = "1.09"
+local Version = "1.1"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -1163,6 +1163,21 @@ do -- [[ Commands ]]
 		["psr"] = {{"Number"},function(args)
 			local psr = tonumber(args[2]) or 30
 			setfflag("S2PhysicsSenderRate", psr)
+		end},
+		["printplayervelocity"] = {{"PlayerName"},function(args)
+			if args[1] and ShortName(args[1]) then
+				local Character = ShortName(args[1]); Character = Character:IsA("Player") and Character.Character or Character
+				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
+				printconsole(Character.Name .. "'s Velocity is " .. Part.Velocity)		
+			end
+		end},
+		["chatplayervelocity"] = {{"PlayerName"},function(args)
+			if args[1] and ShortName(args[1]) then
+				task.wait(GetPing(750))
+				local Character = ShortName(args[1]); Character = Character:IsA("Player") and Character.Character or Character
+				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Velocity is " .. Part.Velocity, "All")
+			end
 		end},
 		["printserverinfo"] = {{},function()
 			if Global.ServerInfo then
