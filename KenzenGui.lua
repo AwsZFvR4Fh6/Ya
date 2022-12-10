@@ -1,4 +1,4 @@
-local Version = "1.12"
+local Version = "1.13"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -1168,7 +1168,7 @@ do -- [[ Commands ]]
 			if args[2] and ShortName(args[2]) then
 				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
 				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
-				printconsole(Character.Name .. "'s Velocity is " .. Part.Velocity)		
+				print(Character.Name .. "'s Velocity is (" .. Part.Velocity.X .. "," .. Part.Velocity.Y .. "," .. Part.Velocity.Z .. ")")		
 			end
 		end},
 		["chatplayervelocity"] = {{"Player"},function(args)
@@ -1176,12 +1176,13 @@ do -- [[ Commands ]]
 				task.wait(GetPing(750))
 				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
 				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Velocity is " .. Part.Velocity, "All")
+				
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Velocity is (" .. Part.Velocity.X .. "," .. Part.Velocity.Y .. "," .. Part.Velocity.Z .. ")", "All")
 			end
 		end},
 		["printserverinfo"] = {{},function()
 			if Global.ServerInfo then
-				printconsole("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country)		
+				print("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country)		
 			end
 		end},
 		["chatserverinfo"] = {{},function()
