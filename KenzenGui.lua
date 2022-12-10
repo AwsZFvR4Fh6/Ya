@@ -1,4 +1,4 @@
-local Version = "1.11"
+local Version = "1.12"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -1187,7 +1187,7 @@ do -- [[ Commands ]]
 		["printtotalvelocity"] = {{"Player"},function(args)
 			if args[2] and ShortName(args[2]) then
 				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
-				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
+				local Part = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
 				print(Character.Name .. "'s Total Velocity is (" .. RoundNumber(Part.Velocity.Magnitude) .. ")")		
 			end
 		end},
@@ -1195,7 +1195,7 @@ do -- [[ Commands ]]
 			if args[2] and ShortName(args[2]) then
 				task.wait(GetPing(750))
 				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
-				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
+				local Part = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
 
 				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Total Velocity is (" .. RoundNumber(Part.Velocity.Magnitude) .. ")", "All")
 			end
