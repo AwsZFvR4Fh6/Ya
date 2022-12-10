@@ -1,4 +1,4 @@
-local Version = "1.13"
+local Version = "1.11"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -81,6 +81,10 @@ do -- [[ Commands ]]
 
 	local function GetPing(Divider)
 		return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()/Divider
+	end
+	
+	local function RoundNumber(Num)
+		return math.round(Num*1000)/1000
 	end
 
 	local function PredictPos(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
@@ -1164,20 +1168,36 @@ do -- [[ Commands ]]
 			local psr = tonumber(args[2]) or 30
 			setfflag("S2PhysicsSenderRate", psr)
 		end},
-		["printplayervelocity"] = {{"Player"},function(args)
+		["printvelocity"] = {{"Player"},function(args)
 			if args[2] and ShortName(args[2]) then
 				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
 				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
-				print(Character.Name .. "'s Velocity is (" .. Part.Velocity.X .. "," .. Part.Velocity.Y .. "," .. Part.Velocity.Z .. ")")		
+				print(Character.Name .. "'s Velocity is (" .. RoundNumber(Part.Velocity.X) .. "," .. RoundNumber(Part.Velocity.Y) .. "," .. RoundNumber(Part.Velocity.Z) .. ")")		
 			end
 		end},
-		["chatplayervelocity"] = {{"Player"},function(args)
+		["chatvelocity"] = {{"Player"},function(args)
 			if args[2] and ShortName(args[2]) then
 				task.wait(GetPing(750))
 				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
 				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
 				
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Velocity is (" .. Part.Velocity.X .. "," .. Part.Velocity.Y .. "," .. Part.Velocity.Z .. ")", "All")
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Velocity is (" .. RoundNumber(Part.Velocity.X) .. "," .. RoundNumber(Part.Velocity.Y) .. "," .. RoundNumber(Part.Velocity.Z) .. ")", "All")
+			end
+		end},
+		["printtotalvelocity"] = {{"Player"},function(args)
+			if args[2] and ShortName(args[2]) then
+				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
+				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
+				print(Character.Name .. "'s Total Velocity is (" .. RoundNumber(Part.Velocity.Magnitude) .. ")")		
+			end
+		end},
+		["chattotalvelocity"] = {{"Player"},function(args)
+			if args[2] and ShortName(args[2]) then
+				task.wait(GetPing(750))
+				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
+				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
+
+				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Total Velocity is (" .. RoundNumber(Part.Velocity.Magnitude) .. ")", "All")
 			end
 		end},
 		["printserverinfo"] = {{},function()
