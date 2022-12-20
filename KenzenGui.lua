@@ -1,4 +1,4 @@
-local Version = "1.12"
+local Version = "1.13"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -1007,6 +1007,8 @@ do -- [[ Commands ]]
 				tool.Parent = Player.Backpack
 				tool.Parent = Player.Character
 				Commands["noclip"][2]()
+				task.wait(0/1)
+				for i,v in pairs(Player.Character:WaitForChild("Humanoid"):GetPlayingAnimationTracks()) do v:Stop() end
 			end
 		end},
 		["invisfling"] = {{},function()
