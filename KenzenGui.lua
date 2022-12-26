@@ -1,4 +1,4 @@
-local Version = "1.2"
+local Version = "1.2.1"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -25,7 +25,9 @@ local loadstring = pcall(function() loadstring("")() end) and loadstring or nil
 local isfile = isfile or readfile and function(name) pcall(function() local a = readfile(name) end) end
 local isnetworkowner = isnetworkowner or function(Part) return Part.ReceiveAge == 0 end
 local Ping = game:GetService("Stats"):WaitForChild("Network"):WaitForChild("ServerStatsItem"):WaitForChild("Data Ping")
-local ChatRemote = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents"); ChatRemote = ChatRemote and ChatRemote:FindFirstChild("SayMessageRequest")
+local ChatRemote; task.defer(function()
+	ChatRemote = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+end)
 
 local Commands,Visible
 local noclipping,Flying = false,false
@@ -650,7 +652,7 @@ Commands = {
 		Alias = {},
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
-				Funcs.AttachToPlayer(Funcs.ShortName(ToPlr),CFrame.new(0,1.6,1.15))
+				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15))
 			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 				if not Seated then
 					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
@@ -665,7 +667,7 @@ Commands = {
 		Alias = {},
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
-				Funcs.AttachToPlayer(Funcs.ShortName(ToPlr),CFrame.new(0,1.6,1.15),true) 
+				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15),true) 
 			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 				if not Seated then
 					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
@@ -680,7 +682,7 @@ Commands = {
 		Alias = {},
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
-				Funcs.AttachToPlayer(Funcs.ShortName(ToPlr),CFrame.new(0,0,1),true) 
+				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,0,1)) 
 			local bangAnim = Instance.new("Animation") do
 				if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 					bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -692,6 +694,26 @@ Commands = {
 					Anim:Play(.1, 1, 1)
 					Anim:AdjustSpeed(5)
 				end
+				end end
+		end,
+	},
+	["bangpredict"] = {
+		Args = {"Player"},
+		Alias = {},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,0,1),true) 
+				local bangAnim = Instance.new("Animation") do
+					if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+						bangAnim.AnimationId = "rbxassetid://5918726674"
+					else
+						bangAnim.AnimationId = "rbxassetid://148840371"
+					end
+
+					local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
+						Anim:Play(.1, 1, 1)
+						Anim:AdjustSpeed(5)
+					end
 				end end
 		end,
 	},
@@ -710,7 +732,10 @@ Commands = {
 		Args = {},
 		Alias = {},
 		Function = function()
-			if not Global.RealChar and Visible then
+			if Visible then
+				Visible(); Visible = nil
+			end
+			if not Global.RealChar then
 				local Player = game:GetService("Players").LocalPlayer
 				local RealChar = Player.Character
 				RealChar.Archivable = true
@@ -1002,7 +1027,7 @@ Commands = {
 		Alias = {"toolkill"},
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
-				local RISH = string.lower(Args[2]) == "yes" or string.lower(Args[2]) == "true"; if RISH then
+				local RISH = Args[2] and string.lower(Args[2]) == "yes" or Args[2] and string.lower(Args[2]) == "true"; if RISH then
 					Commands["refresh"].Function()
 					Funcs.fwait(.3)
 				end
