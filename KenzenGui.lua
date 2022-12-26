@@ -1,4 +1,4 @@
-local Version = "1.2.0.4"
+local Version = "1.2.0.5"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -162,6 +162,7 @@ local Funcs = {}; do
 		local NotificationService
 		repeat
 			NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua");
+			print(NotificationService)
 			Funcs.fwait(0.5)
 		until NotificationService
 		Funcs.Notify = function(Title,Description)
