@@ -162,7 +162,7 @@ local Funcs = {}; do
 		local NotificationService
 		repeat
 			NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua");
-			Funcs.fwait()
+			Funcs.fwait(0.5)
 		until NotificationService
 		Funcs.Notify = function(Title,Description)
 			--print(NotificationService)
