@@ -1,835 +1,715 @@
-local Version = "1.13"
+local Version = "1.2"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
-local LoadTick = tick()
-local GUI = game:GetObjects("rbxassetid://10541085796")[1]
+
+
+
+local Tick = tick()
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local NetworkClient = game:GetService("NetworkClient")
-local HTTP = game:GetService("HttpService")
+local HttpService = game:GetService("HttpService")
 
 local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = Player:GetMouse()
 
-local Toggle = false
-local Global = getgenv and getgenv() or shared
+local Global = Global or getgenv and getgenv() or shared
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
-local printconsole = printconsole or print
+local print = printconsole or print
+local request = (syn and request) or (http and http.request) or (request)
+local setclipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set) or print
+local loadstring = pcall(function() loadstring("")() end) and loadstring or nil
+local isfile = isfile or readfile and function(name) pcall(function() local a = readfile(name) end) end
+local isnetworkowner = isnetworkowner or function(Part) return Part.ReceiveAge == 0 end
+local Ping = game:GetService("Stats"):WaitForChild("Network"):WaitForChild("ServerStatsItem"):WaitForChild("Data Ping")
+local ChatRemote = game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents"); ChatRemote = ChatRemote and ChatRemote:FindFirstChild("SayMessageRequest")
 
-local Storage = {}
+local Commands,Visible
+local noclipping,Flying = false,false
+local Toggle = false
 
-local fwait,Event = Global.fwait,Global.Event
+local EventStorage = {}
 
-if not fwait and not Event then
-	do -- [[ Setting Flags ]]
-		pcall(function() setfflag("NewRunServiceSignals", "true") end) 
-		pcall(function() setfflag("NewRunServiceSignals", true) end) 
+if not Global.Event then
+	local Bind = Instance.new("BindableEvent"); do
+		local EventTick = tick()
+		for i,v in ipairs({RunService.PreRender,RunService.PreAnimation,RunService.PreSimulation,RunService.PostSimulation}) do
+			v:Connect(function()
+				Bind:Fire(tick()-EventTick); EventTick = tick()
+			end)
+		end
+		Global.Event = Bind.Event
 	end
+end; local Event = Global.Event
 
-	local Bind = Instance.new("BindableEvent")
-	local Tick = tick()
-	for i,v in ipairs({RunService.Heartbeat,RunService.Stepped,RunService.RenderStepped,RunService.PreAnimation}) do
-		v:Connect(function()
-			Bind:Fire(tick()-Tick)
-			Tick = tick()
-		end)
-	end
-	fwait = function(Num)
-		if Num and Num > 0 then
-			local Tick = tick()
-			repeat
-				Tick += Bind.Event:Wait()
-			until Tick >= Num
-			return Tick
-		else
-			return Bind.Event:Wait()
+local Funcs = {}; do
+	Funcs.RoundNumber = function(number, decimalPlaces) if number and tonumber(number) then
+			decimalPlaces = decimalPlaces or 4
+			local Return = tostring(math.round(tonumber(number) * 10^decimalPlaces) * 10^-decimalPlaces)
+			return string.find(Return,".") and tonumber(string.sub(Return,1,string.find(Return,".")+decimalPlaces+1)) or tonumber(Return)
 		end
 	end
-	Global.fwait = fwait
-	Global.Event = Bind.Event
-	Event = Bind.Event
-end
-
-
-do -- [[ Commands ]]
-	local function ShortName(Name)
-		Name = tostring(Name)
+	Funcs.fwait = function(Time)
+		if Time and tonumber(Time) and Time > 0 then
+			local Timed = 0; repeat Timed += Event:Wait() until Timed >= Time
+		else Event:Wait() end
+	end
+	Funcs.ShortName = function(Name,IncludeLocal)
+		local Users = {}; Name = string.split(Name,",")
 		for _,plr in pairs(Players:GetPlayers()) do
-			if plr ~= Player and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) then
-				return plr
+			if IncludeLocal and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) or 
+				plr ~= Player and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) or 
+				IncludeLocal and string.sub(string.lower(plr.DisplayName),1,#Name) == string.lower(Name) or 
+				plr ~= Player and string.sub(string.lower(plr.DisplayName),1,#Name) == string.lower(Name) then
+				table.insert(Users,plr)
 			end
 		end
-		for _,plr in pairs(Players:GetPlayers()) do
-			if plr ~= Player and string.sub(string.lower(plr.DisplayName),1,#Name) == string.lower(Name) then
-				return plr
-			end
-		end
-		for _,plr in pairs(workspace:GetChildren()) do
-			if plr ~= Player and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) then
-				return plr
-			end
-		end
+		return Users[1] and Users or nil
 	end
-	local function check4property(obj, prop)
-		return ({pcall(function()if(typeof(obj[prop])=="Instance")then error()end end)})[1]
+	Funcs.GetPing = function(Divider) Divider = Divider or 1000
+		return Ping:GetValue()/Divider
 	end
-
-	local function GetPing(Divider)
-		return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()/Divider
-	end
-	
-	local function RoundNumber(Num)
-		return math.round(Num*1000)/1000
-	end
-
-	local function PredictPos(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
+	Funcs.PredictPos = function(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
 		local DIST = (Pos1 - (_Pos3 or Pos2)).Magnitude + (DISTOff or 0)
 		local TOA = (DIST / Velocity1.Magnitude) + (TOAOff or 0)
 		local POS = Pos2 + (Velocity2 * TOA)
 		return POS
 	end
-
-	local function FixYAxis(Velocity)
-		return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
-	end
-
-	local function ClearAttachConnections()
-		if Storage["AttachConnections"] then
-			for i,v in pairs(Storage["AttachConnections"]) do
+	Funcs.ClearConnections = function(Folder)
+		if EventStorage[Folder] then
+			for i,v in pairs(EventStorage[Folder]) do
 				v:Disconnect()
 			end
+		end; EventStorage[Folder] = {}
+	end
+	Funcs.AttachToPlayer = function(ToPlr,Offset,Prediction)
+		local function FixYAxis(Velocity)
+			return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
 		end
-		Storage["AttachConnections"] = {}
-	end
+		Funcs.ClearConnections("Attachments")
+		
+		if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and not Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+			local BodyVelocity = Instance.new("BodyVelocity"); do
+				BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+				BodyVelocity.P = math.huge; 
+				BodyVelocity.Velocity = Vector3.new()
+				BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+			end
 
-	local function BoopedPredictionAttach(ToPlr,CF)
-		ClearAttachConnections()
-		table.insert(Storage["AttachConnections"],Event:Connect(function()
-			if Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
-				Player.Character.HumanoidRootPart.CFrame = CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, Vector3.new(math.huge, 0, 0), ToPlr.Character.HumanoidRootPart.Position, FixYAxis(ToPlr.Character.HumanoidRootPart.Velocity), nil, .4+GetPing(1000))) * (ToPlr.Character.HumanoidRootPart.CFrame-ToPlr.Character.HumanoidRootPart.Position) * CF
-			else
-				if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
-					Player.Character.HumanoidRootPart.BodyVelocity:Destroy()
-				end
-				ClearAttachConnections()
+			local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+				BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+				BodyAngularVelocity.P = math.huge; 
+				BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+				BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
+			end
+		end
+		
+		table.insert(EventStorage["Attachments"],Event:Connect(function()
+			if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Parent and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
+				local Positioning = Prediction and CFrame.new(Funcs.PredictPos(Player.Character.HumanoidRootPart.Position, 
+					Vector3.new(math.huge, 0, 0), 
+					ToPlr.Character.HumanoidRootPart.Position, 
+					FixYAxis(ToPlr.Character.HumanoidRootPart.Velocity), 
+					nil, 
+					.4+Funcs.GetPing(1000))) * (ToPlr.Character.HumanoidRootPart.CFrame-ToPlr.Character.HumanoidRootPart.Position) * Offset or ToPlr.Character.HumanoidRootPart.CFrame * Offset
+				Player.Character.HumanoidRootPart.CFrame = Positioning
 			end
 		end))
-		table.insert(Storage["AttachConnections"],Player.CharacterAdded:Connect(function()
-			ClearAttachConnections()
-		end))
-	end
-
-	local function OldPredictionAttach(ToPlr,CF)
-		ClearAttachConnections()
-		local speed = 0
-		ToPlr.Character.Humanoid.Running:Connect(function(sp)
-			speed = sp
+		
+		Player.CharacterAdded:Connect(function()
+			Funcs.ClearConnections("Attachments")
 		end)
-		table.insert(Storage["AttachConnections"],Event:Connect(function()
-			if Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
-				Player.Character.HumanoidRootPart.CFrame = CFrame.new(ToPlr.Character.HumanoidRootPart.Position + (ToPlr.Character.Humanoid.MoveDirection * ((speed/16)+GetPing(10)))) * (ToPlr.Character.HumanoidRootPart.CFrame-ToPlr.Character.HumanoidRootPart.Position) * CF
-			else
-				if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
-					Player.Character.HumanoidRootPart.BodyVelocity:Destroy()
-				end
-				ClearAttachConnections()
-			end
-		end))
-		table.insert(Storage["AttachConnections"],Player.CharacterAdded:Connect(function()
-			ClearAttachConnections()
-		end))
 	end
-
-	local function CFrameAttach(ToPlr,CF)
-		ClearAttachConnections()
-		table.insert(Storage["AttachConnections"],Event:Connect(function()
-			if Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
-				Player.Character.HumanoidRootPart.CFrame = ToPlr.Character.HumanoidRootPart.CFrame * CF
-			else
-				if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
-					Player.Character.HumanoidRootPart.BodyVelocity:Destroy()
-				end
-				ClearAttachConnections()
-			end
-		end))
-		table.insert(Storage["AttachConnections"],Player.CharacterAdded:Connect(function()
-			ClearAttachConnections()
-		end))
+	Funcs.Loadstring = function(Link,NoHTTP,ChunkName)
+		if loadstring then
+			loadstring(NoHTTP and Link or game:HttpGet(Link,true),ChunkName)()
+		end
 	end
-
-	local Commands,Visible,RealChar
-	local noclipping,Flying = false,false
-
-	Commands = {
-		["print"] = {{"Value"},function(args)
-			print(args[2])
-		end},
-		["commands"] = {{},function(args)
-			GUI.Frame.Position = UDim2.new(0.1, 0,0.3, 0)
-			GUI.Frame.Visible = true
-		end},
-		["cmds"] = {{},function(args)
-			GUI.Frame.Position = UDim2.new(0.1, 0,0.3, 0)
-			GUI.Frame.Visible = true
-		end},
-		["hydroxide"] = {{},function(args)
-			local owner = "Upbolt"
-			local branch = "revision"
-
-			local function webImport(file)
-				return loadstring(game:HttpGetAsync(("https://raw.githubusercontent.com/%s/Hydroxide/%s/%s.lua"):format(owner, branch, file)), file .. '.lua')()
+	Funcs.GetAuthentication = function(cookie)
+		local authRes = request({
+			Url = "https://www.roblox.com/authentication/signoutfromallsessionsandreauthenticate",
+			Method = "POST",
+			Headers = {
+				["content-type"] = "application/json",
+				["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.305 Chrome/69.0.3497.128 Electron/4.0.8 Safari/537.36",
+				["cookie"] = ".ROBLOSECURITY="..cookie,
+			}
+		});
+		if authRes.Success then
+			return authRes.Headers["x-csrf-token"];
+		end;
+		local authRes2 = request({
+			Url = "https://auth.roblox.com/v1/account/pin",
+			Method = "GET",
+			Headers = {
+				["content-type"] = "application/json",
+				["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.305 Chrome/69.0.3497.128 Electron/4.0.8 Safari/537.36",
+				["cookie"] = ".ROBLOSECURITY="..cookie,
+				["X-CSRF-TOKEN"] = authRes.Headers["x-csrf-token"]
+			}
+		});
+		if authRes2.Success then
+			return authRes.Headers["x-csrf-token"];
+		end;
+	end
+	local NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
+		if NotificationService then
+			NotificationService:message{
+				Title = Title or "",
+				Description = Description or "",
+				Icon = 8982365769,
+			}
+		end
+	end
+	Funcs.KillValidity = function(Player) 
+		Player.CharacterAdded:Connect(function(Character)
+			Character:WaitForChild("HumanoidRootPart"):SetAttribute("SpawnTime",tick())
+		end)
+		task.defer(function()
+			if Player.Character then
+				Player.Character:WaitForChild("HumanoidRootPart"):SetAttribute("SpawnTime",tick())
 			end
+		end)
+	end
+end; if not Global.fwait then Global.fwait = Funcs.fwait end
 
-			webImport("init")
-			webImport("ui/main")
-		end},
-		["backdoorchecker"] = {{},function(args)
-			loadstring(game:HttpGet(('https://raw.githubusercontent.com/iK4oS/backdoor.exe/master/source.lua'),true))()
-		end},
-		["animstealer"] = {{},function(args)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/AnimationStealer.lua",true))()
-		end},
-		["aimlock"] = {{},function(args)
-			loadstring(game:HttpGet("https://pastebin.com/raw/Zz5yB0D1", true))()
-		end},
-		["antitp"] = {{},function(args)
-			local humroot = Player.Character.HumanoidRootPart
-			local prevpos = humroot.CFrame
-			while fwait() do
-				if (humroot.Position - prevpos.Position).Magnitude < -2 or (humroot.Position - prevpos.Position).Magnitude > 2 then
-					humroot.CFrame = prevpos
+
+
+local CommandBar,CommandsFrame,ExitButton,ScrollingFrame
+local ScreenGui = Instance.new("ScreenGui"); do
+	CommandBar = Instance.new("TextBox"); do
+		CommandBar.AnchorPoint = Vector2.new(0.5, 0)
+		CommandBar.BackgroundColor3 = Color3.fromRGB(57, 0, 98)
+		CommandBar.BorderSizePixel = 0
+		CommandBar.Position = UDim2.new(0.5,0,0,-70)
+		CommandBar.Size = UDim2.new(0.3, 0, 0, 30)
+		CommandBar.ZIndex = 5
+		CommandBar.Font = Enum.Font.Gotham
+		CommandBar.PlaceholderText = "Commands"
+		CommandBar.Text = ""
+		CommandBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+		CommandBar.TextSize = 20
+		CommandBar.TextWrapped = true
+		local Diamond = Instance.new("Frame"); do
+			Diamond.AnchorPoint = Vector2.new(0.5, 0.5)
+			Diamond.BackgroundColor3 = Color3.fromRGB(57, 0, 98)
+			Diamond.BorderSizePixel = 0
+			Diamond.Position = UDim2.new(0.5, 0, 0.5, 0)
+			Diamond.Rotation = 45
+			Diamond.Size = UDim2.new(0, 50, 0, 50)
+			Diamond.ZIndex = 4
+			Diamond.Parent = CommandBar
+		end
+		CommandBar.Parent = ScreenGui
+		CommandBar.FocusLost:Connect(function(EnterPressed)
+			if EnterPressed then
+				local Args = string.split(CommandBar.Text," ")
+				local CommandName = Args[1]; table.remove(Args[1])
+				if Commands[CommandName] then
+					Commands[CommandName].Function(Args)
 				end
-				prevpos = humroot.CFrame
 			end
-		end},
-		["antifling"] = {{},function(args)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/phys/main/antifling.lua",true))()
-		end},
-		["explorer"] = {{},function(args)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/awesome-explorer/main/source.lua", true))()
-		end},
-		["dex"] = {{},function(args)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/ExProDex-V2/main/src.lua", true))()
-		end},
-		["dexv4"] = {{},function(args)
-			loadstring(game:HttpGetAsync("https://pastebin.com/raw/fPP8bZ8Z",true))()
-		end},
-		["iy"] = {{},function(args)
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-		end},
-		["reanimate"] = {{},function(args)
-			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/ZendeyReanimate.lua", true))()
-		end},
-		["tooldances"] = {{},function(args)
+			CommandBar.Text = ""
+		end)
+	end
+	CommandsFrame = Instance.new("Frame"); do
+		CommandsFrame.BackgroundColor3 = Color3.fromRGB(57, 0, 98)
+		CommandsFrame.BorderSizePixel = 0
+		CommandsFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
+		CommandsFrame.Size = UDim2.new(0, 200, 0, 220)
+		CommandsFrame.Visible = false
+		local Frame_4 = Instance.new("Frame"); do
+			Frame_4.BackgroundColor3 = Color3.fromRGB(47, 0, 84)
+			Frame_4.BorderSizePixel = 0
+			Frame_4.Size = UDim2.new(1, 0, 0, 25)
+			ExitButton = Instance.new("TextButton"); do
+				ExitButton.AnchorPoint = Vector2.new(1, 0)
+				ExitButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+				ExitButton.BackgroundTransparency = 1
+				ExitButton.Position = UDim2.new(1, 0, 0, 0)
+				ExitButton.Size = UDim2.new(0, 25, 0, 25)
+				ExitButton.Font = Enum.Font.Gotham
+				ExitButton.Text = "X"
+				ExitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+				ExitButton.TextSize = 14
+				ExitButton.Parent = Frame_4
+				ExitButton.Activated:Connect(function()
+					CommandsFrame.Visible = false
+				end)
+			end
+			Frame_4.Parent = CommandsFrame
+			task.defer(function() -- Drag
+				local dragToggle,dragInput,dragStart,startPos
+				local dragSpeed = 0
+				local function updateInput(input)
+					local Delta = input.Position - dragStart
+					CommandsFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + Delta.X, startPos.Y.Scale, startPos.Y.Offset + Delta.Y)
+				end
+				Frame_4.InputBegan:Connect(function(input)
+					if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
+						dragToggle = true
+						dragStart = input.Position
+						startPos = CommandsFrame.Position
+						input.Changed:Connect(function()
+							if input.UserInputState == Enum.UserInputState.End then
+								dragToggle = false
+							end
+						end)	
+					end
+				end)
+				Frame_4.InputChanged:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+						dragInput = input
+					end
+				end)
+				UserInputService.InputChanged:Connect(function(input)
+					if input == dragInput and dragToggle then
+						updateInput(input)
+					end
+				end)
+			end)
+		end
+		ScrollingFrame = Instance.new("ScrollingFrame"); do
+			ScrollingFrame.Active = true
+			ScrollingFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			ScrollingFrame.BackgroundTransparency = 1
+			ScrollingFrame.Position = UDim2.new(0, 0, 0, 25)
+			ScrollingFrame.Size = UDim2.new(0, 200, 0, 195)
+			ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+			ScrollingFrame.ScrollBarThickness = 0
+			ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+			local UIListLayout = Instance.new("UIListLayout"); do
+				UIListLayout.SortOrder = Enum.SortOrder.Name
+				UIListLayout.Parent = ScrollingFrame
+			end
+			ScrollingFrame.Parent = CommandsFrame
+		end
+		CommandsFrame.Parent = ScreenGui
+	end
+	ScreenGui.Parent = script.Parent
+end
+
+Commands = {
+	["print"] = {
+		Args = {"Text"},
+		Alias = {},
+		Function = function(Args)
+			local String = ""
+			for i,v in pairs(Args) do
+				String ..= " " .. v
+			end
+			print(String)
+		end,
+	},
+	["loadstring"] = {
+		Args = {"Script"},
+		Alias = {"s","execute"},
+		Function = function(Args)
+			local String = ""
+			for i,v in pairs(Args) do
+				String ..= " " .. v
+			end
+			Funcs.Loadstring(String,true)
+		end,
+	},
+	["commands"] = {
+		Args = {},
+		Alias = {"cmds","help"},
+		Function = function()
+			CommandsFrame.Visible = true; CommandsFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
+		end,
+	},
+	
+	["respawn"] = {
+		Args = {},
+		Alias = {"gr"},
+		Function = function()
+			if game.PlaceId == 7115420363 then game:GetService("ReplicatedStorage").Respawn:FireServer()
+			elseif game.PlaceId == 9307193325 or game.PlaceId == 5100950559 then
+				Global.ToggleChatFix = false
+				local ChatBar = Player:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame"):WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
+				local Text = ChatBar.Text
+				ChatBar:SetTextFromInput("-gr")
+				Players:Chat("-gr")
+				ChatBar:SetTextFromInput(Text)
+				Global.ToggleChatFix = true
+			elseif Player.Character:FindFirstChild(Player.Name) then
+				Player.Character.Head:Destroy()
+			else
+				local char = Player.Character
+				if char:FindFirstChildOfClass("Humanoid") then char:FindFirstChildOfClass("Humanoid"):ChangeState(15) end
+				char:ClearAllChildren()
+				local newChar = Instance.new("Model")
+				newChar.Parent = workspace
+				Player.Character = newChar
+				Player.Character = char
+				newChar:Destroy()
+			end
+		end,
+	},
+	
+	["refresh"] = {
+		Args = {},
+		Alias = {"re","unbang"},
+		Function = function()
+			local PreviousPosition = Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart.CFrame or
+				Player.Character:FindFirstChild("Head") and Player.Character.Head.CFrame or
+				Player.Character.PrimaryPart and Player.Character.PrimaryPart.CFrame or
+				Player.Character:FindFirstChildOfClass("BasePart") and Player.Character:FindFirstChildOfClass("BasePart").CFrame
+			Commands["respawn"].Function()
+			Player.CharacterAdded:Wait()
+			Player.Character:WaitForChild("HumanoidRootPart").CFrame = PreviousPosition
+		end,
+	},
+	
+	["hydroxide"] = {
+		Args = {},
+		Alias = {"remotespy","rspy","spy"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/init.lua",false,'init.lua')
+			Funcs.Loadstring("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ui/main.lua",false,'ui/main.lua')
+		end,
+	},
+	["backdoorchecker"] = {
+		Args = {},
+		Alias = {"bdc","bchecker"},
+		Function = function()
+			Funcs.Loadstring('https://raw.githubusercontent.com/iK4oS/backdoor.exe/master/source.lua')
+		end,
+	},
+	["animstealer"] = {
+		Args = {},
+		Alias = {"animgrabber"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/AnimationStealer.lua")
+		end,
+	},
+	["aimlock"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			Funcs.Loadstring("https://pastebin.com/raw/Zz5yB0D1")
+		end,
+	},
+	["antitp"] = {
+		Args = {},
+		Alias = {"notp"},
+		Function = function()
+			local humroot = Player.Character:FindFirstChild("HumanoidRootPart"); if humroot then
+				local prevpos = humroot.CFrame
+				while humroot and humroot.Parent do
+					if (humroot.Position - prevpos.Position).Magnitude < -2 or (humroot.Position - prevpos.Position).Magnitude > 2 then
+						humroot.CFrame = prevpos
+					end
+					prevpos = humroot.CFrame
+					Funcs.fwait()
+				end
+			end
+		end,
+	},
+	["antifling"] = {
+		Args = {},
+		Alias = {"physicsantifling"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/L8X/phys/main/antifling.lua")
+		end,
+	},
+	["antifling2"] = {
+		Args = {},
+		Alias = {"nophysicsantifling"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/NonPhysicsServiceAntiFling.lua")
+		end,
+	},
+	["explorer"] = {
+		Args = {},
+		Alias = {"betterdex","newdex"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/wally-rblx/awesome-explorer/main/source.lua")
+		end,
+	},
+	["dex"] = {
+		Args = {},
+		Alias = {"exprodex"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/L8X/ExProDex-V2/main/src.lua")
+		end,
+	},
+	["dexv4"] = {
+		Args = {},
+		Alias = {"upgradeddex"},
+		Function = function()
+			Funcs.Loadstring("https://pastebin.com/raw/fPP8bZ8Z")
+		end,
+	},
+	["iy"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
+		end,
+	},
+	["owlhub"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/ZinityDrops/OwlHubLink/master/OwlHubBack.lua")
+		end,
+	},
+	["boomboxhub"] = {
+		Args = {},
+		Alias = {"boombox"},
+		Function = function()
+			Funcs.Loadstring('https://riptxde.dev/u/hub/script.lua')
+		end,
+	},
+	["serverhop"] = {
+		Args = {"type"},
+		Alias = {"hopserver"},
+		Function = function(Args)
+			local ServerList = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
+			local Type = "Random"
+			if string.lower(Args[1]) == "small" or string.lower(Args[1]) == "smallest" or string.lower(Args[1]) == "lowest" or string.lower(Args[1]) == "low" or string.lower(Args[1]) == "bottom" or string.lower(Args[1]) == "s" then
+				Type = "Smallest"
+			elseif string.lower(Args[1]) == "large" or string.lower(Args[1]) == "largestest" or string.lower(Args[1]) == "highest" or string.lower(Args[1]) == "high" or string.lower(Args[1]) == "top" or string.lower(Args[1]) == "l" then
+				Type = "Largest"
+			end
+			
+			local PlayerCount,ServerJobId = 100,nil
+			for i,v in pairs(ServerList.data) do
+				if Type == "Smallest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing < PlayerCount or Type == "Largest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing > PlayerCount then
+					PlayerCount = v.playing
+					ServerJobId = v.id
+				elseif not ServerJobId and v.id ~= game.JobId and v.playing < v.maxPlayers-1 then
+					ServerJobId = v.id
+				end 
+			end
+			if ServerJobId then
+				game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, ServerJobId)
+			end
+		end,
+	},
+	["reanimate"] = {
+		Args = {},
+		Alias = {"netless"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/ZendeyReanimate.lua")
+		end,
+	},
+	["tooldances"] = {
+		Args = {},
+		Alias = {"toolemotes","emotes","emote"},
+		Function = function()
 			Global.ToolDancesSettings = {
 				Preload = false,
 				PreloadWait = true,
 				Reanimate = true,
 				R15 = false,
 			}
-			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua", true))()
-		end},
-		["r15tooldances"] = {{},function(args)
+			Funcs.Loadstring("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua")
+		end,
+	},
+	["r15tooldances"] = {
+		Args = {},
+		Alias = {"r15toolemotes","r15emotes","r15emote"},
+		Function = function()
 			Global.ToolDancesSettings = {
 				Preload = false,
 				PreloadWait = true,
 				Reanimate = true,
 				R15 = true,
 			}
-			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua", true))()
-		end},
-		["f3x"] = {{},function(args)
-			loadstring(game:GetObjects("rbxassetid://4698064966")[1].Source)()
-		end},
-		["copypos"] = {{},function(args)
-			local function toClipboard(String)
-				local clipBoard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set)
-				if clipBoard then
-					clipBoard(String)
+			Funcs.Loadstring("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua")
+		end,
+	},
+	["f3x"] = {
+		Args = {},
+		Alias = {"btools"},
+		Function = function()
+			Funcs.Loadstring(game:GetObjects("rbxassetid://4698064966")[1].Source,true)
+		end,
+	},
+	["copypos"] = {
+		Args = {},
+		Alias = {"copylocation"},
+		Function = function()
+			local Root = Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.PrimaryPart or Player.Character:FindFirstChild("Head") or Player.Character:FindFirstChildOfClass("BasePart")
+			if Root then setclipboard(Funcs.RoundNumber(Root.Position.X) .. ", " .. Funcs.RoundNumber(Root.Position.Y) .. ", " .. Funcs.RoundNumber(Root.Position.Z)) end
+			Funcs.Notify("Copied position","Copied your .Position to your clipboard.")
+		end,
+	},
+	["antikorblox"] = {
+		Args = {},
+		Alias = {"removekorblox"},
+		Function = function()
+			Player.CharacterAdded:Connect(function(Character)
+				if Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R6 then
+					Player.Character:WaitForChild("Korblox Deathspeaker Right Leg"):Destroy()
+				else
+					Funcs.Notify("R6 Needed","You cannot remove korblox on R15")
 				end
-			end
-			local roundedPos = math.round(Player.Character.HumanoidRootPart.Position.X) .. ", " .. math.round(Player.Character.HumanoidRootPart.Position.Y) .. ", " .. math.round(Player.Character.HumanoidRootPart.Position.Z)
-			toClipboard(roundedPos)
-		end},
-		["antilog"] = {{},function(args)
-			loadstring(game:HttpGet('https://pastebin.com/raw/444k40vk'))();
-		end},
-		["antikorblox"] = {{},function(args)
-			local LP = Player
-			local a = LP.Character:FindFirstChild("Korblox Deathspeaker Right Leg")
-			if a then a:Destroy() end
-			LP.CharacterAdded:Connect(function(v)
-				repeat wait() until v:FindFirstChild("Korblox Deathspeaker Right Leg")
-				v:WaitForChild("Korblox Deathspeaker Right Leg"):Destroy()
 			end)
-		end},
-		["bangsit"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					CFrameAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
+			if Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R6 then
+				Player.Character:WaitForChild("Korblox Deathspeaker Right Leg"):Destroy()
+			else
+				Funcs.Notify("R6 Needed","You cannot remove korblox on R15")
+			end
+		end,
+	},
+	["savecookie"] = {
+		Args = {"cookie"},
+		Alias = {"cookie"},
+		Function = function(Args)
+			writefile("cookie.txt",unpack(Args))
+		end,
+	},
+	["checkcookie"] = {
+		Args = {},
+		Alias = {},
+		Function = function(Args)
+			if isfile("cookie.txt") then
+				local Response = request({
+					Url = "https://avatar.roblox.com/v1/avatar/assets/9368550035/wear",
+					Method = "POST",
+					Headers = {
+						["cookie"] = readfile("cookie.txt"),
+						["Content-Type"] = "application/json",
+						["x-csrf-token"] = "",
+						["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+					},
+					Body = game:GetService("HttpService"):JSONEncode({})
+				})
+				if Response.StatusCode == 401 then
+					Funcs.Notify("Cookie Invalid","Please get a new cookie.")
+				else
+					Funcs.Notify("Cookie Valid","You may proceed to use cookie related commands.")
 				end
+			else
+				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
 			end
-		end},
-		["bangsitpredict"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					BoopedPredictionAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
+		end,
+	},
+	["r6"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			if isfile("cookie.txt") then
+				local Response = request({
+					Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
+					Method = "POST",
+					Headers = {
+						["cookie"] = readfile("cookie.txt"),
+						["Content-Type"] = "application/json",
+						["x-csrf-token"] = Funcs.GetAuthentication(readfile("cookie.txt")),
+						["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+					},
+					Body = game:GetService("HttpService"):JSONEncode({
+						playerAvatarType = 1
+					})
+				})
+				Commands["refresh"].Function()
+			else
+				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
+			end
+		end,
+	},
+	["r15"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			if isfile("cookie.txt") then
+				local Response = request({
+					Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
+					Method = "POST",
+					Headers = {
+						["cookie"] = readfile("cookie.txt"),
+						["Content-Type"] = "application/json",
+						["x-csrf-token"] = Funcs.GetAuthentication(readfile("cookie.txt")),
+						["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+					},
+					Body = game:GetService("HttpService"):JSONEncode({
+						playerAvatarType = 3
+					})
+				})
+				Commands["refresh"].Function()
+			else
+				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
+			end
+		end,
+	},
+	["headsit"] = {
+		Args = {"Player"},
+		Alias = {},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+				Funcs.AttachToPlayer(Funcs.ShortName(ToPlr),CFrame.new(0,1.6,1.15))
+			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+				if not Seated then
+					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
+					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
+					Funcs.ClearConnections("Attachments")
 				end
-			end
-		end},
-		["bangsitpredict2"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					OldPredictionAttach(copyplr,CFrame.new(0,-1.202,-1.6) * CFrame.Angles(math.rad(-90),0,0))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
+			end)) end
+		end,
+	},
+	["headsitpredict"] = {
+		Args = {"Player"},
+		Alias = {},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+				Funcs.AttachToPlayer(Funcs.ShortName(ToPlr),CFrame.new(0,1.6,1.15),true) 
+			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+				if not Seated then
+					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
+					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
+					Funcs.ClearConnections("Attachments")
 				end
-			end
-		end},
-		["hjobsit"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					CFrameAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
+				end)) end
+		end,
+	},
+	["bang"] = {
+		Args = {"Player"},
+		Alias = {},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+				Funcs.AttachToPlayer(Funcs.ShortName(ToPlr),CFrame.new(0,0,1),true) 
+			local bangAnim = Instance.new("Animation") do
+				if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+					bangAnim.AnimationId = "rbxassetid://5918726674"
+				else
+					bangAnim.AnimationId = "rbxassetid://148840371"
 				end
-			end
-		end},
-		["hjobsitpredict2"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					OldPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
 
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
+				local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
+					Anim:Play(.1, 1, 1)
+					Anim:AdjustSpeed(5)
 				end
-			end
-		end},
-		["hjobsitpredict"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,-1.05) * CFrame.Angles(0,math.rad(180),0))
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
-				end
-			end
-		end},
-		["sniffsit"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					CFrameAttach(copyplr,CFrame.new(0,-2.3,1.05))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
-				end
-			end
-		end},
-		["sniffsitpredict2"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					OldPredictionAttach(copyplr,CFrame.new(0,-2.3,1.05))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
-				end
-			end
-		end},
-		["sniffsitpredict"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					BoopedPredictionAttach(copyplr,CFrame.new(0,-2.3,1.05))
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
-				end
-			end
-		end},
-		["headsit"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					CFrameAttach(copyplr,CFrame.new(0,1.6,1.15))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
-				end
-			end
-		end},
-		["headsitpredict2"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					OldPredictionAttach(copyplr,CFrame.new(0,1.6,1.15))
-
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
-				end
-			end
-		end},
-		["headsitpredict"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					BoopedPredictionAttach(copyplr,CFrame.new(0,1.6,1.15))
-					Player.Character:FindFirstChildOfClass('Humanoid').Sit = true
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-					table.insert(Storage["AttachConnections"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-						if not Seated then
-							BodyVelocity:Destroy()
-							ClearAttachConnections()
-						end
-					end))
-				end
-			end
-		end},
-		["bang"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					CFrameAttach(copyplr,CFrame.new(0,0,1))
-					local bangAnim = Instance.new("Animation") do
-						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
-							bangAnim.AnimationId = "rbxassetid://5918726674"
-						else
-							bangAnim.AnimationId = "rbxassetid://148840371"
-						end
-
-						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
-							Anim:Play(.1, 1, 1)
-							Anim:AdjustSpeed(5)
-						end
-					end
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-				end
-			end
-		end},
-		["joinplr"] = {{"PlayerID","GameID"},function(args)
-			local retries = 0
-			local function ToServer(User,PlaceId)	
-				if args[2] == nil then PlaceId = game.PlaceId end
-				if not pcall(function()
-						local FoundUser, UserId = pcall(function()
-							if tonumber(User) then
-								return tonumber(User)
-							end
-
-							return Players:GetUserIdFromNameAsync(User)
-						end)
-						local URL2 = ("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
-						local Http = HTTP:JSONDecode(game:HttpGet(URL2))
-						local GUID
-
-						local function tablelength(T)
-							local count = 0
-							for _ in pairs(T) do count = count + 1 end
-							return count
-						end
-
-						for i=1,tonumber(tablelength(Http.data)) do
-							for j,k in pairs(Http.data[i].playerIds) do
-								if k == UserId then
-									GUID = Http.data[i].id
-								end
-							end
-						end
-
-						if GUID ~= nil then
-							game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId,GUID,Players.LocalPlayer)
-						else
-						end
-					end)
-				then
-					if retries < 999 then
-						retries = retries + 1
-						print('ERROR retrying '..retries..'/3')
-						ToServer(User,PlaceId)
-					else
-					end
-				end
-			end
-			ToServer(args[2],args[3])
-		end},
-		["bangpredict2"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					OldPredictionAttach(copyplr,CFrame.new(0,0,1))
-					local bangAnim = Instance.new("Animation") do
-						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
-							bangAnim.AnimationId = "rbxassetid://5918726674"
-						else
-							bangAnim.AnimationId = "rbxassetid://148840371"
-						end
-
-						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
-							Anim:Play(.1, 1, 1)
-							Anim:AdjustSpeed(5)
-						end
-					end
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-				end
-			end
-		end},
-		["bangpredict"] = {{"Player"},function(args)
-			if args[2] then
-				local copyplr = ShortName(args[2])
-				if copyplr then
-					BoopedPredictionAttach(copyplr,CFrame.new(0,0,1))
-					local bangAnim = Instance.new("Animation") do
-						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
-							bangAnim.AnimationId = "rbxassetid://5918726674"
-						else
-							bangAnim.AnimationId = "rbxassetid://148840371"
-						end
-
-						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim) do
-							Anim:Play(.1, 1, 1)
-							Anim:AdjustSpeed(5)
-						end
-					end
-
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new()
-						BodyVelocity.Parent = Player.Character.HumanoidRootPart;
-					end
-
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
-					end
-				end
-			end
-		end},
-		["owlhub"] = {{},function(args)
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/ZinityDrops/OwlHubLink/master/OwlHubBack.lua"))();
-		end},
-		["boombox"] = {{},function(args)
-			loadstring(game:HttpGetAsync('https://riptxde.dev/u/hub/script.lua'))()
-		end},
-		["serverhop"] = {{},function(args)
-			local sl = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
-			for i,v in pairs(sl.data) do
-				if v.playing < v.maxPlayers and v.id ~= game.JobId then
-					game:service'TeleportService':TeleportToPlaceInstance(game.PlaceId, v.id)
-				end
-			end
-		end},
-		["serverhopsmallest"] = {{},function(args)
-			local sl = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
-			local minimum,id = 100,nil
-			for i,v in pairs(sl.data) do
-				if v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing < minimum then
-					minimum = v.playing
-					id = v.id
-				end
-			end
-			if id then
-				game:service'TeleportService':TeleportToPlaceInstance(game.PlaceId, id)
-			end
-		end},
-		["serverhoplargest"] = {{},function(args)
-			local sl = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
-			local maximum,id = 0,nil
-			for i,v in pairs(sl.data) do
-				if v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing > maximum then
-					maximum = v.playing
-					id = v.id
-				end
-			end
-			if id then
-				game:service'TeleportService':TeleportToPlaceInstance(game.PlaceId, id)
-			end
-		end},
-		["serverhop2"] = {{},function(args)
-			game:GetService('TeleportService'):Teleport(game.PlaceId, Player)
-		end},
-		["rejoin"] = {{},function(args)
+				end end
+		end,
+	},
+	["rejoin"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
 			if #Players:GetPlayers() <= 1 then
 				game:GetService('TeleportService'):Teleport(game.PlaceId, Player)
 			else
 				game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, game.JobId, Player)
 			end
-		end},
-		["invisible"] = {{},function(args)
-			if not RealChar then
+		end,
+	},
+	["invisible"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			if not Global.RealChar and Visible then
 				local Player = game:GetService("Players").LocalPlayer
-				RealChar = Player.Character
+				local RealChar = Player.Character
 				RealChar.Archivable = true
 				local FakeChar = RealChar:Clone()
 
@@ -858,62 +738,49 @@ do -- [[ Commands ]]
 					FakeChar:Destroy()
 				end
 			end
-
-		end},
-		["visible"] = {{},function()
+		end,
+	},
+	["visible"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
 			if Visible then
-				Visible()
-				Visible = nil
+				Visible(); Visible = nil
 			end
-		end},
-		["noclip"] = {{},function()
-			Storage["Noclip"] = RunService.Stepped:Connect(function()
+		end,
+	},
+	["noclip"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			if EventStorage.Noclip then 
+				EventStorage.Noclip:Disconnect() EventStorage.Noclip = nil
+			end
+			EventStorage.Noclip = RunService.Stepped:Connect(function()
 				for _, child in pairs(Player.Character:GetDescendants()) do
 					if child:IsA("BasePart") and child.CanCollide == true then
 						child.CanCollide = false
 					end
 				end
 			end)
-		end},
-		["clip"] = {{},function()
-			if Storage["Noclip"] then Storage["Noclip"]:Disconnect() end
-		end},
-		["respawn"] = {{},function()
-			if Storage["InvisFling"] then Storage["InvisFling"]:Disconnect() end
-			if game.PlaceId == 7115420363 then
-				game:GetService("ReplicatedStorage").Respawn:FireServer()
-			elseif game.PlaceId == 9307193325 or game.PlaceId == 5100950559 then
-				Global.ToggleChatFix = false
-				local ChatBar = Player:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame"):WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
-				local Text = ChatBar.Text
-				ChatBar:SetTextFromInput("-gr")
-				Players:Chat("-gr")
-				ChatBar:SetTextFromInput(Text)
-				Global.ToggleChatFix = true
-			elseif Player.Character:FindFirstChild(Player.Name) then
-				Player.Character.Head:Destroy()
-			else
-				local char = RealChar or Player.Character
-				if char:FindFirstChildOfClass("Humanoid") then char:FindFirstChildOfClass("Humanoid"):ChangeState(15) end
-				char:ClearAllChildren()
-				local newChar = Instance.new("Model")
-				newChar.Parent = workspace
-				Player.Character = newChar
-				fwait()
-				Player.Character = char
-				newChar:Destroy()
+		end,
+	},
+	["clip"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			if EventStorage.Noclip then 
+				EventStorage.Noclip:Disconnect() EventStorage.Noclip = nil
 			end
-		end},
-		["refresh"] = {{},function()
-			local pos = Player.Character.HumanoidRootPart.CFrame
-			Commands["respawn"][2]()
-			Player.CharacterAdded:Wait()
-			Player.Character:WaitForChild("HumanoidRootPart",500).CFrame = pos
-		end},
-		["fly"] = {{},function()
+		end,
+	},
+	["fly"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
 			if not Flying then
 				local Player = game:GetService("Players").LocalPlayer
-				local Character = RealChar or Player.Character
+				local Character = Player.Character
 				local Root = Character.HumanoidRootPart
 
 				Flying = true
@@ -944,7 +811,7 @@ do -- [[ Commands ]]
 
 				Character.Humanoid.PlatformStand = true
 
-				Storage["FlyInputBegan"] = UserInputService.InputBegan:Connect(function(Key)
+				EventStorage.FlyInputBegan = UserInputService.InputBegan:Connect(function(Key)
 					if Key.KeyCode == Enum.KeyCode.W then
 						Controls.Forward = 1
 					elseif Key.KeyCode == Enum.KeyCode.S then
@@ -960,7 +827,7 @@ do -- [[ Commands ]]
 					end
 				end)
 
-				Storage["FlyInputEnd"] = UserInputService.InputEnded:Connect(function(Key)
+				EventStorage.FlyInputEnd = UserInputService.InputEnded:Connect(function(Key)
 					if Key.KeyCode == Enum.KeyCode.W then
 						Controls.Forward = 0
 					elseif Key.KeyCode == Enum.KeyCode.S then
@@ -984,20 +851,28 @@ do -- [[ Commands ]]
 						BodyVelocity.Velocity = Vector3.new(0, 0, 0)
 					end
 					BodyGyro.CFrame = workspace.CurrentCamera.CoordinateFrame
-					fwait()
+					Funcs.fwait()
 				end
 
 				BodyGyro:destroy()
 				BodyVelocity:destroy()
 				Player.Character.Humanoid.PlatformStand = false
 			end
-		end},
-		["unfly"] = {{},function()
+		end,
+	},
+	["unfly"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
 			Flying = false
-			if Storage["FlyInputEnd"] then Storage["FlyInputEnd"]:Disconnect() end
-			if Storage["FlyInputBegan"] then Storage["FlyInputBegan"]:Disconnect() end
-		end},
-		["cleanfling"] = {{},function()
+			if EventStorage.FlyInputEnd then EventStorage.FlyInputEnd:Disconnect() end
+			if EventStorage.FlyInputBegan then EventStorage.FlyInputBegan:Disconnect() end
+		end,
+	},
+	["cleanfling"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
 			local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
 			if tool then
 				tool.Parent = Player.Backpack
@@ -1006,359 +881,307 @@ do -- [[ Commands ]]
 				Player.Character.HumanoidRootPart.CustomPhysicalProperties = PhysicalProperties.new(math.huge,math.huge,math.huge,math.huge,math.huge)
 				tool.Parent = Player.Backpack
 				tool.Parent = Player.Character
-				Commands["noclip"][2]()
-				task.wait(0/1)
-				for i,v in pairs(Player.Character:WaitForChild("Humanoid"):GetPlayingAnimationTracks()) do v:Stop() end
+				Commands["noclip"].Function()
+				Funcs.fwait(0/1)
+				for i,v in pairs(Player.Character:WaitForChild("Humanoid"):GetPlayingAnimationTracks()) do
+					if string.find(v.Animation.AnimationId,"182393478") then
+						v:Stop()
+					end
+				end
 			end
-		end},
-		["invisfling"] = {{},function()
-			RealChar = Player.Character
-			local Root = RealChar.HumanoidRootPart
-
-			Root.Transparency = 0
-			RealChar.Archivable = true
-			local FakeCharacter = RealChar:Clone(); do
-				RealChar.Parent = workspace
-				FakeCharacter.Parent = RealChar
-				Player.Character = RealChar
-
-				workspace.CurrentCamera.CameraSubject = Root
-				task.wait(game.Players.RespawnTime+0.1)
+		end,
+	},
+	["invisfling"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			local Root = Player.Character:FindFirstChild("HumanoidRootPart"); local SelectionBox = Instance.new("SelectionBox"); do
+				SelectionBox.Adornee = Root; 
+				SelectionBox.Transparency = 1; 
+				SelectionBox.Parent = Root
 			end
-
-			Storage["InvisFling"] = Event:Connect(function()
-				Root:ApplyImpulse(Vector3.new(-17.72,0,-17.72))
+			Commands["fly"].Function()
+			EventStorage.InvisFling = Event:Connect(function()
 				Root.Velocity = Vector3.new(-17.72,0,-17.72)
 			end)
-
-			for i,v in pairs(RealChar:GetChildren()) do
+			local Character = Player.Character; Character.Archivable = true
+			local NewCharacter = Character:Clone(); NewCharacter:WaitForChild("Head").Anchored = true
+			Player.Character = NewCharacter; Character.Parent = NewCharacter; NewCharacter.Parent = workspace
+			Funcs.fwait(Players.RespawnTime+Funcs.GetPing(750))
+			for i,v in pairs(Character:GetChildren()) do
 				if v ~= Root and v.Name ~= "Humanoid" then
 					v:Destroy()
 				end
 			end
-
-			Commands["fly"][2]()
-		end},
-		["datalimit"] = {{"Number"},function(args)
-			if tonumber(args[2]) then
-				NetworkClient:SetOutgoingKBPSLimit(tonumber(args[2]))
+		end,
+	},
+	["datalimit"] = {
+		Args = {"KBPS"},
+		Alias = {},
+		Function = function(Args)
+			if tonumber(Args[1]) then
+				NetworkClient:SetOutgoingKBPSLimit(tonumber(Args[1]))
 			end
-		end},
-		["replicationlag"] = {{"Number"},function(args)
-			if tonumber(args[2]) then
-				settings():GetService("NetworkSettings").IncomingReplicationLag = tonumber(args[2])/1000
-			end
-		end},
-		["goto"] = {{"Player"},function(args)
-			local Plr = ShortName(args[2])
+		end,
+	},
+	["goto"] = {
+		Args = {},
+		Alias = {},
+		Function = function(Args)
+			local Plr = Funcs.ShortName(Args[1]);
 			if Plr then
-				Player.Character.HumanoidRootPart.CFrame = Plr.Character:FindFirstChild("HumanoidRootPart") and Plr.Character.HumanoidRootPart.CFrame or Plr.Character:FindFirstChildOfClass("BasePart").CFrame
+				Player.Character.HumanoidRootPart.CFrame = Plr[1].Character:FindFirstChild("HumanoidRootPart") and Plr[1].Character.HumanoidRootPart.CFrame or Plr[1].Character:FindFirstChildOfClass("BasePart").CFrame
 			end
-		end},
-		["jp"] = {{"Number"},function(args)
-			local jpower = args[2] and tonumber(args[2]) or 50
-			if Player.Character:FindFirstChildOfClass('Humanoid').UseJumpPower then
-				Player.Character:FindFirstChildOfClass('Humanoid').JumpPower = jpower
-			else
-				Player.Character:FindFirstChildOfClass('Humanoid').JumpHeight  = jpower
-			end
-		end},
-		["speed"] = {{"Number"},function(args)
-			local jpower = args[2] and tonumber(args[2]) or 16
-			Player.Character:FindFirstChildOfClass('Humanoid').WalkSpeed = jpower
-		end},
-		["gravity"] = {{"Number"},function(args)
-			local jpower = args[2] and tonumber(args[2]) or 196.2
-			workspace.Gravity = jpower
-		end},
-		["sit"] = {{},function(args)
-			Player.Character.Humanoid.Sit = true
-		end},
-		["tptool"] = {{},function(args)
-			local TpTool = Instance.new("Tool")
-			TpTool.Name = "Teleport Tool"
-			TpTool.RequiresHandle = false
-			TpTool.Parent = Player.Backpack
-			TpTool.Activated:Connect(function()
-				local Char = RealChar or Player.Character or workspace:FindFirstChild(Player.Name)
-				local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
-				if not Char or not HRP then
-					return warn("Failed to find HumanoidRootPart")
-				end
-				HRP.CFrame = CFrame.new(Mouse.Hit.X, Mouse.Hit.Y + 3, Mouse.Hit.Z, select(4, HRP.CFrame:components()))
-			end)
-		end},
-		["friend"] = {{"Player"},function(args)
-			local Plr = ShortName(args[2])
+		end,
+	},
+	["goto2"] = {
+		Args = {},
+		Alias = {},
+		Function = function(Args)
+			local Plr = Funcs.ShortName(Args[1]);
 			if Plr then
-				Plr:RequestFriendship(Plr)
+				Player.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+				Player.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+				Player.Character.HumanoidRootPart.CFrame = Plr[1].Character:FindFirstChild("HumanoidRootPart") and Plr[1].Character.HumanoidRootPart.CFrame or Plr[1].Character:FindFirstChildOfClass("BasePart").CFrame
 			end
-		end},
-		["fireproximityprompt"] = {{},function(args)
-			if fireproximityprompt then
-				for i,v in pairs(workspace:GetDescendants()) do
-					if v:IsA("ProximityPrompt") then
-						fireproximityprompt(v)
-					end
-				end
+		end,
+	},
+	["replicationlag"] = {
+		Args = {"number"},
+		Alias = {},
+		Function = function(Args)
+			if tonumber(Args[1]) then
+				settings():GetService("NetworkSettings").IncomingReplicationLag = tonumber(Args[1])/1000
 			end
-		end},
-		["light"] = {{"Range","Brightness"},function(args)
-			local light = Instance.new("PointLight")
-			light.Parent = Player.Character:FindFirstChildOfClass("BasePart")
-			light.Range = 30
-			light.Brightness = args[3] or 5
-			light.Range = args[2] or 8
-		end},
-		["split"] = {{},function(args)
+		end,
+	},
+	["psr"] = {
+		Args = {"number"},
+		Alias = {},
+		Function = function(Args)
+			if tonumber(Args[1]) then
+				setfflag("S2PhysicsSenderRate",tonumber(Args[1]) or 30)
+			end
+		end,
+	},
+	["speed"] = {
+		Args = {"number"},
+		Alias = {"walkspeed"},
+		Function = function(Args)
+			Player.Character:FindFirstChildOfClass('Humanoid').WalkSpeed = Args[1] and tonumber(Args[1]) or 16
+		end,
+	},
+	["gravity"] = {
+		Args = {"number"},
+		Alias = {},
+		Function = function(Args)
+			workspace.Gravity = Args[1] and tonumber(Args[1]) or 16
+		end,
+	},
+	["sit"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+			Player.Character:WaitForChild("HumanoidRootPart").Sit = true
+		end,
+	},
+	["split"] = {
+		Args = {},
+		Alias = {"r15split"},
+		Function = function()
 			if Player.Character:FindFirstChild("Waist",true) then
 				Player.Character.Character.UpperTorso.Waist:Destroy()
 			end
-		end},
-		["firetouchinterests"] = {{},function(args)
-			local Root = Player.Character:FindFirstChildOfClass("BasePart")
-			local function Touch(x)
-				x = x.FindFirstAncestorWhichIsA(x, "Part")
-				if x then
-					if firetouchinterest then
-						return task.defer(function()
-							firetouchinterest(x, Root, 1, wait() and firetouchinterest(x, Root, 0))
-						end)
+		end,
+	},
+	["kill"] = {
+		Args = {"Player"},
+		Alias = {"toolkill"},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
+				local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
+				if tool then
+					tool.Parent = Player.Backpack
+					tool.Parent = Player.Character
+					Player.Character.Humanoid:Destroy()
+					Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
+					tool:GetPropertyChangedSignal("Parent"):Wait(); if tool.Parent == ToPlr.Character then
+						Funcs.ClearConnections("Attachments")
+						local Root = Player.Character.HumanoidRootPart
+						repeat
+							Root.CFrame = CFrame.new(999999, workspace.FallenPartsDestroyHeight + 1,999999)
+							Funcs.fwait()
+						until not ToPlr.Character or not Root or not ToPlr.Character:FindFirstChild("HumanoidRootPart") or not Root.Parent
 					end
-					x.CFrame = Root.CFrame
 				end
 			end
-			for _, v in ipairs(workspace:GetDescendants()) do
-				if v.IsA(v, "TouchTransmitter") then
-					Touch(v)
+		end,
+	},
+	["fling"] = {
+		Args = {"Player"},
+		Alias = {"velocitykill","flingkill"},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
+				local Root = Player.Character:WaitForChild("HumanoidRootPart")
+				local Origin = Root.CFrame
+				Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
+				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(2147483646,2147483646,2147483646)
+				repeat 
+					Funcs.fwait()
+				until not ToPlr.Character or not ToPlr.Character:FindFirstChild("HumanoidRootPart") or ToPlr.Character.HumanoidRootPart.Velocity.Magnitude >= 100 or ToPlr.Character.HumanoidRootPart.RotVelocity.Magnitude >= 100
+				Funcs.ClearConnections("Attachments")
+				Root:WaitForChild("BodyAngularVelocity"):Destroy()
+				Root:WaitForChild("BodyVelocity"):Destroy()
+				Root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+				Root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+				Root.CFrame = Origin
+			end
+		end,
+	},
+	["printvelocity"] = {
+		Args = {"Player"},
+		Alias = {},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1],true); if ToPlr then 
+				for i,v in pairs(ToPlr) do
+					for i,part in pairs(v.Character:GetChildren()) do
+						if part:IsA("BasePart") then
+							print(v.Name,part.Name,Funcs.RoundNumber(part.Velocity.X) .. "," .. Funcs.RoundNumber(part.Velocity.Y) .. "," .. Funcs.RoundNumber(part.Velocity.Z))
+						end
+					end
 				end
 			end
-		end},
-		["kill"] = {{"Player"},function(args)
-			local Plr = ShortName(args[2])
-			local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
-			if Plr and tool then
-
-				tool.Parent = Player.Backpack
-				local Target = Plr.Character
-				local Character = Player.Character
-
-				local Humanoid = Character.Humanoid do
-					local FakeHum = Humanoid:Clone()
-					Humanoid.Name = ""
-					FakeHum.Parent = Character
-					Humanoid:Destroy()
+		end,
+	},
+	["printtotalvelocity"] = {
+		Args = {"Player"},
+		Alias = {"printmagnitude"},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1],true); if ToPlr then 
+				for i,v in pairs(ToPlr) do
+					for i,part in pairs(v.Character:GetChildren()) do
+						if part:IsA("BasePart") then
+							print(v.Name,part.Name,Funcs.RoundNumber(part.Velocity.Magnitude))
+						end
+					end
 				end
-
-				tool.Parent = Character
-
-				local Root = Character.HumanoidRootPart
-				local TRoot = Target.HumanoidRootPart
-
-				repeat
-					Root.CFrame = TRoot.CFrame * CFrame.new(math.random(-1,1)/10,math.random(-1,1)/10,math.random(-1,1)/10)
-					fwait()
-				until tool.Parent == Target
-
-				repeat
-					Root.CFrame = CFrame.new(999999, workspace.FallenPartsDestroyHeight + 1,999999)
-					fwait()
-				until not Root or not TRoot or not Root.Parent or not TRoot.Parent
 			end
-		end},
-		["psr"] = {{"Number"},function(args)
-			local psr = tonumber(args[2]) or 30
-			setfflag("S2PhysicsSenderRate", psr)
-		end},
-		["printvelocity"] = {{"Player"},function(args)
-			if args[2] and ShortName(args[2]) then
-				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
-				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
-				print(Character.Name .. "'s Velocity is (" .. RoundNumber(Part.Velocity.X) .. "," .. RoundNumber(Part.Velocity.Y) .. "," .. RoundNumber(Part.Velocity.Z) .. ")")		
+		end,
+	},
+	["chattotalvelocity"] = {
+		Args = {"Player"},
+		Alias = {"chatvelocity","chatmagnitude"},
+		Function = function(Args)
+			Funcs.fwait(900)
+			local ToPlr = Funcs.ShortName(Args[1],true); if ToPlr then 
+				for i,v in pairs(ToPlr) do
+					for i,part in pairs(v.Character:GetChildren()) do
+						if part:IsA("BasePart") then
+							ChatRemote:FireServer(v.Name .. " " .. part.Name .. " " .. Funcs.RoundNumber(part.Velocity.Magnitude),"All")
+						end
+					end
+				end
 			end
-		end},
-		["chatvelocity"] = {{"Player"},function(args)
-			if args[2] and ShortName(args[2]) then
-				task.wait(GetPing(750))
-				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
-				local Part = Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
-				
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Velocity is (" .. RoundNumber(Part.Velocity.X) .. "," .. RoundNumber(Part.Velocity.Y) .. "," .. RoundNumber(Part.Velocity.Z) .. ")", "All")
-			end
-		end},
-		["printtotalvelocity"] = {{"Player"},function(args)
-			if args[2] and ShortName(args[2]) then
-				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
-				local Part = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
-				print(Character.Name .. "'s Total Velocity is (" .. RoundNumber(Part.Velocity.Magnitude) .. ")")		
-			end
-		end},
-		["chattotalvelocity"] = {{"Player"},function(args)
-			if args[2] and ShortName(args[2]) then
-				task.wait(GetPing(750))
-				local Character = ShortName(args[2]); Character = Character:IsA("Player") and Character.Character or Character
-				local Part = Character.PrimaryPart or Character:FindFirstChild("HumanoidRootPart") or Character:FindFirstChild("Head") or Character:FindFirstChildOfClass("BasePart")
-
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Character.Name .. "'s Total Velocity is (" .. RoundNumber(Part.Velocity.Magnitude) .. ")", "All")
-			end
-		end},
-		["printserverinfo"] = {{},function()
+		end,
+	},
+	["printserverinfo"] = {
+		Args = {},
+		Alias = {},
+		Function = function()
 			if Global.ServerInfo then
 				print("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country)		
 			end
-		end},
-		["chatserverinfo"] = {{},function()
+		end,
+	},
+	["chatserverinfo"] = {
+		Args = {},
+		Alias = {"serverinfo","serverlocation"},
+		Function = function()
 			if Global.ServerInfo then
-				task.wait(GetPing(750))
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country, "All")
+				Funcs.fwait(900)
+				ChatRemote:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country,"All")		
 			end
-		end},
-		["boothprint"] = {{},function()
-			for i,v in pairs(workspace["Booth Blocks"]:GetChildren()) do
-				print(v:WaitForChild("Board"):WaitForChild("BoothGui"):WaitForChild("BoothFrame"):WaitForChild("Description").Text)
-			end
-		end},
-		["aimkid"] = {{},function(args)
-			GUI.TextBox.Frame.Frame.Visible = not GUI.TextBox.Frame.Frame.Visible
-		end},
-	}
-
-	GUI.TextBox.FocusLost:Connect(function(EnterPressed)
-		if EnterPressed then
-			local Args = string.split(GUI.TextBox.Text," ")
-			if Commands[string.lower(Args[1])] then
-				Commands[string.lower(Args[1])][2](Args)
-			end
-		end
-		GUI.TextBox.Text = ""
-	end)
-
-	Player.Chatted:Connect(function(msg)
-		if string.sub(msg,1,1) == "!" then
-			msg = string.sub(msg,2)
-			local Args = string.split(msg," ")
-			if Commands[string.lower(Args[1])] then
-				Commands[string.lower(Args[1])][2](Args)
-			end
-		end
-	end)
-
-	for i,v in pairs(Commands) do
-		local newlabel = Instance.new("TextLabel"); do
-			newlabel.BackgroundTransparency = 1
-			newlabel.Size = UDim2.new(1,0,0,20)
-			newlabel.Font = Enum.Font.Gotham
-			newlabel.TextSize = 14
-			newlabel.TextColor3 = Color3.new(1,1,1)
-			newlabel.LayoutOrder = i
-		end--script.TextLabel:Clone()
-		local txt = i
-		for i,v in pairs(v[1]) do
-			txt ..= " <" .. v .. ">"
-		end
-		newlabel.Text = txt
-		newlabel.Parent = GUI.Frame.ScrollingFrame
-	end
-end
-
-do -- [[ Commands GUI ]]
-	local function drag(Frame,FrameToMove)
-		local frametomove = FrameToMove
-		local dragToggle,dragInput,dragStart,startPos
-		local dragSpeed = 0
-		local function updateInput(input)
-			local Delta = input.Position - dragStart
-			frametomove.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + Delta.X, startPos.Y.Scale, startPos.Y.Offset + Delta.Y)
-		end
-		Frame.InputBegan:Connect(function(input)
-			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and game:GetService("UserInputService"):GetFocusedTextBox() == nil then
-				dragToggle = true
-				dragStart = input.Position
-				startPos = frametomove.Position
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						dragToggle = false
+		end,
+	},
+	["printmass"] = {
+		Args = {"Player"},
+		Alias = {},
+		Function = function(Args)
+			local ToPlr = Funcs.ShortName(Args[1],true); if ToPlr then 
+				for i,v in pairs(ToPlr) do
+					local Mass = 0
+					for i,part in pairs(v.Character:GetChildren()) do
+						if part:IsA("BasePart") then
+							Mass += part.Mass
+						end
 					end
-				end)	
+					print(v,Mass)
+				end
 			end
-		end)
-		Frame.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				dragInput = input
+		end,
+	},
+	["chatmass"] = {
+		Args = {"Player"},
+		Alias = {"mass"},
+		Function = function(Args)
+			Funcs.fwait(900)
+			local ToPlr = Funcs.ShortName(Args[1],true); if ToPlr then 
+				for i,v in pairs(ToPlr) do
+					local Mass = 0
+					for i,part in pairs(v.Character:GetChildren()) do
+						if part:IsA("BasePart") then
+							Mass += part.Mass
+						end
+					end
+					ChatRemote:FireServer(v.Name .. " " .. Mass,"All")
+				end
 			end
-		end)
-		UserInputService.InputChanged:Connect(function(input)
-			if input == dragInput and dragToggle then
-				updateInput(input)
-			end
-		end)
-	end
-	drag(GUI.Frame.Frame,GUI.Frame)
-	GUI.Frame.Frame.TextButton.Activated:Connect(function()
-		GUI.Frame.Visible = false
+		end,
+	}, --[[
+	[""] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+
+		end,
+	}, ]]
+}
+
+for i,v in pairs(Commands) do
+	local newlabel = Instance.new("TextLabel"); task.defer(function()
+		newlabel.BackgroundTransparency = 1
+		newlabel.Size = UDim2.new(1,0,0,20)
+		newlabel.Font = Enum.Font.Gotham
+		newlabel.TextSize = 14
+		newlabel.TextColor3 = Color3.new(1,1,1)
+		newlabel.Name = i
+		
+		local TextValue = i
+		for i,v in pairs(v.Args) do
+			TextValue ..= " <" .. v .. ">"
+		end; newlabel.Text = TextValue
+		
+		newlabel.Parent = ScrollingFrame
 	end)
 end
 
-do -- [[ Aimkid KeyChain ]]
-	local lastY = 0
-	local val = 0
-
-	task.defer(function() 
-		while GUI do
-			local Fram = RunService.RenderStepped:Wait()/(1/60)*0.6
-			local X, Y, Z = Camera.CFrame:ToOrientation()
-			if Toggle then
-				if math.deg(Y) > lastY then
-					val += Fram
-				elseif math.deg(Y) < lastY then
-					val -= Fram
-				else
-					val -= val/12
-				end
-				if val >= 30 then
-					val -= Fram
-				elseif val <= -30 then
-					val += Fram
-				end
-			else
-				if GUI.TextBox.Frame.Frame.Rotation > -180 then
-					val -= Fram*15
-				end
-			end
-			GUI.TextBox.Frame.Frame.Rotation = val
-			lastY = math.deg(Y)
-
-		end 
-	end)
-end
-
-do -- [[ Toggle ]]
-	UserInputService.InputBegan:Connect(function(input,gameprocess)
-		if not gameprocess and input.KeyCode == Enum.KeyCode.LeftBracket then
-			Toggle = not Toggle
-			if Toggle then
-				TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0.1,0)}):Play()
-				TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.25,0.25)}):Play()
-			else
-				TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
-				TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.1,0.1)}):Play()
-			end
+UserInputService.InputBegan:Connect(function(input,gameprocess)
+	if not gameprocess and input.KeyCode == Enum.KeyCode.LeftBracket then
+		Toggle = not Toggle
+		if Toggle then
+			TweenService:Create(CommandBar,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0.1,0)}):Play()
+		else
+			TweenService:Create(CommandBar,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
 		end
-	end)
-	task.defer(function()
-		fwait(.1)
-		TweenService:Create(GUI.TextBox,TweenInfo.new(0.5),{Position=UDim2.new(0.5,0,0,-70)}):Play()
-		TweenService:Create(GUI.TextBox.Frame.Frame.ImageLabel,TweenInfo.new(0.5),{AnchorPoint=Vector2.new(0.1,0.1)}):Play()
-	end)
-end
+	end
+end)
 
-do -- [[ Settings ]]
+task.defer(function()
 	local Settings = Global.AidKid or {
 		MainColor = Color3.fromRGB(57, 0, 98),
 		SecondaryColor = Color3.fromRGB(47, 0, 84),
-		Image = "rbxassetid://4840955387" -- must use image id
 	}
-	for i,v in pairs(GUI:GetDescendants()) do
+	for i,v in pairs(ScreenGui:GetDescendants()) do
 		if not v:IsA("UIListLayout") then
 			if v.BackgroundColor3 == Color3.fromRGB(57, 0, 98) then
 				v.BackgroundColor3 = Settings.MainColor
@@ -1367,9 +1190,23 @@ do -- [[ Settings ]]
 			end
 		end
 	end
-	GUI.TextBox.Frame.Frame.ImageLabel.ImageLabel.Image = Settings.Image
-end
+end)
 
-GUI.Parent = game:GetService("CoreGui")
-printconsole(Version)
-return LoadTick
+if not pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end) then ScreenGui.Parent = Player:WaitForChild("PlayerGui") end
+
+Player.Chatted:Connect(function(msg)
+	if string.sub(msg,1,1) == "!" then
+		msg = string.sub(msg,2)
+		local Args = string.split(msg," ")
+		local CommandName = Args[1]; table.remove(Args,1)
+		if Commands[CommandName] then
+			Commands[CommandName].Function(Args)
+		end
+	end
+end)
+
+Players.PlayerAdded:Connect(Funcs.KillValidity)
+for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
+
+print("Version: " .. Version .. " | Load Time: " .. tostring(Funcs.RoundNumber(tick()-Tick)))
+return tostring(Funcs.RoundNumber(tick()-Tick))
