@@ -1,9 +1,7 @@
-local Version = "1.2"
+local Version = "1.2.1"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
-
-
 
 local Tick = tick()
 
@@ -209,7 +207,7 @@ local ScreenGui = Instance.new("ScreenGui"); do
 		CommandBar.FocusLost:Connect(function(EnterPressed)
 			if EnterPressed then
 				local Args = string.split(CommandBar.Text," ")
-				local CommandName = Args[1]; table.remove(Args[1])
+				local CommandName = Args[1]; table.remove(Args,1)
 				if Commands[CommandName] then
 					Commands[CommandName].Function(Args)
 				end
