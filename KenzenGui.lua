@@ -1,4 +1,4 @@
-local Version = "1.2.3"
+local Version = "1.2.4"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -210,9 +210,11 @@ local ScreenGui = Instance.new("ScreenGui"); do
 		CommandBar.FocusLost:Connect(function(EnterPressed)
 			if EnterPressed then
 				local Args = string.split(CommandBar.Text," ")
-				local CommandName = Args[1]; table.remove(Args,1)
-				if Commands[CommandName] then
-					Commands[CommandName].Function(Args)
+				local CommandName = string.lower(Args[1]); table.remove(Args,1)
+				for i,v in pairs(Commands) do
+					if i == CommandName or table.find(v.Alias,CommandName) then
+						Commands[i].Function(Args)
+					end
 				end
 			end
 			CommandBar.Text = ""
@@ -1207,9 +1209,11 @@ Player.Chatted:Connect(function(msg)
 	if string.sub(msg,1,1) == "!" then
 		msg = string.sub(msg,2)
 		local Args = string.split(msg," ")
-		local CommandName = Args[1]; table.remove(Args,1)
-		if Commands[CommandName] then
-			Commands[CommandName].Function(Args)
+		local CommandName = string.lower(Args[1]); table.remove(Args,1)
+		for i,v in pairs(Commands) do
+			if i == CommandName or table.find(v.Alias,CommandName) then
+				Commands[i].Function(Args)
+			end
 		end
 	end
 end)
