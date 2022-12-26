@@ -1,4 +1,4 @@
-local Version = "1.2.4"
+local Version = "1.2"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -19,7 +19,7 @@ local Mouse = Player:GetMouse()
 local Global = Global or getgenv and getgenv() or shared
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
 local print = printconsole or print
-local request = (syn and request) or (http and http.request) or (request)
+local request = (syn and syn.request) or (http and http.request) or (request)
 local setclipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set) or print
 local loadstring = pcall(function() loadstring("")() end) and loadstring or nil
 local isfile = isfile or readfile and function(name) pcall(function() local a = readfile(name) end) end
