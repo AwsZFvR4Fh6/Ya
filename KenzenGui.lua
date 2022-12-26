@@ -1,4 +1,4 @@
-local Version = "1.2.2"
+local Version = "1.2.3"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -58,13 +58,15 @@ local Funcs = {}; do
 		else Event:Wait() end
 	end
 	Funcs.ShortName = function(Name,IncludeLocal)
-		local Users = {}; Name = string.split(Name,",")
-		for _,plr in pairs(Players:GetPlayers()) do
-			if IncludeLocal and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) or 
-				plr ~= Player and string.sub(string.lower(plr.Name),1,#Name) == string.lower(Name) or 
-				IncludeLocal and string.sub(string.lower(plr.DisplayName),1,#Name) == string.lower(Name) or 
-				plr ~= Player and string.sub(string.lower(plr.DisplayName),1,#Name) == string.lower(Name) then
-				table.insert(Users,plr)
+		local Users = {}; local Names = string.split(Name,",")
+		for _,v in pairs(Names) do
+			for _,plr in pairs(Players:GetPlayers()) do
+				if IncludeLocal and string.sub(string.lower(plr.Name),1,#v) == string.lower(v) or 
+					plr ~= Player and string.sub(string.lower(plr.Name),1,#v) == string.lower(v) or 
+					IncludeLocal and string.sub(string.lower(plr.DisplayName),1,#v) == string.lower(v) or 
+					plr ~= Player and string.sub(string.lower(plr.DisplayName),1,#v) == string.lower(v) then
+					table.insert(Users,plr)
+				end
 			end
 		end
 		return Users[1] and Users or nil
