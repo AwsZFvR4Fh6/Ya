@@ -1,4 +1,4 @@
-local Version = "1.2.0.1"
+local Version = "1.2.0.2"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -655,6 +655,7 @@ Commands = {
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15))
+				Player.Character:WaitForChild("HumanoidRootPart").Sit = true
 			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 				if not Seated then
 					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
@@ -670,6 +671,7 @@ Commands = {
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15),true) 
+				Player.Character:WaitForChild("HumanoidRootPart").Sit = true
 			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 				if not Seated then
 					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
@@ -750,6 +752,7 @@ Commands = {
 				end
 
 				RealChar:MoveTo(Vector3.new(0,math.huge,0))
+				Funcs.fwait()
 				RealChar.HumanoidRootPart.Anchored = true
 
 				FakeChar.Parent = workspace
@@ -872,7 +875,11 @@ Commands = {
 						Controls.Down = 0
 					end
 				end)
-
+				
+				Player.CharacterAdded:Connect(function()
+					Commands["unfly"].Function()
+				end)
+				
 				while Flying do
 					local Speed = Controls.Left == 0 and  Controls.Right == 0 and Controls.Forward == 0 and  Controls.Back == 0 and  Controls.Down == 0 and Controls.Up == 0 and 0 or 50
 					if (Controls.Left + Controls.Right) ~= 0 or (Controls.Forward + Controls.Back) ~= 0 or (Controls.Down + Controls.Up) ~= 0 then
@@ -912,7 +919,7 @@ Commands = {
 				tool.Parent = Player.Backpack
 				tool.Parent = Player.Character
 				Commands["noclip"].Function()
-				Funcs.fwait(0/1)
+				Funcs.fwait(.1)
 				for i,v in pairs(Player.Character:WaitForChild("Humanoid"):GetPlayingAnimationTracks()) do
 					if string.find(v.Animation.AnimationId,"182393478") then
 						v:Stop()
@@ -930,7 +937,7 @@ Commands = {
 				SelectionBox.Transparency = 1; 
 				SelectionBox.Parent = Root
 			end
-			Commands["fly"].Function()
+			task.defer(function() Commands["fly"].Function() end)
 			EventStorage.InvisFling = Event:Connect(function()
 				Root.Velocity = Vector3.new(-17.72,0,-17.72)
 			end)
