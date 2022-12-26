@@ -1,4 +1,4 @@
-local Version = "1.2.0.2"
+local Version = "1.2.0.4"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -18,7 +18,6 @@ local Mouse = Player:GetMouse()
 
 local Global = Global or getgenv and getgenv() or shared
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
-local print = printconsole and function(...) printconsole(tostring(...)) end or print
 local request = (syn and syn.request) or (http and http.request) or (request)
 local setclipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set) or print
 local loadstring = pcall(function() loadstring("")() end) and loadstring or nil
@@ -159,17 +158,25 @@ local Funcs = {}; do
 			return authRes.Headers["x-csrf-token"];
 		end;
 	end
-	local NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
-		print(NotificationService)
-		if NotificationService then
-			--print(tostring(Title) .. " " .. tostring(Description))
-			NotificationService:message{
-				Title = Title or "",
-				Description = Description or "",
-				Icon = 8982365769,
-			}
+	task.defer(function()
+		local NotificationService
+		repeat
+			NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua");
+			Funcs.fwait()
+		until NotificationService
+		Funcs.Notify = function(Title,Description)
+			--print(NotificationService)
+			if NotificationService then
+				--print(tostring(Title) .. " " .. tostring(Description))
+				NotificationService:message{
+					Title = Title or "",
+					Description = Description or "",
+					Icon = 8982365769,
+				}
+			end
 		end
-	end
+	end)
+	
 	Funcs.KillValidity = function(Player) 
 		Player.CharacterAdded:Connect(function(Character)
 			Character:WaitForChild("HumanoidRootPart"):SetAttribute("SpawnTime",tick())
@@ -1265,5 +1272,9 @@ for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
 
 Tick = tick()-Tick
 print("Version: " .. Version .. " | Load Time: " .. tostring(Funcs.RoundNumber(Tick)))
-Funcs.Notify("LoadTime",tostring(Funcs.RoundNumber(Tick)))
+task.defer(function()
+	repeat 
+		Funcs.fwait()
+	until Funcs.Notify; Funcs.Notify("LoadTime",tostring(Funcs.RoundNumber(Tick)))
+end)
 return tostring(Funcs.RoundNumber(Tick))
