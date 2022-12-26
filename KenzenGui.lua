@@ -1,4 +1,4 @@
-local Version = "1.2.1"
+local Version = "1.2.2"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -157,6 +157,7 @@ local Funcs = {}; do
 	end
 	local NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
 		if NotificationService then
+			--print(tostring(Title) .. " " .. tostring(Description))
 			NotificationService:message{
 				Title = Title or "",
 				Description = Description or "",
@@ -993,10 +994,14 @@ Commands = {
 		end,
 	},
 	["kill"] = {
-		Args = {"Player"},
+		Args = {"Player","RISH"},
 		Alias = {"toolkill"},
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
+				local RISH = string.lower(Args[2]) == "yes" or string.lower(Args[2]) == "true"; if RISH then
+					Commands["refresh"].Function()
+					Funcs.fwait(.3)
+				end
 				local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
 				if tool then
 					tool.Parent = Player.Backpack
@@ -1087,7 +1092,9 @@ Commands = {
 		Alias = {},
 		Function = function()
 			if Global.ServerInfo then
-				print("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country)		
+				print("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country)	
+			else
+				Funcs.Notify("No Global.ServerInfo","Please use the autoexecute provided by ProductionTakeOne")
 			end
 		end,
 	},
@@ -1097,7 +1104,9 @@ Commands = {
 		Function = function()
 			if Global.ServerInfo then
 				Funcs.fwait(900)
-				ChatRemote:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country,"All")		
+				ChatRemote:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country,"All")
+			else
+				Funcs.Notify("No Global.ServerInfo","Please use the autoexecute provided by ProductionTakeOne")
 			end
 		end,
 	},
@@ -1206,5 +1215,7 @@ end)
 Players.PlayerAdded:Connect(Funcs.KillValidity)
 for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
 
-print("Version: " .. Version .. " | Load Time: " .. tostring(Funcs.RoundNumber(tick()-Tick)))
-return tostring(Funcs.RoundNumber(tick()-Tick))
+Tick = tick()-Tick
+print("Version: " .. Version .. " | Load Time: " .. tostring(Funcs.RoundNumber(Tick)))
+Funcs.Notify("LoadTime",tostring(Funcs.RoundNumber(Tick)))
+return tostring(Funcs.RoundNumber(Tick))
