@@ -1,4 +1,4 @@
-local Version = "1.2.1"
+local Version = "1.2.3"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -160,6 +160,7 @@ local Funcs = {}; do
 		end;
 	end
 	local NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
+		print(NotificationService)
 		if NotificationService then
 			--print(tostring(Title) .. " " .. tostring(Description))
 			NotificationService:message{
@@ -213,6 +214,7 @@ local ScreenGui = Instance.new("ScreenGui"); do
 			if EnterPressed then
 				local Args = string.split(CommandBar.Text," ")
 				local CommandName = string.lower(Args[1]); table.remove(Args,1)
+				if not Args[1] then Args[1] = "" end
 				for i,v in pairs(Commands) do
 					if i == CommandName or table.find(v.Alias,CommandName) then
 						Commands[i].Function(Args)
@@ -1027,15 +1029,22 @@ Commands = {
 		Alias = {"toolkill"},
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
-				local RISH = Args[2] and string.lower(Args[2]) == "yes" or Args[2] and string.lower(Args[2]) == "true"; if RISH then
+				local RISH = Args[2] and string.lower(Args[2]) == "yes" or Args[2] and string.lower(Args[2]) == "true"; if RISH and ToPlr.Character.Humanoid:GetAttribute("SpawnTime") >= Player.Character.Humanoid:GetAttribute("SpawnTime") then
 					Commands["refresh"].Function()
 					Funcs.fwait(.3)
 				end
 				local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
 				if tool then
 					tool.Parent = Player.Backpack
+					
+					local Humanoid = Player.Character.Humanoid do
+						local FakeHum = Humanoid:Clone()
+						Humanoid.Name = ""
+						FakeHum.Parent = Player.Character
+						Humanoid:Destroy()
+					end
+					
 					tool.Parent = Player.Character
-					Player.Character.Humanoid:Destroy()
 					Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
 					tool:GetPropertyChangedSignal("Parent"):Wait(); if tool.Parent == ToPlr.Character then
 						Funcs.ClearConnections("Attachments")
@@ -1057,6 +1066,7 @@ Commands = {
 				local Root = Player.Character:WaitForChild("HumanoidRootPart")
 				local Origin = Root.CFrame
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
+				Funcs.fwait()
 				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(2147483646,2147483646,2147483646)
 				repeat 
 					Funcs.fwait()
