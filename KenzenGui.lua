@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 1"
+local Version = "1.2 BETA TEST 2"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -160,9 +160,9 @@ local Funcs = {}; do
 		end;
 	end
 	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
-		--print(NotificationService)
+		print(NotificationService,tostring(Title) .. " " .. tostring(Description))
 		if NotificationService then
-			print(tostring(Title) .. " " .. tostring(Description))
+			--print(tostring(Title) .. " " .. tostring(Description))
 			NotificationService:message{
 				Title = Title or "",
 				Description = Description or "",
