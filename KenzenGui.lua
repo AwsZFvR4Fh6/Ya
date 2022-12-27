@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 2"
+local Version = "1.2 BETA TEST 3"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -159,7 +159,7 @@ local Funcs = {}; do
 			return authRes.Headers["x-csrf-token"];
 		end;
 	end
-	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
+	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); warn(NotificationService) Funcs.Notify = function(Title,Description)
 		print(NotificationService,tostring(Title) .. " " .. tostring(Description))
 		if NotificationService then
 			--print(tostring(Title) .. " " .. tostring(Description))
@@ -620,6 +620,7 @@ Commands = {
 						playerAvatarType = 1
 					})
 				})
+				Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
 				Commands["refresh"].Function()
 			else
 				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
@@ -644,6 +645,7 @@ Commands = {
 						playerAvatarType = 3
 					})
 				})
+				Funcs.Notify("Attempted to change to r15","Response code" .. Response.StatusCode)
 				Commands["refresh"].Function()
 			else
 				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
