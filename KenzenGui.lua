@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 7"
+local Version = "1.2 BETA TEST 8"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -143,6 +143,7 @@ local Funcs = {}; do
 			}
 		});
 		if authRes and authRes.Headers and authRes.Headers["x-csrf-token"] then
+			Funcs.fwait(.1)
 			return authRes.Headers["x-csrf-token"]
 		end
 		local authRes2 = request({
@@ -156,6 +157,7 @@ local Funcs = {}; do
 			}
 		});
 		if authRes2 and authRes2.Headers and authRes2.Headers["x-csrf-token"] then
+			Funcs.fwait(.1)
 			return authRes2.Headers["x-csrf-token"]
 		end
 	end
