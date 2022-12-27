@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 11"
+local Version = "1.2 BETA TEST 12"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -1099,7 +1099,7 @@ Commands = {
 				Commands["noclip"].Function()
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
 				Funcs.fwait(.1+Funcs.GetPing(750))--Funcs.GetPing(750))
-				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(200000,200000,200000)
+				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Global.FlingValue--Vector3.new(200000,200000,200000)
 				repeat 
 					Funcs.fwait()
 				until not ToPlr.Character or not ToPlr.Character:FindFirstChild("HumanoidRootPart") or ToPlr.Character.HumanoidRootPart.Velocity.Magnitude >= 100 or ToPlr.Character.HumanoidRootPart.RotVelocity.Magnitude >= 100
