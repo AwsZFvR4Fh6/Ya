@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 9"
+local Version = "1.2 BETA TEST 10"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -341,6 +341,9 @@ Commands = {
 		Args = {},
 		Alias = {"gr"},
 		Function = function()
+			if Visible then
+				Visible(); Visible = nil
+			end
 			if game.PlaceId == 7115420363 then game:GetService("ReplicatedStorage").Respawn:FireServer()
 			elseif game.PlaceId == 9307193325 or game.PlaceId == 5100950559 then
 				Global.ToggleChatFix = false
@@ -416,6 +419,8 @@ Commands = {
 				local prevpos = humroot.CFrame
 				while humroot and humroot.Parent do
 					if (humroot.Position - prevpos.Position).Magnitude < -2 or (humroot.Position - prevpos.Position).Magnitude > 2 then
+						humroot.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+						humroot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
 						humroot.CFrame = prevpos
 					end
 					prevpos = humroot.CFrame
@@ -577,7 +582,11 @@ Commands = {
 		Args = {"cookie"},
 		Alias = {"cookie"},
 		Function = function(Args)
-			writefile("cookie.txt",unpack(Args))
+			local Connected = ""
+			for i,v in pairs(Args) do
+				Connected ..= " " .. v
+			end
+			writefile("cookie.txt",Connected)
 		end,
 	},
 	["checkcookie"] = {
@@ -1051,7 +1060,7 @@ Commands = {
 		Alias = {"toolkill"},
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
-				local RISH = Args[2] and string.lower(Args[2]) == "yes" or Args[2] and string.lower(Args[2]) == "true"; if RISH and ToPlr.Character.Humanoid:GetAttribute("SpawnTime") >= Player.Character.Humanoid:GetAttribute("SpawnTime") then
+				local RISH = Args[2] and string.lower(Args[2]) == "yes" or Args[2] and string.lower(Args[2]) == "true"; if RISH and ToPlr.Character:WaitForChild("HumanoidRootPart"):GetAttribute("SpawnTime") >= Player.Character:WaitForChild("HumanoidRootPart"):GetAttribute("SpawnTime") then
 					Commands["refresh"].Function()
 					Funcs.fwait(.3)
 				end
@@ -1087,13 +1096,15 @@ Commands = {
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
 				local Root = Player.Character:WaitForChild("HumanoidRootPart")
 				local Origin = Root.CFrame
+				Commands["noclip"].Function()
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
-				Funcs.fwait()
-				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(2147483646,2147483646,2147483646)
+				Funcs.fwait(Funcs.GetPing(750))
+				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(200000,200000,200000)
 				repeat 
 					Funcs.fwait()
 				until not ToPlr.Character or not ToPlr.Character:FindFirstChild("HumanoidRootPart") or ToPlr.Character.HumanoidRootPart.Velocity.Magnitude >= 100 or ToPlr.Character.HumanoidRootPart.RotVelocity.Magnitude >= 100
 				Funcs.ClearConnections("Attachments")
+				Commands["clip"].Function()
 				Root:WaitForChild("BodyAngularVelocity"):Destroy()
 				Root:WaitForChild("BodyVelocity"):Destroy()
 				Root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
@@ -1132,22 +1143,6 @@ Commands = {
 			end
 		end,
 	},
-	["chattotalvelocity"] = {
-		Args = {"Player"},
-		Alias = {"chatvelocity","chatmagnitude"},
-		Function = function(Args)
-			Funcs.fwait(900)
-			local ToPlr = Funcs.ShortName(Args[1],true); if ToPlr then 
-				for i,v in pairs(ToPlr) do
-					for i,part in pairs(v.Character:GetChildren()) do
-						if part:IsA("BasePart") then
-							ChatRemote:FireServer(v.Name .. " " .. part.Name .. " " .. Funcs.RoundNumber(part.Velocity.Magnitude),"All")
-						end
-					end
-				end
-			end
-		end,
-	},
 	["printserverinfo"] = {
 		Args = {},
 		Alias = {},
@@ -1164,7 +1159,7 @@ Commands = {
 		Alias = {"serverinfo","serverlocation"},
 		Function = function()
 			if Global.ServerInfo then
-				Funcs.fwait(900)
+				Funcs.fwait(Funcs.GetPing(900))
 				ChatRemote:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country,"All")
 			else
 				Funcs.Notify("No Global.ServerInfo","Please use the autoexecute provided by ProductionTakeOne")
@@ -1188,24 +1183,7 @@ Commands = {
 			end
 		end,
 	},
-	["chatmass"] = {
-		Args = {"Player"},
-		Alias = {"mass"},
-		Function = function(Args)
-			Funcs.fwait(900)
-			local ToPlr = Funcs.ShortName(Args[1],true); if ToPlr then 
-				for i,v in pairs(ToPlr) do
-					local Mass = 0
-					for i,part in pairs(v.Character:GetChildren()) do
-						if part:IsA("BasePart") then
-							Mass += part.Mass
-						end
-					end
-					ChatRemote:FireServer(v.Name .. " " .. Mass,"All")
-				end
-			end
-		end,
-	}, --[[
+	 --[[
 	[""] = {
 		Args = {},
 		Alias = {},
