@@ -1,4 +1,4 @@
-local Version = "1.2.0.5"
+local Version = "1.2"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -11,6 +11,7 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local NetworkClient = game:GetService("NetworkClient")
 local HttpService = game:GetService("HttpService")
+local NotificationService
 
 local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -158,25 +159,17 @@ local Funcs = {}; do
 			return authRes.Headers["x-csrf-token"];
 		end;
 	end
-	task.defer(function()
-		local NotificationService
-		repeat
-			NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua");
-			print(NotificationService)
-			Funcs.fwait(0.5)
-		until NotificationService
-		Funcs.Notify = function(Title,Description)
-			--print(NotificationService)
-			if NotificationService then
-				--print(tostring(Title) .. " " .. tostring(Description))
-				NotificationService:message{
-					Title = Title or "",
-					Description = Description or "",
-					Icon = 8982365769,
-				}
-			end
+	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
+		--print(NotificationService)
+		if NotificationService then
+			--print(tostring(Title) .. " " .. tostring(Description))
+			NotificationService:message{
+				Title = Title or "",
+				Description = Description or "",
+				Icon = 8982365769,
+			}
 		end
-	end)
+	end
 	
 	Funcs.KillValidity = function(Player) 
 		Player.CharacterAdded:Connect(function(Character)
@@ -1271,11 +1264,7 @@ end)
 Players.PlayerAdded:Connect(Funcs.KillValidity)
 for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
 
-Tick = tick()-Tick
-print("Version: " .. Version .. " | Load Time: " .. tostring(Funcs.RoundNumber(Tick)))
-task.defer(function()
-	repeat 
-		Funcs.fwait()
-	until Funcs.Notify; Funcs.Notify("LoadTime",tostring(Funcs.RoundNumber(Tick)))
-end)
-return tostring(Funcs.RoundNumber(Tick))
+Tick = tostring(Funcs.RoundNumber(tick()-Tick))
+print("Version: " .. Version .. " | Load Time: " .. Tick)
+Funcs.Notify("LoadTime",Tick)
+return Tick
