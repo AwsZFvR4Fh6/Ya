@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 5"
+local Version = "1.2 BETA TEST 6"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -608,24 +608,29 @@ Commands = {
 		Function = function()
 			if isfile("cookie.txt") then
 				local Token = Funcs.GetAuthentication(readfile("cookie.txt"))
-				local Response = request({
-					Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
-					Method = "POST",
-					Headers = {
-						["cookie"] = readfile("cookie.txt"),
-						["Content-Type"] = "application/json",
-						["x-csrf-token"] = Funcs.GetAuthentication(readfile("cookie.txt")),
-						["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
-					},
-					Body = game:GetService("HttpService"):JSONEncode({
-						playerAvatarType = 1
+				if Token then
+					local Response = request({
+						Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
+						Method = "POST",
+						Headers = {
+							["cookie"] = readfile("cookie.txt"),
+							["Content-Type"] = "application/json",
+							["x-csrf-token"] = Token,
+							["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+						},
+						Body = game:GetService("HttpService"):JSONEncode({
+							playerAvatarType = 1
+						})
 					})
-				})
-				if not Response.Success then
-					--Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
-					Funcs.Notify(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+					if not Response.Success then
+						--Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+						Funcs.Notify(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+					else
+						Commands["refresh"].Function()
+					end
+				else
+					Funcs.Notify("Invalid Token?",Token)
 				end
-				Commands["refresh"].Function()
 			else
 				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
 			end
@@ -636,24 +641,30 @@ Commands = {
 		Alias = {},
 		Function = function()
 			if isfile("cookie.txt") then
-				local Response = request({
-					Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
-					Method = "POST",
-					Headers = {
-						["cookie"] = readfile("cookie.txt"),
-						["Content-Type"] = "application/json",
-						["x-csrf-token"] = Funcs.GetAuthentication(readfile("cookie.txt")),
-						["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
-					},
-					Body = game:GetService("HttpService"):JSONEncode({
-						playerAvatarType = 3
+				local Token = Funcs.GetAuthentication(readfile("cookie.txt"))
+				if Token then
+					local Response = request({
+						Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
+						Method = "POST",
+						Headers = {
+							["cookie"] = readfile("cookie.txt"),
+							["Content-Type"] = "application/json",
+							["x-csrf-token"] = Token,
+							["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+						},
+						Body = game:GetService("HttpService"):JSONEncode({
+							playerAvatarType = 3
+						})
 					})
-				})
-				if not Response.Success then
-					--Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
-					Funcs.Notify(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+					if not Response.Success then
+						--Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+						Funcs.Notify(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+					else
+						Commands["refresh"].Function()
+					end
+				else
+					Funcs.Notify("Invalid Token?",Token)
 				end
-				Commands["refresh"].Function()
 			else
 				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
 			end
