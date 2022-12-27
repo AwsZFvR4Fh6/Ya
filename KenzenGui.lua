@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 10"
+local Version = "1.2 BETA TEST 11"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -1098,7 +1098,7 @@ Commands = {
 				local Origin = Root.CFrame
 				Commands["noclip"].Function()
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
-				Funcs.fwait(Funcs.GetPing(750))
+				Funcs.fwait(.1+Funcs.GetPing(750))--Funcs.GetPing(750))
 				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(200000,200000,200000)
 				repeat 
 					Funcs.fwait()
@@ -1107,9 +1107,12 @@ Commands = {
 				Commands["clip"].Function()
 				Root:WaitForChild("BodyAngularVelocity"):Destroy()
 				Root:WaitForChild("BodyVelocity"):Destroy()
-				Root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-				Root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-				Root.CFrame = Origin
+				for i=1,3 do
+					Root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+					Root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+					Root.CFrame = Origin
+					Funcs.fwait()
+				end
 			end
 		end,
 	},
