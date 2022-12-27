@@ -1,4 +1,4 @@
-local Version = "1.2"
+local Version = "1.2.1"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -495,9 +495,9 @@ Commands = {
 				Type = "Smallest"
 			elseif string.lower(Args[1]) == "large" or string.lower(Args[1]) == "largestest" or string.lower(Args[1]) == "highest" or string.lower(Args[1]) == "high" or string.lower(Args[1]) == "top" or string.lower(Args[1]) == "l" then
 				Type = "Largest"
-			end
+			end Funcs.Notify("Attempting to serverhop","Type: " .. Type)
 			
-			local PlayerCount,ServerJobId = 100,nil
+			local PlayerCount,ServerJobId = Type == "Smallest" and 100 or 0,nil
 			for i,v in pairs(ServerList.data) do
 				if Type == "Smallest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing < PlayerCount or Type == "Largest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing > PlayerCount then
 					PlayerCount = v.playing
