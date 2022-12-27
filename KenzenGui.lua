@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 6"
+local Version = "1.2 BETA TEST 7"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -142,9 +142,9 @@ local Funcs = {}; do
 				["cookie"] = ".ROBLOSECURITY="..cookie,
 			}
 		});
-		if authRes.Success then
-			return authRes.Headers["x-csrf-token"];
-		end;
+		if authRes and authRes.Headers and authRes.Headers["x-csrf-token"] then
+			return authRes.Headers["x-csrf-token"]
+		end
 		local authRes2 = request({
 			Url = "https://auth.roblox.com/v1/account/pin",
 			Method = "GET",
@@ -155,9 +155,9 @@ local Funcs = {}; do
 				["X-CSRF-TOKEN"] = authRes.Headers["x-csrf-token"]
 			}
 		});
-		if authRes2.Success then
-			return authRes.Headers["x-csrf-token"];
-		end;
+		if authRes2 and authRes2.Headers and authRes2.Headers["x-csrf-token"] then
+			return authRes2.Headers["x-csrf-token"]
+		end
 	end
 	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
 		--print(NotificationService,tostring(Title) .. " " .. tostring(Description))
