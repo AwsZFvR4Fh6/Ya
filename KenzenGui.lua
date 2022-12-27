@@ -1264,7 +1264,7 @@ end)
 Players.PlayerAdded:Connect(Funcs.KillValidity)
 for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
 
-Tick = tostring(Funcs.RoundNumber(tick()-Tick))
-print("Version: " .. Version .. " | Load Time: " .. Tick)
-Funcs.Notify("LoadTime",Tick)
+local NewTick = tostring(Funcs.RoundNumber(tick()-Tick))
+print("Version: " .. Version .. " | Load Time: " .. NewTick)
+Funcs.Notify("LoadTime",NewTick)
 return Tick
