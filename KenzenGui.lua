@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 3"
+local Version = "1.2 BETA TEST 4"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -129,7 +129,7 @@ local Funcs = {}; do
 	end
 	Funcs.Loadstring = function(Link,NoHTTP,ChunkName)
 		if loadstring then
-			loadstring(NoHTTP and Link or game:HttpGet(Link,true),ChunkName)()
+			return loadstring(NoHTTP and Link or game:HttpGet(Link,true),ChunkName)()
 		end
 	end
 	Funcs.GetAuthentication = function(cookie)
@@ -159,8 +159,8 @@ local Funcs = {}; do
 			return authRes.Headers["x-csrf-token"];
 		end;
 	end
-	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); warn(NotificationService) Funcs.Notify = function(Title,Description)
-		print(NotificationService,tostring(Title) .. " " .. tostring(Description))
+	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
+		--print(NotificationService,tostring(Title) .. " " .. tostring(Description))
 		if NotificationService then
 			--print(tostring(Title) .. " " .. tostring(Description))
 			NotificationService:message{
