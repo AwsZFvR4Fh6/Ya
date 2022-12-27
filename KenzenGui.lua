@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 4"
+local Version = "1.2 BETA TEST 5"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -607,6 +607,7 @@ Commands = {
 		Alias = {},
 		Function = function()
 			if isfile("cookie.txt") then
+				local Token = Funcs.GetAuthentication(readfile("cookie.txt"))
 				local Response = request({
 					Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
 					Method = "POST",
@@ -620,7 +621,10 @@ Commands = {
 						playerAvatarType = 1
 					})
 				})
-				Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+				if not Response.Success then
+					--Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+					Funcs.Notify(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+				end
 				Commands["refresh"].Function()
 			else
 				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
@@ -645,7 +649,10 @@ Commands = {
 						playerAvatarType = 3
 					})
 				})
-				Funcs.Notify("Attempted to change to r15","Response code" .. Response.StatusCode)
+				if not Response.Success then
+					--Funcs.Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+					Funcs.Notify(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+				end
 				Commands["refresh"].Function()
 			else
 				Funcs.Notify("No Cookie","You have not added your cookie, please use the savecookie command.")
