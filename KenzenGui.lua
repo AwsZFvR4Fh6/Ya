@@ -1,4 +1,4 @@
-local Version = "1.2 BETA TEST 8"
+local Version = "1.2 BETA TEST 9"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -32,6 +32,7 @@ end)
 local Commands,Visible
 local noclipping,Flying = false,false
 local Toggle = false
+local Token
 
 local EventStorage = {}
 
@@ -132,33 +133,34 @@ local Funcs = {}; do
 			return loadstring(NoHTTP and Link or game:HttpGet(Link,true),ChunkName)()
 		end
 	end
-	Funcs.GetAuthentication = function(cookie)
+	Funcs.GetAuthentication = function()
+		local cookie = readfile("cookie.txt")
 		local authRes = request({
 			Url = "https://www.roblox.com/authentication/signoutfromallsessionsandreauthenticate",
 			Method = "POST",
 			Headers = {
 				["content-type"] = "application/json",
 				["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.305 Chrome/69.0.3497.128 Electron/4.0.8 Safari/537.36",
-				["cookie"] = ".ROBLOSECURITY="..cookie,
+				["cookie"] = cookie,
 			}
 		});
-		if authRes and authRes.Headers and authRes.Headers["x-csrf-token"] then
-			Funcs.fwait(.1)
-			return authRes.Headers["x-csrf-token"]
-		end
+		if authRes.Success then
+			return authRes.Headers["x-csrf-token"];
+		end;
 		local authRes2 = request({
 			Url = "https://auth.roblox.com/v1/account/pin",
 			Method = "GET",
 			Headers = {
 				["content-type"] = "application/json",
 				["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.305 Chrome/69.0.3497.128 Electron/4.0.8 Safari/537.36",
-				["cookie"] = ".ROBLOSECURITY="..cookie,
+				["cookie"] = cookie,
 				["X-CSRF-TOKEN"] = authRes.Headers["x-csrf-token"]
 			}
 		});
-		if authRes2 and authRes2.Headers and authRes2.Headers["x-csrf-token"] then
-			Funcs.fwait(.1)
-			return authRes2.Headers["x-csrf-token"]
+		if authRes2.Success then
+			return authRes.Headers["x-csrf-token"];
+		else
+			Funcs.Notify("Incorrect Cookie","Your cookie invalid")
 		end
 	end
 	NotificationService = Funcs.Loadstring("https://raw.githubusercontent.com/AbstractPoo/Main/main/Notifications.lua"); Funcs.Notify = function(Title,Description)
@@ -583,18 +585,8 @@ Commands = {
 		Alias = {},
 		Function = function(Args)
 			if isfile("cookie.txt") then
-				local Response = request({
-					Url = "https://avatar.roblox.com/v1/avatar/assets/9368550035/wear",
-					Method = "POST",
-					Headers = {
-						["cookie"] = readfile("cookie.txt"),
-						["Content-Type"] = "application/json",
-						["x-csrf-token"] = "",
-						["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
-					},
-					Body = game:GetService("HttpService"):JSONEncode({})
-				})
-				if Response.StatusCode == 401 then
+				if not Token then Token = Funcs.GetAuthentication() end
+				if not Token then
 					Funcs.Notify("Cookie Invalid","Please get a new cookie.")
 				else
 					Funcs.Notify("Cookie Valid","You may proceed to use cookie related commands.")
@@ -609,7 +601,7 @@ Commands = {
 		Alias = {},
 		Function = function()
 			if isfile("cookie.txt") then
-				local Token = Funcs.GetAuthentication(readfile("cookie.txt"))
+				if not Token then Token = Funcs.GetAuthentication() end
 				if Token then
 					local Response = request({
 						Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
@@ -643,7 +635,7 @@ Commands = {
 		Alias = {},
 		Function = function()
 			if isfile("cookie.txt") then
-				local Token = Funcs.GetAuthentication(readfile("cookie.txt"))
+				if not Token then Token = Funcs.GetAuthentication() end
 				if Token then
 					local Response = request({
 						Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
