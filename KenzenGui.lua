@@ -679,7 +679,7 @@ Commands = {
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15))
-				Player.Character:WaitForChild("HumanoidRootPart").Sit = true
+				Player.Character:WaitForChild("Humanoid").Sit = true
 			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 				if not Seated then
 					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
@@ -695,7 +695,7 @@ Commands = {
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15),true) 
-				Player.Character:WaitForChild("HumanoidRootPart").Sit = true
+				Player.Character:WaitForChild("Humanoid").Sit = true
 			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 				if not Seated then
 					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
@@ -1043,7 +1043,7 @@ Commands = {
 		Args = {},
 		Alias = {},
 		Function = function()
-			Player.Character:WaitForChild("HumanoidRootPart").Sit = true
+			Player.Character:WaitForChild("Humanoid").Sit = true
 		end,
 	},
 	["split"] = {
