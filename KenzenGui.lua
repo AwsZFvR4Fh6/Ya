@@ -158,7 +158,10 @@ local Funcs = {}; do
 			}
 		});
 		if authRes2.Success then
-			return authRes.Headers["x-csrf-token"];
+			Token = authRes.Headers["x-csrf-token"]; task.delay(600,function() 
+				Token = nil	
+			end)
+			--return 
 		else
 			Funcs.Notify("Incorrect Cookie","Your cookie invalid")
 		end
@@ -594,7 +597,7 @@ Commands = {
 		Alias = {},
 		Function = function(Args)
 			if isfile("cookie.txt") then
-				if not Token then Token = Funcs.GetAuthentication() end
+				if not Token then Funcs.GetAuthentication() end
 				if not Token then
 					Funcs.Notify("Cookie Invalid","Please get a new cookie.")
 				else
@@ -610,7 +613,7 @@ Commands = {
 		Alias = {},
 		Function = function()
 			if isfile("cookie.txt") then
-				if not Token then Token = Funcs.GetAuthentication() end
+				if not Token then Funcs.GetAuthentication() end
 				if Token then
 					local Response = request({
 						Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
@@ -644,7 +647,7 @@ Commands = {
 		Alias = {},
 		Function = function()
 			if isfile("cookie.txt") then
-				if not Token then Token = Funcs.GetAuthentication() end
+				if not Token then Funcs.GetAuthentication() end
 				if Token then
 					local Response = request({
 						Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
