@@ -1,4 +1,4 @@
-local Version = "1.2.1"
+local Version = "1.2.2"
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -348,6 +348,7 @@ Commands = {
 				Visible(); Visible = nil
 			end
 			if game.PlaceId == 7115420363 then game:GetService("ReplicatedStorage").Respawn:FireServer()
+			elseif game.PlaceId == 7143319086 then Player.Respawn:FireServer()
 			elseif game.PlaceId == 9307193325 or game.PlaceId == 5100950559 then
 				Global.ToggleChatFix = false
 				local ChatBar = Player:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame"):WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
