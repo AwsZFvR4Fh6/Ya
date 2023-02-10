@@ -1,4 +1,7 @@
-local Version = "1.2.2"
+local Version = "1.2.3"
+
+local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/gethiddengui/main/src.lua", false))() end)
+
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
 end
@@ -17,7 +20,7 @@ local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = Player:GetMouse()
 
-local Global = Global or getgenv and getgenv() or shared
+local Global = Global or getgenv and getgenv() or shared or _G or getfenv(0)
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
 local request = (syn and syn.request) or (http and http.request) or (request)
 local setclipboard = setclipboard or toclipboard or set_clipboard or (Clipboard and Clipboard.set) or print
@@ -95,7 +98,7 @@ local Funcs = {}; do
 			return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
 		end
 		Funcs.ClearConnections("Attachments")
-		
+
 		if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and not Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
 			local BodyVelocity = Instance.new("BodyVelocity"); do
 				BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
@@ -111,7 +114,7 @@ local Funcs = {}; do
 				BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
 			end
 		end
-		
+
 		table.insert(EventStorage["Attachments"],Event:Connect(function()
 			if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Parent and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
 				local Positioning = Prediction and CFrame.new(Funcs.PredictPos(Player.Character.HumanoidRootPart.Position, 
@@ -123,7 +126,7 @@ local Funcs = {}; do
 				Player.Character.HumanoidRootPart.CFrame = Positioning
 			end
 		end))
-		
+
 		Player.CharacterAdded:Connect(function()
 			Funcs.ClearConnections("Attachments")
 		end)
@@ -177,7 +180,7 @@ local Funcs = {}; do
 			}
 		end
 	end
-	
+
 	Funcs.KillValidity = function(Player) 
 		Player.CharacterAdded:Connect(function(Character)
 			Character:WaitForChild("HumanoidRootPart"):SetAttribute("SpawnTime",tick())
@@ -306,7 +309,9 @@ local ScreenGui = Instance.new("ScreenGui"); do
 		end
 		CommandsFrame.Parent = ScreenGui
 	end
-	ScreenGui.Parent = script.Parent
+	if syn and syn.protect_gui then
+		syn.protect_gui(ScreenGui)
+	end
 end
 
 Commands = {
@@ -339,7 +344,7 @@ Commands = {
 			CommandsFrame.Visible = true; CommandsFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
 		end,
 	},
-	
+
 	["respawn"] = {
 		Args = {},
 		Alias = {"gr"},
@@ -371,7 +376,7 @@ Commands = {
 			end
 		end,
 	},
-	
+
 	["refresh"] = {
 		Args = {},
 		Alias = {"re","unbang"},
@@ -385,7 +390,7 @@ Commands = {
 			Player.Character:WaitForChild("HumanoidRootPart").CFrame = PreviousPosition
 		end,
 	},
-	
+
 	["hydroxide"] = {
 		Args = {},
 		Alias = {"remotespy","rspy","spy"},
@@ -500,7 +505,7 @@ Commands = {
 			elseif string.lower(Args[1]) == "large" or string.lower(Args[1]) == "largestest" or string.lower(Args[1]) == "highest" or string.lower(Args[1]) == "high" or string.lower(Args[1]) == "top" or string.lower(Args[1]) == "l" then
 				Type = "Largest"
 			end Funcs.Notify("Attempting to serverhop","Type: " .. Type)
-			
+
 			local PlayerCount,ServerJobId = Type == "Smallest" and 100 or 0,nil
 			for i,v in pairs(ServerList.data) do
 				if Type == "Smallest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing < PlayerCount or Type == "Largest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing > PlayerCount then
@@ -684,13 +689,13 @@ Commands = {
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15))
 				Player.Character:WaitForChild("Humanoid").Sit = true
-			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-				if not Seated then
-					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
-					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
-					Funcs.ClearConnections("Attachments")
-				end
-			end)) end
+				table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+					if not Seated then
+						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
+						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
+						Funcs.ClearConnections("Attachments")
+					end
+				end)) end
 		end,
 	},
 	["headsitpredict"] = {
@@ -700,12 +705,12 @@ Commands = {
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15),true) 
 				Player.Character:WaitForChild("Humanoid").Sit = true
-			table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
-				if not Seated then
-					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
-					if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
-					Funcs.ClearConnections("Attachments")
-				end
+				table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+					if not Seated then
+						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
+						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
+						Funcs.ClearConnections("Attachments")
+					end
 				end)) end
 		end,
 	},
@@ -715,17 +720,17 @@ Commands = {
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,0,1)) 
-			local bangAnim = Instance.new("Animation") do
-				if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
-					bangAnim.AnimationId = "rbxassetid://5918726674"
-				else
-					bangAnim.AnimationId = "rbxassetid://148840371"
-				end
+				local bangAnim = Instance.new("Animation") do
+					if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+						bangAnim.AnimationId = "rbxassetid://5918726674"
+					else
+						bangAnim.AnimationId = "rbxassetid://148840371"
+					end
 
-				local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
-					Anim:Play(.1, 1, 1)
-					Anim:AdjustSpeed(5)
-				end
+					local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
+						Anim:Play(.1, 1, 1)
+						Anim:AdjustSpeed(5)
+					end
 				end end
 		end,
 	},
@@ -903,11 +908,11 @@ Commands = {
 						Controls.Down = 0
 					end
 				end)
-				
+
 				Player.CharacterAdded:Connect(function()
 					Commands["unfly"].Function()
 				end)
-				
+
 				while Flying do
 					local Speed = Controls.Left == 0 and  Controls.Right == 0 and Controls.Forward == 0 and  Controls.Back == 0 and  Controls.Down == 0 and Controls.Up == 0 and 0 or 50
 					if (Controls.Left + Controls.Right) ~= 0 or (Controls.Forward + Controls.Back) ~= 0 or (Controls.Down + Controls.Up) ~= 0 then
@@ -1071,14 +1076,14 @@ Commands = {
 				local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
 				if tool then
 					tool.Parent = Player.Backpack
-					
+
 					local Humanoid = Player.Character.Humanoid do
 						local FakeHum = Humanoid:Clone()
 						Humanoid.Name = ""
 						FakeHum.Parent = Player.Character
 						Humanoid:Destroy()
 					end
-					
+
 					tool.Parent = Player.Character
 					Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
 					tool:GetPropertyChangedSignal("Parent"):Wait(); if tool.Parent == ToPlr.Character then
@@ -1208,12 +1213,12 @@ for i,v in pairs(Commands) do
 		newlabel.TextSize = 14
 		newlabel.TextColor3 = Color3.new(1,1,1)
 		newlabel.Name = i
-		
+
 		local TextValue = i
 		for i,v in pairs(v.Args) do
 			TextValue ..= " <" .. v .. ">"
 		end; newlabel.Text = TextValue
-		
+
 		newlabel.Parent = ScrollingFrame
 	end)
 end
@@ -1245,7 +1250,12 @@ task.defer(function()
 	end
 end)
 
-if not pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end) then ScreenGui.Parent = Player:WaitForChild("PlayerGui") end
+if not pcall(function()
+		ScreenGui.Parent = Global.gethiddengui and Global.gethiddengui() or gethui and gethui() or game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui")
+	end)
+then 
+	ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+end
 
 Player.Chatted:Connect(function(msg)
 	if string.sub(msg,1,1) == "!" then
