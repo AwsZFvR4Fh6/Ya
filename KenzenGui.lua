@@ -28,6 +28,7 @@ local loadstring = pcall(function() loadstring("")() end) and loadstring or nil
 local isfile = isfile or readfile and function(name) pcall(function() local a = readfile(name) end) end
 local isnetworkowner = isnetworkowner or function(Part) return Part.ReceiveAge == 0 end
 local Ping = game:GetService("Stats"):WaitForChild("Network"):WaitForChild("ServerStatsItem"):WaitForChild("Data Ping")
+local printconsole = printconsole or print
 local ChatRemote; task.defer(function()
 	ChatRemote = game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
 end)
@@ -1274,6 +1275,6 @@ Players.PlayerAdded:Connect(Funcs.KillValidity)
 for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
 
 local NewTick = tostring(Funcs.RoundNumber(tick()-Tick))
-print("Version: " .. Version .. " | Load Time: " .. NewTick)
+printconsole("Version: " .. Version .. " | Load Time: " .. NewTick)
 Funcs.Notify("LoadTime",NewTick)
 return Tick
