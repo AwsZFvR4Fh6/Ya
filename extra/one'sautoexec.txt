@@ -1,93 +1,300 @@
 local LoadTick = tick()
 
 local Settings = {
-	["AutomaticUpdates"] = false, -- slower, uses default settings
-	["ToggleGUI"] = true, -- Toggles Aimkid GUI
-	["Backrooms"] = false, -- Teleports you to the backrooms if you fall into the void
-	["FastLoad"] = true, -- Changes roblox loading GUI
-	["KickGui"] = true, -- Changes Kick GUI
-	["ReplaceWait"] = true, -- Replaces wait() with task.wait(), which is more optimized
-	["ExtraGlobals"] = true, -- Adds [netless, saveinstance, fwait, Event, Global, ServerInfo, SmartLerp, Notify], modifys [decompile,Players:Chat,getsynasset]
-	["Notifications"] = true, -- Toggles Notifications
-	["DisablePrompts"] = true, -- Disables Purchase Prompts
-	["AntiAFK"] = true, -- Uses common anti-afk
-	["AntiKick"] = false, -- Uses common anti-client kick
-	["RemovedLayered"] = false, -- For Layered Clothing Crashes
-	["ChatFilterLabel"] = true, -- Adds a TextLabel that displays filtered text
-	["GUISettings"] = {
+	AutomaticUpdates = false, 
+	-- Slower and uses default settings, but loads it from the latest version
+	ToggleGUI = true,
+	-- Toggles the command bar
+	Backrooms = false, 
+	-- Teleports you to the backrooms if you fall into the void
+	FastLoad = true, 
+	-- Changes roblox loading GUI
+	KickGui = true, 
+	-- Changes the UI for when you get kicked from the game
+	ReplaceWait = true, 
+	-- Replaces wait() with task.wait(), which is more optimized
+	ExtraGlobals = true,
+	--[[
+	Adds the following:
+		netless 
+		saveinstance 
+		fwait
+		Event
+		Global
+		ServerInfo
+		Notify
+		WaitForDescendant 
+		WaitForChildOfClass 
+		WaitForDescendantOfClass 
+		RequestURL
+		GetFileFromURL
+		RoundNumber
+	Modifies the following: 
+		decompile 
+		Players:Chat
+		getsynasset 
+	]]
+	Notifications = true, 
+	-- Toggles Notifications
+	DisablePrompts = true, 
+	-- Disables Purchase Prompts
+	AntiAFK = true, 
+	-- Uses common anti-afk
+	AntiKick = false, 
+	-- Uses common anti-client kick
+	ChatFilterLabel = true, 
+	-- Adds a TextLabel that displays filtered text
+	DisableMenuOpened = true,
+	-- Disables the MenuOpened from firing, preventing shitty condo teleports
+	GUISettings = {
 		["MainColor"] = Color3.fromRGB(57, 0, 98),
 		["SecondaryColor"] = Color3.fromRGB(47, 0, 84),
 		["Image"] = "rbxassetid://4840955387" -- "rbxassetid://ID" or getsynasset(PATH)
 	}
 }
 
+--====--
+
 if Settings["AutomaticUpdates"] then
 	local printconsole = printconsole or print
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/extra/one'sautoexec.txt",true))()
 	printconsole(tostring("Full Load Time in " .. tick() - LoadTick))
 else
+	
 	-- :: Variables
-	local Global = getgenv and getgenv() or shared
+	local Global = Global or getgenv and getgenv() or shared or _G or getfenv(0)
 	local getsynasset = getsynasset or getcustomasset
 	local isfile = isfile or readfile and function(f) return pcall(function() readfile(f) end) end
 	local printconsole = printconsole or print
 	local request = (syn and syn.request) or (http and http.request) or (request)
 	local notify,Event
-
+	local fwait = task.wait
+	local OldDecomp = decompile
+	
 	-- :: Functions
-
+	
+	local function RequestURL(URL,KeepActive)
+		local Data,Temp; if request then 
+			Data,Temp = request({Url = URL,Method = 'GET'}); Data = Data.Body
+		else 
+			Data,Temp = game:HttpGetAsync(URL)
+		end
+		return Data
+	end; 
+	
 	local function IsGameLoaded()
 		if not game:IsLoaded("Workspace") then game.Loaded:Wait() end
 	end
-
+	
 	local function GetLinkedAsset(Link)
 		local Name = string.split(Link,"/"); Name = Name[#Name]
 		local File
-		if getsynasset then
+		if getsynasset and string.find(Name,".") then
 			if not isfile(Name) then
-				local Data,T = request and request({Url = Link,Method = 'GET'}) or game:HttpGet(Link)
-				if request then Data = Data.Body end
-				writefile(Name,Data)
+				writefile(Name,RequestURL(Link))
 			end
 			File = getsynasset(Name)
 		end
 		return File
+	end; 
+	
+	local function RoundNumber(number, decimalPlaces) if number and tonumber(number) then
+			decimalPlaces = decimalPlaces or 4
+			local Return = tostring(math.round(tonumber(number) * 10^decimalPlaces) * 10^-decimalPlaces)
+			return string.find(Return,".") and tonumber(string.sub(Return,1,string.find(Return,".")+decimalPlaces+1)) or tonumber(Return)
+		end
+	end; 
+	
+	local function GetToPath(From,Directory)
+		for i,v in pairs(string.split(Directory,".")) do
+			From = From:WaitForChild(v,5000)
+		end return From
 	end
-
+	
 	-- :: Code
-
-	if Settings["ToggleGUI"] then task.defer(function()
-			Global.AidKid = Settings["GUISettings"]
-			printconsole(tostring("GUI loaded in " .. math.abs(tick() - loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua",true))())))
-		end) end
-
-	if Settings["Backrooms"] then task.defer(function()
-			IsGameLoaded()
-			local Player = game:GetService("Players").LocalPlayer
-			local function RootCheck(Char)
-				local HumRoot = Char:WaitForChild("HumanoidRootPart",500)
-				local HB
-				HB = game:GetService("RunService").Heartbeat:Connect(function()
-					if HumRoot and HumRoot.Parent then
-						if HumRoot.Position.Y <= workspace.FallenPartsDestroyHeight + 10 then
-							game:GetService("TeleportService"):Teleport(3227921645, Player)
-							HB:Disconnect()
-						end
-					else
-						HB:Disconnect()
-					end
+	
+	do 
+		local GuiService,CoreGui,RunService,Players,ChatService = game:GetService("GuiService"),game:GetService("CoreGui"),game:GetService("RunService"),game:GetService("Players"),game:GetService("Chat")
+		local Event = RunService.Heartbeat
+		local Part,Chat
+		
+		if Settings.ExtraGlobals then
+			Global.RequestURL = RequestURL
+			Global.Global = Global
+			Global.GetFileFromURL = GetLinkedAsset
+			Global.RoundNumber = RoundNumber
+			Global.getsynasset = getsynasset
+			
+			Global.WaitForDescendant = function(Start,Name)
+				local Find = Start:FindFirstChild(Name,true)
+				local DescendantAdded = Start.DescendantAdded:Connect(function(New)
+					if New.Name == Name then Find = New end
+				end)
+				repeat Find = Start:FindFirstChild(Name,true) fwait(0/1) until Find
+				DescendantAdded:Disconnect()
+				return Find
+			end
+			
+			Global.WaitForChildOfClass = function(Start,Class)
+				local Table = {}
+				local ChildAdded
+				for i,v in pairs(Start:GetChildren()) do
+					if v:IsA(Class) then return v else table.insert(Table,v) end
+				end
+				ChildAdded = Start.ChildAdded:Connect(function(v)
+					if v:IsA(Class) and not table.find(Table,v) then return v else table.insert(Table,v) end
 				end)
 			end
-		end) end
-
-	if Settings["FastLoad"] then task.defer(function()
-			local BlackFrame = game:GetService("CoreGui"):WaitForChild("RobloxLoadingGui",500):WaitForChild("BlackFrame",500); do
-				BlackFrame.BackgroundTransparency = 1
-				BlackFrame.Active = false
-				BlackFrame:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function() BlackFrame.BackgroundTransparency = 1 end)
+			
+			Global.WaitForDescendantOfClass = function(Start,Class)
+				local Table = {}
+				local DescendantAdded
+				for i,v in pairs(Start:GetDescendants()) do
+					if v:IsA(Class) then return v else table.insert(Table,v) end
+				end
+				DescendantAdded = Start.DescendantAdded:Connect(function(v)
+					if v:IsA(Class) and not table.find(Table,v) then return v else table.insert(Table,v) end
+				end)
 			end
+			
+			do
+				local Bind = Instance.new("BindableEvent")
+				local PingBind = Instance.new("BindableEvent")
+				local PingVal = 0
+				local Ping; task.spawn(function() Ping = GetToPath(game:GetService("Stats"),"Network.ServerStatsItem.Data Ping") PingVal = Ping:GetValue()/1000 end)
+				local VarTick = tick()
+				for i,v in ipairs({"RenderStepped","PreAnimation","Stepped","Heartbeat","PostSimulation","PreSimulation","PreRender"}) do
+					RunService[v]:Connect(function()
+						Bind:Fire(tick()-VarTick)
+						VarTick = tick()
+						if Ping and Ping:GetValue()/1000 ~= PingVal then
+							PingVal = Ping:GetValue()/1000
+							PingBind:Fire(PingVal)
+						end
+					end)
+				end
+				local function FastWait(Num)
+					if Num and Num > 0 then
+						local Tick = 0
+						repeat
+							Tick += Bind.Event:Wait()
+						until Tick >= Num
+						return Tick
 
-			local Part = Instance.new("Part"); do
+					else
+						return Bind.Event:Wait()
+					end
+				end
+				local function PingWait()
+					return PingBind.Event:Wait()
+				end
+				
+				fwait = FastWait
+				Global.fwait = FastWait
+				Global.Event = Bind.Event
+
+				Global.pwait = PingWait
+				Global.pEvent = PingBind.Event
+
+				Event = Bind.Event
+			end
+			
+			do
+				Global.decompile = function(script)
+					return "--  Advanced Decompiler by ProductionTakeOne#3330 \n" .. string.gsub(string.gsub(OldDecomp(script),"l__",""),"__1","")
+				end
+			end
+			
+			task.defer(function() -- // ServerInfo
+				local peer,replicator = game:GetService("NetworkClient").ConnectionAccepted:Wait()
+				local data = game:GetService("HttpService"):JSONDecode(RequestURL("http://ip-api.com/json/" .. peer:sub(1, peer:find("|")-1)))
+				local ServerInfo = {
+					Country = data.country,
+					CountryCode = data.countrycode,
+					State = data.regionName,
+					StateCode = data.region,
+					City = data.city,
+					ZIP = data.zip,
+					Latitude = data.lat,
+					Longitude = data.lon,
+					TimeZone = data.timezone,
+					IP = data.query,
+				}
+				
+				Global.ServerInfo = ServerInfo
+				
+				repeat fwait(0/1) until notify
+				if notify ~= "Disabled" then
+					Global.Notify = notify
+					notify({
+						Text = "Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country,
+						Duration = 10
+					})
+				end
+			end)
+			
+		end
+		
+		if Settings.KickGui then
+			task.defer(function()
+				GetToPath(CoreGui,"RobloxPromptGui.promptOverlay").ChildAdded:Connect(function(v)
+					if v.Name == "ErrorPrompt" then
+						GuiService:ClearError()
+						local ErrorText = v:FindFirstChild("ErrorMessage",true)
+						v.Visible = false
+						local VideoFrame = Instance.new("VideoFrame"); do
+							VideoFrame.AnchorPoint = Vector2.new(0.5,1)
+							VideoFrame.BackgroundTransparency = 1
+							VideoFrame.Position = UDim2.new(0.5,0,0.8,0)
+							VideoFrame.Size = UDim2.new(0,450,0,225)
+							VideoFrame.ZIndex = 999999998
+							VideoFrame.Looped = true
+							VideoFrame.Video = GetLinkedAsset("https://cdn.discordapp.com/attachments/806623634038325318/957076752843280424/one-piece-vinsmoke-sanji.webm") or "rbxassetid://5670785995"
+							VideoFrame:Play()
+							VideoFrame.Parent = CoreGui.RobloxPromptGui
+						end
+						local TextLabel = Instance.new("TextLabel"); do
+							TextLabel.AnchorPoint = Vector2.new(0.5,0)
+							TextLabel.BackgroundTransparency = 1
+							TextLabel.Position = UDim2.new(0.5,0,1,0)
+							TextLabel.Size = UDim2.new(1,0,0.3,0)
+							TextLabel.ZIndex = 999999998
+							TextLabel.Font = Enum.Font.Gotham
+							TextLabel.TextSize = 20
+							TextLabel.Text = ErrorText.Text
+							TextLabel.TextColor3 = Color3.new(1,1,1)
+							TextLabel.TextStrokeTransparency = 0
+							TextLabel.Parent = VideoFrame
+							ErrorText.Changed:Connect(function()
+								TextLabel.Text = ErrorText.Text
+							end)
+						end
+						local TextButton = Instance.new("TextButton"); do
+							TextButton.AnchorPoint = Vector2.new(0,0)
+							TextButton.Size = UDim2.new(1,0,1,0)
+							TextButton.ZIndex = 999999999
+							TextButton.Text = ""
+							TextButton.Transparency = 1
+							TextButton.Parent = VideoFrame
+							TextButton.Activated:Connect(function()
+								VideoFrame:Destroy()
+							end)
+						end
+						repeat GuiService:ClearError() fwait(0/1) until not VideoFrame
+					end
+				end)
+			end)
+		end
+		
+		if Settings.FastLoad then
+			task.defer(function()
+				local BlackFrame = GetToPath(CoreGui,"RobloxLoadingGui.BlackFrame"); do
+					BlackFrame.BackgroundTransparency = 1
+					BlackFrame.Active = false
+					BlackFrame:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function() BlackFrame.BackgroundTransparency = 1 end)
+				end
+			end)
+			Part = Instance.new("Part"); do
 				Part.Size = Vector3.new(5,1,5)
 				Part.CFrame = CFrame.Angles(0,math.rad(-90),0)--CFrame.new(Vector3.new(),workspace.CurrentCamera.CFrame.Position)
 				Part.Transparency = 1
@@ -103,59 +310,9 @@ else
 				Image.Image = GetLinkedAsset("https://cdn.discordapp.com/attachments/806690952089305158/954924304238260284/FN_nKHuUcAAY8H4.png") or "rbxassetid://9184481698"
 				Image.Parent = Surface
 			end
-			IsGameLoaded(); Part:Destroy()
-		end) end
-
-	if Settings["KickGui"] then task.defer(function()
-			game:GetService("CoreGui"):WaitForChild("RobloxPromptGui",500):WaitForChild("promptOverlay",500).ChildAdded:Connect(function(v)
-				if v.Name == "ErrorPrompt" then
-					game:GetService("GuiService"):ClearError()
-					local ErrorText = v:FindFirstChild("ErrorMessage",true)
-					v.Visible = false
-					local VideoFrame = Instance.new("VideoFrame"); do
-						VideoFrame.AnchorPoint = Vector2.new(0.5,1)
-						VideoFrame.BackgroundTransparency = 1
-						VideoFrame.Position = UDim2.new(0.5,0,0.8,0)
-						VideoFrame.Size = UDim2.new(0,450,0,225)
-						VideoFrame.ZIndex = 999999998
-						VideoFrame.Looped = true
-						VideoFrame.Video = GetLinkedAsset("https://cdn.discordapp.com/attachments/806623634038325318/957076752843280424/one-piece-vinsmoke-sanji.webm") or "rbxassetid://5670785995"
-						VideoFrame:Play()
-						VideoFrame.Parent = game:GetService("CoreGui").RobloxPromptGui
-					end
-					local TextLabel = Instance.new("TextLabel"); do
-						TextLabel.AnchorPoint = Vector2.new(0.5,0)
-						TextLabel.BackgroundTransparency = 1
-						TextLabel.Position = UDim2.new(0.5,0,1,0)
-						TextLabel.Size = UDim2.new(1,0,0.3,0)
-						TextLabel.ZIndex = 999999998
-						TextLabel.Font = Enum.Font.Gotham
-						TextLabel.TextSize = 20
-						TextLabel.Text = ErrorText.Text
-						TextLabel.TextColor3 = Color3.new(1,1,1)
-						TextLabel.TextStrokeTransparency = 0
-						TextLabel.Parent = VideoFrame
-						ErrorText.Changed:Connect(function()
-							TextLabel.Text = ErrorText.Text
-						end)
-					end
-					local TextButton = Instance.new("TextButton"); do
-						TextButton.AnchorPoint = Vector2.new(0,0)
-						TextButton.Size = UDim2.new(1,0,1,0)
-						TextButton.ZIndex = 999999999
-						TextButton.Text = ""
-						TextButton.Transparency = 1
-						TextButton.Parent = VideoFrame
-						TextButton.Activated:Connect(function()
-							VideoFrame:Destroy()
-						end)
-					end
-					repeat game:GetService("GuiService"):ClearError() task.wait(0/1) until not VideoFrame
-				end
-			end)
-		end) end
-
-	if Settings["ReplaceWait"] then task.defer(function()
+		end
+		
+		if Settings.ReplaceWait then
 			Global.wait = function(Time)
 				if Time then
 					return task.wait(Time)
@@ -163,150 +320,52 @@ else
 					return task.wait(1/30)
 				end
 			end
-		end) end
-
-	if Settings["ExtraGlobals"] then task.defer(function()
-			task.defer(function() IsGameLoaded() loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/SaveInstance.txt",true))() end)
-
-			Global.netless = function(Part)
-				if Part:IsA("BasePart") then
-					local BodyVelocity = Instance.new("BodyVelocity"); do
-						BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
-						BodyVelocity.P = math.huge; 
-						BodyVelocity.Velocity = Vector3.new(-17.72,0,-17.72);
-						BodyVelocity.Parent = Part;
-					end
-					local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
-						BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
-						BodyAngularVelocity.P = math.huge; 
-						BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
-						BodyAngularVelocity.Parent = Part
-					end
-
-					local HB
-					HB = game:GetService("RunService").Heartbeat:Connect(function()
-						if Part and Part:IsDescendantOf(workspace) then
-							Part:ApplyImpulse(Vector3.new(-17.72,0,-17.72))
-							Part.Velocity = Vector3.new(-17.72,0,-17.72)
-							Part.AssemblyAngularVelocity = BodyAngularVelocity.AngularVelocity
-						else
-							HB:Disconnect()
-						end
-					end)
-				end
-				return Part
-			end
-
-			do -- // fwait/Event
-				local Bind = Instance.new("BindableEvent")
-				local VarTick = tick()
-				for i,v in ipairs({"PreRender","PreAnimation","PreSimulation","PostSimulation"}) do
-					game:GetService("RunService")[v]:Connect(function()
-						Bind:Fire(tick()-VarTick)
-						VarTick = tick()
-					end)
-				end
-				local function FastWait(Num)
-					if Num and Num > 0 then
-						local Tick = 0
-						repeat
-							Tick += Bind.Event:Wait()
-						until Tick >= Num
-						return Tick
-
-					else
-						return Bind.Event:Wait()
-					end
-				end
-				Global.fwait = FastWait
-				Global.Event = Bind.Event
-				Event = Bind.Event
-			end
-
-			Global.Global = Global
-
-			task.defer(function() -- // ServerInfo
-				local peer,replicator = game:GetService("NetworkClient").ConnectionAccepted:Wait()
-				repeat task.wait(0/1) until notify
-				local data = game:GetService("HttpService"):JSONDecode(game:HttpGet("http://ip-api.com/json/" .. peer:sub(1, peer:find("|")-1)))
-				local ServerInfo = {
-					Country = data.country,
-					CountryCode = data.countrycode,
-					State = data.regionName,
-					StateCode = data.region,
-					City = data.city,
-					ZIP = data.zip,
-					Latitude = data.lat,
-					Longitude = data.lon,
-					TimeZone = data.timezone,
-					IP = data.query,
-				}
-				if notify ~= "Disabled" then
-					notify({
-						Text = "Connected to " .. ServerInfo.State .. ", " .. ServerInfo.City .. " in " .. ServerInfo.Country,
-						Duration = 10
-					})
-				end
-				Global.ServerInfo = ServerInfo
+		end
+		
+		if Settings.DisablePrompts then
+			task.defer(function()
+				GetToPath(CoreGui,"PurchasePrompt.ProductPurchaseContainer").Visible = false
 			end)
-
-			task.defer(function() -- // SmartLerp
-				repeat task.wait(0/1) until Event
-				local RunService = game:GetService("RunService")
-				local SmartLerp = {}
-				SmartLerp.Processes = {}
-
-				local function Lerp(a, b, t)
-					return type(a) == "number" and (a + ((b - a) * t)) or a:Lerp(b, t)
-				end
-
-				function SmartLerp.Lerp(Item, Properties, Alpha)
-					if SmartLerp.Processes[Item] then
-						for Property, Value in pairs(Properties) do
-							SmartLerp.Processes[Item][1][Property] = Value
-							SmartLerp.Processes[Item][2] = Alpha
-						end
+		end
+		
+		if hookmetamethod and checkcaller and getnamecallmethod then -- Hooks
+			pcall(function()
+				local MethodCall; MethodCall = hookmetamethod(game, "__namecall", function(self, ...)
+					if checkcaller() then
+						if Settings.AntiKick and getnamecallmethod() == "Kick" then
+							return printconsole("Attemped Kick") --wait(9e8)
+						elseif Chat and Global.ToggleChatFix and self == Players and getnamecallmethod() == "Chat" and checkcaller() and debug.info(3, "f") ~= Chat then
+							return Chat(...)
+						end; return MethodCall(self,...)
 					else
-						SmartLerp.Processes[Item] = {Properties, Alpha}
-					end
-				end
-
-				Event:Connect(function()
-					for Item, LerpProperties in pairs(SmartLerp.Processes) do
-						local Complete = true
-
-						for Property, Value in pairs(LerpProperties[1]) do
-							Complete = false
-							if Item[Property] == Value then
-								LerpProperties[1][Property] = nil
-							else
-								Item[Property] = Lerp(Item[Property], Value, LerpProperties[2])
-							end
-						end
-
-						if Complete then
-							SmartLerp.Processes[Item] = nil
-						end
+						return MethodCall(self,...)
 					end
 				end)
-
-				Global.SmartLerp = SmartLerp
 			end)
-
-			do -- // decompile
-				local OldDecomp = decompile
-				Global.decompile = function(script)
-					return "--  Advanced Decompiler by ProductionTakeOne#3330 \n" .. string.gsub(string.gsub(OldDecomp(script),"l__",""),"__1","")
-				end
+		end
+		
+		if Settings.ToggleGUI then
+			Global.AidKid = Settings.GUISettings
+			loadstring(RequestURL("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua"))()
+		end
+		
+		IsGameLoaded(); Part:Destroy()
+		local GameLoadedIn = RoundNumber(tick() - LoadTick)
+		printconsole(tostring("Game loaded in " .. GameLoadedIn))
+		
+		local Player = Players.LocalPlayer
+		
+		if Settings.DisableMenuOpened and getconnections then
+			for i,v in pairs(getconnections(game:GetService("GuiService").MenuOpened)) do
+				v:Disable()
 			end
-
-			task.defer(function() -- // Players:Chat
-				IsGameLoaded()
+		end
+		
+		if Settings.ExtraGlobals then
+			task.defer(function()
 				Global.ToggleChatFix = true
-				local Players = game:GetService("Players")
-				local LocalPlayer = Players.LocalPlayer
-				local ChatBar = LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame"):WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
-				local function Chat(Message)
+				local ChatBar = GetToPath(Player,"PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar")
+				Chat = function(Message)
 					if Global.ToggleChatFix then
 						local Text = ChatBar.Text
 						ChatBar:SetTextFromInput(Message)
@@ -314,115 +373,71 @@ else
 						ChatBar:SetTextFromInput(Text)
 					end
 				end
-				local __namecall; __namecall = hookmetamethod(game, "__namecall", function(self, ...)
-					if self == Players and getnamecallmethod() == "Chat" and checkcaller() and debug.info(3, "f") ~= Chat and Global.ToggleChatFix then
-						return Chat(...)
-					end; return __namecall(self, ...)
+			end)
+		end
+		
+		if Settings.Backrooms then
+			local function RootCheck(Char)
+				local HumRoot = Char:WaitForChild("HumanoidRootPart",500)
+				local HB
+				HB = game:GetService("RunService").Heartbeat:Connect(function()
+					if HumRoot and HumRoot.Parent then
+						if HumRoot.Position.Y <= workspace.FallenPartsDestroyHeight + 10 then
+							game:GetService("TeleportService"):Teleport(3227921645, Player)
+							HB:Disconnect()
+						end
+					else
+						HB:Disconnect()
+					end
+				end)
+			end Player.CharacterAdded:Connect(function(Character)
+				RootCheck(Character) 
+			end) if Player.Character then RootCheck(Player.Character) end
+		end
+		
+		if Settings.ChatFilterLabel then
+			task.defer(function()
+				local ChatBar = GetToPath(Player,"PlayerGui.Chat.Frame.ChatBarParentFrame")
+				local ChatBox = GetToPath(ChatBar,"Frame.BoxFrame.Frame.ChatBar")
+				local TextLabel = Instance.new("TextLabel"); do
+					TextLabel.Size = UDim2.new(1,0,0,42)
+					TextLabel.Position = UDim2.new(0,5,1,0)
+					TextLabel.BackgroundTransparency = 1
+					TextLabel.TextStrokeTransparency = 0
+					TextLabel.TextColor3 = Color3.new(1,1,1)
+					TextLabel.Text = ChatBox.Text
+					TextLabel.TextSize = 15
+					TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+					TextLabel.TextYAlignment = Enum.TextYAlignment.Top
+					TextLabel.Parent = ChatBar
+				end
+				local bool = true
+				ChatBox.Changed:Connect(function()
+					if bool then
+						bool = false
+						pcall(function()
+							TextLabel.Text = ChatService:FilterStringForBroadcast(ChatBox.Text,Player)
+						end) 
+						bool = true
+					end
 				end)
 			end)
+		end
 
-			Global.getsynasset = getsynasset
-
-			task.defer(function() -- // Notify
-				repeat task.wait(0/1) until notify
-				if notify ~= "Disabled" then
-					Global.Notify = notify
-				end
-			end)
-
+		if Settings.Notifications then
+			notify = Settings.Notifications and loadstring(RequestURL("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/Notifications.lua"))() or "Disabled"
+		end
+		
+		if Settings.AntiAFK then task.defer(function()
+			loadstring(RequestURL("https://raw.githubusercontent.com/NoTwistedHere/Roblox/main/AntiAFK.lua"))()
 		end) end
+		
+		local loadedtime = RoundNumber(tick() - LoadTick)
 
-	task.defer(function() -- // Notifications
-		notify = Settings["Notifications"] and loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/Notifications.lua",true))() or "Disabled"
-	end)
-
-	if Settings["DisablePrompts"] then task.defer(function()
-			game:GetService("CoreGui"):WaitForChild("PurchasePrompt",500):WaitForChild("ProductPurchaseContainer",500).Visible = false
-		end) end
-
-	if Settings["AntiAFK"] then task.defer(function()
-			IsGameLoaded()
-			--[[local vu = game:GetService("VirtualUser")
-			game:GetService("Players").LocalPlayer.Idled:connect(function()
-				vu:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-				task.wait(.1)
-				vu:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-			end)]]
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/NoTwistedHere/Roblox/main/AntiAFK.lua"))()
-		end) end
-
-	if Settings["AntiKick"] then task.defer(function()
-			--[[
-			local mt = getrawmetatable(game)
-			local backup = mt.__namecall
-			setreadonly(mt, false)
-
-			mt.__namecall = newcclosure(function(self, ...)
-				local method = getnamecallmethod()
-				local args = {...}
-				if method == "Kick" then
-					printconsole('attempted kick')
-					return function() end
-				end
-				return backup(self,...)
-			end)
-
-			setreadonly(mt, true)]]
-			local Old
-			Old = hookmetamethod(game, "__namecall", function(Self, ...) 
-				if getnamecallmethod() == "Kick" then 
-					return printconsole("Attemped Kick") --wait(9e8)
-				end
-
-				return Old(Self, ...)
-			end)
-		end) end
-
-	if Settings["RemovedLayered"] then task.defer(function()
-			workspace.DescendantAdded:Connect(function(Wrap)
-				if Wrap:IsA("WrapLayer") then
-					task.wait(0/1)
-					Wrap.Parent:Destroy()
-				end
-			end)
-		end) end
-
-	if Settings["ChatFilterLabel"] then task.defer(function()
-			IsGameLoaded()
-			local Player = game:GetService("Players").LocalPlayer
-			local ChatBar = Player:WaitForChild("PlayerGui"):WaitForChild("Chat"):WaitForChild("Frame"):WaitForChild("ChatBarParentFrame")
-			local ChatBox = ChatBar:WaitForChild("Frame"):WaitForChild("BoxFrame"):WaitForChild("Frame"):WaitForChild("ChatBar")
-			local TextLabel = Instance.new("TextLabel"); do
-				TextLabel.Size = UDim2.new(1,0,0,42)
-				TextLabel.Position = UDim2.new(0,5,1,0)
-				TextLabel.BackgroundTransparency = 1
-				TextLabel.TextStrokeTransparency = 0
-				TextLabel.TextColor3 = Color3.new(1,1,1)
-				TextLabel.Text = ChatBox.Text
-				TextLabel.TextSize = 15
-				TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-				TextLabel.TextYAlignment = Enum.TextYAlignment.Top
-				TextLabel.Parent = ChatBar
-			end
-			local bool = true
-			ChatBox.Changed:Connect(function()
-				if bool then
-					bool = false
-					pcall(function()
-						TextLabel.Text = game:GetService("Chat"):FilterStringForBroadcast(ChatBox.Text,Player)
-					end) 
-					bool = true
-				end
-			end)
-		end) end
-
-	local loadedtime = tick() - LoadTick
-
-	printconsole(tostring("Autoexec loaded in " .. loadedtime))
-
-	IsGameLoaded()
-
-	printconsole(tostring("Game loaded in " .. tick() - LoadTick))
-
-	if notify ~= "Disabled" then notify({Text = "Game loaded in " .. tick() - LoadTick,Duration = 5}) end
+		printconsole(tostring("Autoexec loaded in " .. loadedtime))
+		
+		if notify ~= "Disabled" then
+			notify({Text = "Game loaded in " .. math.abs(GameLoadedIn),Duration = 5})
+		end
+	end
 end
