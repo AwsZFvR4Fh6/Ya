@@ -1,6 +1,6 @@
 local Version = "1.2.3"
 
-local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/L8X/gethiddengui/main/src.lua", false))() end)
+local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
 if not game:IsLoaded("Workspace") then -- scriptware uses isloaded args
 	game.Loaded:Wait()
