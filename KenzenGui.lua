@@ -1,4 +1,4 @@
-local Version = "1.2.3"
+local Version = "1.2.5"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -1176,6 +1176,18 @@ Commands = {
 				ChatRemote:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country,"All")
 			else
 				Funcs.Notify("No Global.ServerInfo","Please use the autoexecute provided by ProductionTakeOne")
+			end
+		end,
+	},
+	["chatserverinfo"] = {
+		Args = {"Player"},
+		Alias = {"serverinfo","serverlocation"},
+		Function = function(Args)
+			if Global.GetPlayerData and Args[1] then
+				Funcs.fwait(Funcs.GetPing(900))
+				ChatRemote:FireServer(Global.GetPlayerData(Funcs.ShortName(Args[1]) or Args[1]),"All")
+			else
+				Funcs.Notify("No RoTracker","Please ask ProductionTakeOne for RoTracker")
 			end
 		end,
 	},
