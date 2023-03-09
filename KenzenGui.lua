@@ -1,4 +1,4 @@
-local Version = "1.2.5"
+local Version = "1.2.5.1"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -1167,6 +1167,17 @@ Commands = {
 			end
 		end,
 	},
+	["printplayerinfo"] = {
+		Args = {"Player"},
+		Alias = {"serverinfo","serverlocation"},
+		Function = function(Args)
+			if Global.GetPlayerData and Args[1] then
+				print(Global.GetPlayerData(Funcs.ShortName(Args[1]) or Args[1]))
+			else
+				Funcs.Notify("No RoTracker","Please ask ProductionTakeOne for RoTracker")
+			end
+		end,
+	},
 	["chatserverinfo"] = {
 		Args = {},
 		Alias = {"serverinfo","serverlocation"},
@@ -1179,7 +1190,7 @@ Commands = {
 			end
 		end,
 	},
-	["chatserverinfo"] = {
+	["chatplayerinfo"] = {
 		Args = {"Player"},
 		Alias = {"serverinfo","serverlocation"},
 		Function = function(Args)
