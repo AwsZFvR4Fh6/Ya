@@ -1172,7 +1172,8 @@ Commands = {
 		Alias = {"serverinfo","serverlocation"},
 		Function = function(Args)
 			if Global.GetPlayerData and Args[1] then
-				print(Global.GetPlayerData(Funcs.ShortName(Args[1])[1].Name or Args[1]))
+				local Found = Funcs.ShortName(Args[1])
+				print(Global.GetPlayerData(Found and Found[1].Name or Args[1]))
 			else
 				Funcs.Notify("No RoTracker","Please ask ProductionTakeOne for RoTracker")
 			end
@@ -1196,7 +1197,8 @@ Commands = {
 		Function = function(Args)
 			if Global.GetPlayerData and Args[1] then
 				--Funcs.fwait(Funcs.GetPing(900))
-				ChatRemote:FireServer(Global.GetPlayerData(Funcs.ShortName(Args[1])[1].Name or Args[1]),"All")
+				local Found = Funcs.ShortName(Args[1])
+				ChatRemote:FireServer(Global.GetPlayerData(Found and Found[1].Name or Args[1]),"All")
 			else
 				Funcs.Notify("No RoTracker","Please ask ProductionTakeOne for RoTracker")
 			end
