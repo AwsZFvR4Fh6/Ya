@@ -1,4 +1,4 @@
-local Version = "1.2.5.4"
+local Version = "1.2.5.5"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -1196,7 +1196,7 @@ Commands = {
 		Alias = {"serverinfo","serverlocation"},
 		Function = function(Args)
 			if Global.GetPlayerData and Args[1] then
-				--Funcs.fwait(Funcs.GetPing(900))
+				Funcs.fwait(Funcs.GetPing(900))
 				local Found = Funcs.ShortName(Args[1])
 				ChatRemote:FireServer(Global.GetPlayerData(Found and Found[1].Name or Args[1]),"All")
 			else
