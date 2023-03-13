@@ -1,51 +1,41 @@
 local LoadTick = tick()
 
 local Settings = {
-	AutomaticUpdates = false, 
-	-- Slower and uses default settings, but loads it from the latest version
-	ToggleGUI = true,
-	-- Toggles the command bar
-	Backrooms = false, 
-	-- Teleports you to the backrooms if you fall into the void
-	FastLoad = true, 
-	-- Changes roblox loading GUI
-	KickGui = true, 
-	-- Changes the UI for when you get kicked from the game
-	ReplaceWait = true, 
-	-- Replaces wait() with task.wait(), which is more optimized
-	ExtraGlobals = true,
-	--[[
+	AutomaticUpdates = false, -- :: Slower and uses default settings, but loads it from the latest version
+	ToggleGUI = true, -- :: Toggles the command bar
+	Backrooms = false, -- :: Teleports you to the backrooms if you fall into the void
+	FastLoad = true, -- :: Changes roblox loading GUI
+	KickGui = true, -- :: Changes the UI for when you get kicked from the game
+	ReplaceWait = true, -- :: Replaces wait() with task.wait(), which is more optimized
+	ExtraGlobals = true, --[[
 	Adds the following:
-		netless 
-		saveinstance 
-		fwait
-		Event
-		Global
-		ServerInfo
-		Notify
-		WaitForDescendant 
-		WaitForChildOfClass 
-		WaitForDescendantOfClass 
-		RequestURL
-		GetFileFromURL
-		RoundNumber
+		netless :: Applies velocity to parts
+		fwait :: Uses all runservice events
+		Event :: Connectable event for fwait
+		Global :: Global Table for variables
+		ServerInfo :: Table full of info about server
+		Notify :: Creates a notification
+		WaitForDescendant :: WaitForChild but descendant
+		WaitForChildOfClass :: WaitForChild but for classes
+		WaitForDescendantOfClass :: WaitForDescendant but for classes
+		RequestURL :: Requests a URL using HTTP
+		GetFileFromURL :: Returns a file thats obtained from URL
+		RoundNumber :: Improved math.round
+		RandomString/nCreate :: Creates a random string
 	Modifies the following: 
-		decompile 
-		Players:Chat
-		getsynasset 
+		decompile :: Makes variables look cleaner
+		getsynasset/getcustomasset :: Compatibility Fix
+		sethiddenproperty :: Compatibility Fix
+		setfflag :: Compatibility Fix
+		isnetworkowner :: Compatibility Fix
+		wait :: replaced with fwait					
 	]]
-	Notifications = true, 
-	-- Toggles Notifications
-	DisablePrompts = true, 
-	-- Disables Purchase Prompts
-	AntiAFK = true, 
-	-- Uses common anti-afk
-	AntiKick = false, 
-	-- Uses common anti-client kick
-	ChatFilterLabel = true, 
-	-- Adds a TextLabel that displays filtered text
-	DisableMenuOpened = true,
-	-- Disables the MenuOpened from firing, preventing shitty condo teleports
+	Notifications = true, -- :: Toggles Notifications
+	DisablePrompts = true, -- :: Disables Purchase Prompts
+	AntiAFK = true, -- :: Uses common anti-afk
+	RejoinOnKick = false, -- :: Replacement for antikick, makes you rejoin the game upon kick
+	ChatFilterLabel = true, -- :: Adds a TextLabel that displays filtered text
+	DisableMenuOpened = true, -- :: Disables the MenuOpened from firing, preventing shitty condo teleports
 	GUISettings = {
 		["MainColor"] = Color3.fromRGB(57, 0, 98),
 		["SecondaryColor"] = Color3.fromRGB(47, 0, 84),
@@ -60,7 +50,7 @@ if Settings["AutomaticUpdates"] then
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/extra/one'sautoexec.txt",true))()
 	printconsole(tostring("Full Load Time in " .. tick() - LoadTick))
 else
-	
+
 	-- :: Variables
 	local Global = Global or getgenv and getgenv() or shared or _G or getfenv(0)
 	local getsynasset = getsynasset or getcustomasset
@@ -70,9 +60,26 @@ else
 	local notify,Event
 	local fwait = task.wait
 	local OldDecomp = decompile
+	local Sethiddenproperty; do -- sethiddenproperty compatability
+		local shp = sethiddenproperty or set_hidden_property or sethiddenprop or setscriptable and function(loc,prop,val)
+			if not loc then
+				return true
+			end 
+			if not pcall(function() local a = loc[prop] end)  then
+				setscriptable(loc,prop,true)
+			end 
+			loc[prop] = val
+		end or function() end
+
+		Sethiddenproperty = function(loc,prop,val) -- krnl has a broken sethiddenproperty
+			return pcall(function()
+				shp(loc,prop,val)
+			end)
+		end
+	end
 	
 	-- :: Functions
-	
+
 	local function RequestURL(URL,KeepActive)
 		local Data,Temp; if request then 
 			Data,Temp = request({Url = URL,Method = 'GET'}); Data = Data.Body
@@ -81,11 +88,11 @@ else
 		end
 		return Data
 	end; 
-	
+
 	local function IsGameLoaded()
 		if not game:IsLoaded("Workspace") then game.Loaded:Wait() end
 	end
-	
+
 	local function GetLinkedAsset(Link)
 		local Name = string.split(Link,"/"); Name = Name[#Name]
 		local File
@@ -97,34 +104,47 @@ else
 		end
 		return File
 	end; 
-	
+
 	local function RoundNumber(number, decimalPlaces) if number and tonumber(number) then
 			decimalPlaces = decimalPlaces or 4
 			local Return = tostring(math.round(tonumber(number) * 10^decimalPlaces) * 10^-decimalPlaces)
 			return string.find(Return,".") and tonumber(string.sub(Return,1,string.find(Return,".")+decimalPlaces+1)) or tonumber(Return)
 		end
 	end; 
-	
+
 	local function GetToPath(From,Directory)
 		for i,v in pairs(string.split(Directory,".")) do
 			From = From:WaitForChild(v,5000)
 		end return From
 	end
-	
+
 	-- :: Code
-	
+
 	do 
-		local GuiService,CoreGui,RunService,Players,ChatService = game:GetService("GuiService"),game:GetService("CoreGui"),game:GetService("RunService"),game:GetService("Players"),game:GetService("Chat")
+		local GuiService,CoreGui,RunService,Players,ChatService,TeleportService = game:GetService("GuiService"),game:GetService("CoreGui"),game:GetService("RunService"),game:GetService("Players"),game:GetService("Chat"),game:GetService("TeleportService")
 		local Event = RunService.Heartbeat
 		local Part,Chat
-		
+
 		if Settings.ExtraGlobals then
-			Global.RequestURL = RequestURL
-			Global.Global = Global
+			Global.isnetworkowner = isnetworkowner or function(Part) return Part.ReceiveAge == 0 end
+			Global.setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
+			
+			Global.sethiddenproperty = Sethiddenproperty
 			Global.GetFileFromURL = GetLinkedAsset
 			Global.RoundNumber = RoundNumber
 			Global.getsynasset = getsynasset
+			Global.getcustomasset = getsynasset
+			Global.RequestURL = RequestURL
+			Global.Global = Global
 			
+			Global.RandomString = function(Amount)
+				local nString = ""
+				for _ = 1, Amount or math.random(5,20) do
+					nString = string.upper(nString .. string.char(math.random(33, 126)))
+				end
+				return nString
+			end; Global.nCreate = Global.RandomString
+
 			Global.WaitForDescendant = function(Start,Name)
 				local Find = Start:FindFirstChild(Name,true)
 				local DescendantAdded = Start.DescendantAdded:Connect(function(New)
@@ -134,30 +154,41 @@ else
 				DescendantAdded:Disconnect()
 				return Find
 			end
-			
+
 			Global.WaitForChildOfClass = function(Start,Class)
-				local Table = {}
-				local ChildAdded
-				for i,v in pairs(Start:GetChildren()) do
-					if v:IsA(Class) then return v else table.insert(Table,v) end
+				local Find = Start:FindFirstChildOfClass(Class)
+				if Find then return Find
+				else
+					local Table = {}
+					local ChildAdded
+					ChildAdded = Start.ChildAdded:Connect(function(v)
+						if v:IsA(Class) and not table.find(Table,v) then Find = v else table.insert(Table,v) end
+					end)
+					for i,v in pairs(Start:GetChildren()) do
+						if v:IsA(Class) then Find = v else table.insert(Table,v) end
+					end
+					repeat Start.ChildAdded:Wait() until Find; ChildAdded:Disconnect() return Find
 				end
-				ChildAdded = Start.ChildAdded:Connect(function(v)
-					if v:IsA(Class) and not table.find(Table,v) then return v else table.insert(Table,v) end
-				end)
+				
 			end
-			
+
 			Global.WaitForDescendantOfClass = function(Start,Class)
-				local Table = {}
-				local DescendantAdded
-				for i,v in pairs(Start:GetDescendants()) do
-					if v:IsA(Class) then return v else table.insert(Table,v) end
+				local Find = Start:FindFirstChildOfClass(Class,true)
+				if Find then return Find
+				else
+					local Table = {}
+					local DescendantAdded
+					DescendantAdded = Start.DescendantAdded:Connect(function(v)
+						if v:IsA(Class) and not table.find(Table,v) then Find = v else table.insert(Table,v) end
+					end)
+					for i,v in pairs(Start:GetDescendants()) do
+						if v:IsA(Class) then Find = v else table.insert(Table,v) end
+					end
+					repeat Start.DescendantAdded:Wait() until Find; DescendantAdded:Disconnect() return Find
 				end
-				DescendantAdded = Start.DescendantAdded:Connect(function(v)
-					if v:IsA(Class) and not table.find(Table,v) then return v else table.insert(Table,v) end
-				end)
 			end
-			
-			do
+
+			do -- :: fwait and pwait
 				local Bind = Instance.new("BindableEvent")
 				local PingBind = Instance.new("BindableEvent")
 				local PingVal = 0
@@ -188,7 +219,7 @@ else
 				local function PingWait()
 					return PingBind.Event:Wait()
 				end
-				
+
 				fwait = FastWait
 				Global.fwait = FastWait
 				Global.Event = Bind.Event
@@ -198,14 +229,12 @@ else
 
 				Event = Bind.Event
 			end
-			
-			do
-				Global.decompile = function(script)
-					return "--  Advanced Decompiler by ProductionTakeOne#3330 \n" .. string.gsub(string.gsub(OldDecomp(script),"l__",""),"__1","")
-				end
+
+			Global.decompile = function(script)
+				return "--  Advanced Decompiler by ProductionTakeOne#3330 \n" .. string.gsub(string.gsub(OldDecomp(script),"l__",""),"__1","")
 			end
-			
-			task.defer(function() -- // ServerInfo
+
+			task.defer(function() -- :: ServerInfo
 				local peer,replicator = game:GetService("NetworkClient").ConnectionAccepted:Wait()
 				local data = game:GetService("HttpService"):JSONDecode(RequestURL("http://ip-api.com/json/" .. peer:sub(1, peer:find("|")-1)))
 				local ServerInfo = {
@@ -220,9 +249,9 @@ else
 					TimeZone = data.timezone,
 					IP = data.query,
 				}
-				
+
 				Global.ServerInfo = ServerInfo
-				
+
 				repeat fwait(0/1) until notify
 				if notify ~= "Disabled" then
 					Global.Notify = notify
@@ -233,12 +262,28 @@ else
 				end
 			end)
 			
+			Global.wait = function(Time)
+				if Time then
+					return fwait(Time)
+				else
+					return fwait(1/30)
+				end
+			end
+			
 		end
-		
+
 		if Settings.KickGui then
 			task.defer(function()
 				GetToPath(CoreGui,"RobloxPromptGui.promptOverlay").ChildAdded:Connect(function(v)
 					if v.Name == "ErrorPrompt" then
+						if Settings.RejoinOnKick then
+							if #Players:GetPlayers() <= 1 then
+								TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+							else
+								TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+							end
+						end
+						
 						GuiService:ClearError()
 						local ErrorText = v:FindFirstChild("ErrorMessage",true)
 						v.Visible = false
@@ -280,19 +325,17 @@ else
 								VideoFrame:Destroy()
 							end)
 						end
+						RunService:SetRobloxGuiFocused(false)
 						repeat GuiService:ClearError() fwait(0/1) until not VideoFrame
 					end
 				end)
 			end)
 		end
-		
+
 		if Settings.FastLoad then
 			task.defer(function()
-				local BlackFrame = GetToPath(CoreGui,"RobloxLoadingGui.BlackFrame"); do
-					BlackFrame.BackgroundTransparency = 1
-					BlackFrame.Active = false
-					BlackFrame:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function() BlackFrame.BackgroundTransparency = 1 end)
-				end
+				GetToPath(CoreGui,"RobloxLoadingGUI.BackgroundScreen").Enabled = false
+				RunService:SetRobloxGuiFocused(false)
 			end)
 			Part = Instance.new("Part"); do
 				Part.Size = Vector3.new(5,1,5)
@@ -311,71 +354,30 @@ else
 				Image.Parent = Surface
 			end
 		end
-		
-		if Settings.ReplaceWait then
-			Global.wait = function(Time)
-				if Time then
-					return task.wait(Time)
-				else
-					return task.wait(1/30)
-				end
-			end
-		end
-		
+
 		if Settings.DisablePrompts then
 			task.defer(function()
 				GetToPath(CoreGui,"PurchasePrompt.ProductPurchaseContainer").Visible = false
 			end)
 		end
-		
-		if hookmetamethod and checkcaller and getnamecallmethod then -- Hooks
-			pcall(function()
-				local MethodCall; MethodCall = hookmetamethod(game, "__namecall", function(self, ...)
-					if checkcaller() then
-						if Settings.AntiKick and getnamecallmethod() == "Kick" then
-							return printconsole("Attemped Kick") --wait(9e8)
-						elseif Chat and Global.ToggleChatFix and self == Players and getnamecallmethod() == "Chat" and checkcaller() and debug.info(3, "f") ~= Chat then
-							return Chat(...)
-						end; return MethodCall(self,...)
-					else
-						return MethodCall(self,...)
-					end
-				end)
-			end)
-		end
-		
+
 		if Settings.ToggleGUI then
 			Global.AidKid = Settings.GUISettings
 			loadstring(RequestURL("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua"))()
 		end
-		
+
 		IsGameLoaded(); Part:Destroy()
 		local GameLoadedIn = RoundNumber(tick() - LoadTick)
 		printconsole(tostring("Game loaded in " .. GameLoadedIn))
-		
+
 		local Player = Players.LocalPlayer
-		
+
 		if Settings.DisableMenuOpened and getconnections then
 			for i,v in pairs(getconnections(game:GetService("GuiService").MenuOpened)) do
 				v:Disable()
 			end
 		end
-		
-		if Settings.ExtraGlobals then
-			task.defer(function()
-				Global.ToggleChatFix = true
-				local ChatBar = GetToPath(Player,"PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar")
-				Chat = function(Message)
-					if Global.ToggleChatFix then
-						local Text = ChatBar.Text
-						ChatBar:SetTextFromInput(Message)
-						Players:Chat(Message)
-						ChatBar:SetTextFromInput(Text)
-					end
-				end
-			end)
-		end
-		
+
 		if Settings.Backrooms then
 			local function RootCheck(Char)
 				local HumRoot = Char:WaitForChild("HumanoidRootPart",500)
@@ -394,7 +396,7 @@ else
 				RootCheck(Character) 
 			end) if Player.Character then RootCheck(Player.Character) end
 		end
-		
+
 		if Settings.ChatFilterLabel then
 			task.defer(function()
 				local ChatBar = GetToPath(Player,"PlayerGui.Chat.Frame.ChatBarParentFrame")
@@ -427,15 +429,15 @@ else
 		if Settings.Notifications then
 			notify = Settings.Notifications and loadstring(RequestURL("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/Notifications.lua"))() or "Disabled"
 		end
-		
+
 		if Settings.AntiAFK then task.defer(function()
-			loadstring(RequestURL("https://raw.githubusercontent.com/NoTwistedHere/Roblox/main/AntiAFK.lua"))()
-		end) end
+				loadstring(RequestURL("https://raw.githubusercontent.com/NoTwistedHere/Roblox/main/AntiAFK.lua"))()
+			end) end
 		
 		local loadedtime = RoundNumber(tick() - LoadTick)
 
 		printconsole(tostring("Autoexec loaded in " .. loadedtime))
-		
+
 		if notify ~= "Disabled" then
 			notify({Text = "Game loaded in " .. math.abs(GameLoadedIn),Duration = 5})
 		end
