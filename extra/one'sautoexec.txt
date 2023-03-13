@@ -6,7 +6,6 @@ local Settings = {
 	Backrooms = false, -- :: Teleports you to the backrooms if you fall into the void
 	FastLoad = true, -- :: Changes roblox loading GUI
 	KickGui = true, -- :: Changes the UI for when you get kicked from the game
-	ReplaceWait = true, -- :: Replaces wait() with task.wait(), which is more optimized
 	ExtraGlobals = true, --[[
 	Adds the following:
 		netless :: Applies velocity to parts
