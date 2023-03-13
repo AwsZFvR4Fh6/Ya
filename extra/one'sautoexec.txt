@@ -439,7 +439,7 @@ else
 		printconsole(tostring("Autoexec loaded in " .. loadedtime))
 
 		if notify ~= "Disabled" then
-			notify({Text = "Game loaded in " .. math.abs(GameLoadedIn),Duration = 5})
+			notify({Text = "Game loaded in " .. RoundNumber(GameLoadedIn),Duration = 5})
 		end
 	end
 end
