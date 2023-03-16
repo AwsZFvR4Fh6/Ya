@@ -1,4 +1,4 @@
-local Version = "1.2.5.5"
+local Version = "1.2.5.6"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -20,6 +20,7 @@ local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = Player:GetMouse()
 
+local gethiddenproperty = gethiddenproperty or get_hidden_property or gethiddenprop
 local Global = Global or getgenv and getgenv() or shared or _G or getfenv(0)
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
 local request = (syn and syn.request) or (http and http.request) or (request)
@@ -439,6 +440,21 @@ Commands = {
 			end
 		end,
 	},
+	["antitool"] = {
+		Args = {},
+		Alias = {"notk","antitk"},
+		Function = function()
+			Player.Character.ChildAdded:Connect(function(Tool)
+				if Tool:IsA("Tool") then
+					for i,v in pairs(Tool:GetJoints()) do
+						if v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent) then
+							Tool.Parent = Player.Backpack
+						end
+					end
+				end
+			end)
+		end,
+	},
 	["antifling"] = {
 		Args = {},
 		Alias = {"physicsantifling"},
@@ -501,9 +517,10 @@ Commands = {
 		Function = function(Args)
 			local ServerList = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
 			local Type = "Random"
-			if string.lower(Args[1]) == "small" or string.lower(Args[1]) == "smallest" or string.lower(Args[1]) == "lowest" or string.lower(Args[1]) == "low" or string.lower(Args[1]) == "bottom" or string.lower(Args[1]) == "s" then
+
+			if table.find({"small","smallest","lowest","low","bottom","s"},string.lower(Args[1])) then
 				Type = "Smallest"
-			elseif string.lower(Args[1]) == "large" or string.lower(Args[1]) == "largestest" or string.lower(Args[1]) == "highest" or string.lower(Args[1]) == "high" or string.lower(Args[1]) == "top" or string.lower(Args[1]) == "l" then
+			elseif table.find({"large","largestest","highest","high","top","l"},string.lower(Args[1])) then
 				Type = "Largest"
 			end Funcs.Notify("Attempting to serverhop","Type: " .. Type)
 
@@ -532,6 +549,10 @@ Commands = {
 		Args = {},
 		Alias = {"toolemotes","emotes","emote"},
 		Function = function()
+			if gethiddenproperty and gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletion.Enabled then
+				return -- game is patched
+			end
+			
 			Global.ToolDancesSettings = {
 				Preload = false,
 				PreloadWait = true,
@@ -545,6 +566,10 @@ Commands = {
 		Args = {},
 		Alias = {"r15toolemotes","r15emotes","r15emote"},
 		Function = function()
+			if gethiddenproperty and gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletion.Enabled then
+				return -- game is patched
+			end
+			
 			Global.ToolDancesSettings = {
 				Preload = false,
 				PreloadWait = true,
