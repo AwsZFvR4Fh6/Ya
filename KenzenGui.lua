@@ -1,4 +1,4 @@
-local Version = "1.2.6.2"
+local Version = "1.2.6.3"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -237,7 +237,7 @@ local ScreenGui = Instance.new("ScreenGui"); do
 					end
 				end
 			end
-			
+			CommandBar.Text = ""
 		end)
 	end
 	CommandsFrame = Instance.new("Frame"); do
