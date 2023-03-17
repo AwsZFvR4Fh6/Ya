@@ -1,4 +1,4 @@
-local Version = "1.2.6.1"
+local Version = "1.2.6.2"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -231,11 +231,13 @@ local ScreenGui = Instance.new("ScreenGui"); do
 				if not Args[1] then Args[1] = "" end
 				for i,v in pairs(Commands) do
 					if i == CommandName or table.find(v.Alias,CommandName) then
-						Commands[i].Function(Args)
+						task.defer(function()
+							Commands[i].Function(Args)
+						end)
 					end
 				end
 			end
-			CommandBar.Text = ""
+			
 		end)
 	end
 	CommandsFrame = Instance.new("Frame"); do
