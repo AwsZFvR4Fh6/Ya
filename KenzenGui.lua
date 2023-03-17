@@ -1,4 +1,4 @@
-local Version = "1.2.6"
+local Version = "1.2.6.1"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -400,6 +400,20 @@ Commands = {
 		Function = function()
 			Funcs.Loadstring("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/init.lua",false,'init.lua')
 			Funcs.Loadstring("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ui/main.lua",false,'ui/main.lua')
+		end,
+	},
+	["fatesadmin"] = {
+		Args = {},
+		Alias = {"fate"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/fatesc/fates-admin/main/main.lua")
+		end,
+	},
+	["cmdx"] = {
+		Args = {},
+		Alias = {"cmdxadmin"},
+		Function = function()
+			Funcs.Loadstring("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source")
 		end,
 	},
 	["backdoorchecker"] = {
