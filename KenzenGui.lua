@@ -1,4 +1,4 @@
-local Version = "1.2.5.9"
+local Version = "1.2.6"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -443,7 +443,7 @@ Commands = {
 	},
 	["antitool"] = {
 		Args = {},
-		Alias = {"notk","antitk"},
+		Alias = {"notk","antitk","antiattach"},
 		Function = function()
 			Player.Character.ChildAdded:Connect(function(Tool)
 				if Tool:IsA("Tool") then
@@ -454,6 +454,41 @@ Commands = {
 					end
 				end
 			end)
+		end,
+	},
+	["antipredict"] = {
+		Args = {},
+		Alias = {"velocityspoof"},
+		Function = function()
+			local HumanoidRootPart = Player.Character.HumanoidRootPart
+			local Velocity = Vector3.new(2147483646,-2147483646,2147483646)
+			while HumanoidRootPart and HumanoidRootPart.Parent do
+				local RootVelocity = HumanoidRootPart.Velocity
+				HumanoidRootPart.Velocity = Velocity
+				game:GetService("RunService").PreRender:Wait()
+				HumanoidRootPart.Velocity = RootVelocity
+				game:GetService("RunService").PostSimulation:Wait()
+			end
+		end,
+	},
+	
+	["antibang"] = {
+		Args = {},
+		Alias = {"antiheadsit"},
+		Function = function()
+			local HumanoidRootPart = Player.Character.HumanoidRootPart
+			local Camera = workspace.CurrentCamera
+			local CFrame = CFrame.new(math.huge,-math.huge,math.huge)
+			while HumanoidRootPart and HumanoidRootPart.Parent do
+				local RootCFrame = HumanoidRootPart.CFrame
+				local Cam = Camera.CFrame
+				HumanoidRootPart.CFrame = CFrame
+				Camera.CFrame = Cam
+				RunService.PreAnimation:Wait()
+				HumanoidRootPart.CFrame = RootCFrame
+				Camera.CFrame = Cam
+				Funcs.fwait(Player:GetNetworkPing()*2)
+			end
 		end,
 	},
 	["antifling"] = {
