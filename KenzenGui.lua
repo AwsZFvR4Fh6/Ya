@@ -1,4 +1,4 @@
-local Version = "1.2.5.7"
+local Version = "1.2.5.8"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -1102,13 +1102,6 @@ Commands = {
 					for i=1,5 do
 						local Path1 = Path:GetWaypoints()[i]
 						if Path1 then
-							local Part = Instance.new("Part"); do
-								Part.Size = Vector3.new(1,1,1)
-								Part.Anchored = true
-								Part.CanCollide = false
-								Part.Position = Path1.Position + Vector3.new(0,5,0)
-								Part.Parent = workspace.ProductionTake1
-							end
 							if Path1.Action == Enum.PathWaypointAction.Walk then
 								Humanoid:MoveTo(Path1.Position)--; Humanoid.MoveToFinished:Wait()
 								repeat fwait() until (Root.Position - Path1.Position).Magnitude < 4
