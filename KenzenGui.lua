@@ -1,4 +1,4 @@
-local Version = "1.2.7.4"
+local Version = "1.2.7.5a"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -1158,6 +1158,7 @@ Commands = {
 		Function = function(Args)
 			local Plr = Funcs.ShortName(Args[1]);
 			if Plr then
+				Plr = Plr[1]
 				Commands["antifling"].Function()
 
 				local Character = Player.Character
