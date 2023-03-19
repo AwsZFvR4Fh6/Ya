@@ -155,7 +155,7 @@ local TBIsHidden,CheckTB = false,function()
 	return UserInputService:GetFocusedTextBox() ~= nil and gethiddengui and UserInputService:GetFocusedTextBox():IsDescendantOf(Folder) or 
 		UserInputService:GetFocusedTextBox() ~= nil and gethui and gethui() ~= CoreGui and UserInputService.GetFocusedTextBox(UserInputService):IsDescendantOf(gethui()) 
 end; do
-	for i,v in pairs(Event,UserInputService.TextBoxFocused,UserInputService.TextBoxFocusReleased) do
+	for i,v in pairs({Event,UserInputService.TextBoxFocused,UserInputService.TextBoxFocusReleased}) do
 		v:Connect(function()
 			TBIsHidden = CheckTB()
 		end)
