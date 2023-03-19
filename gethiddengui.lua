@@ -27,7 +27,7 @@ local tostring,game,type,typeof,table,setfenv,getrawmetatable,DebugSettings,getr
 	checkcaller = checkcaller
 	cloneref = cloneref or function(ref) return ref end
 	stats = stats and stats() or Stats and Stats() or game:GetService("Stats")
-	setreadonly = setreadonly or table.freeze
+	setreadonly = setreadonly
 end
 
 if Global and Global.gethiddengui then return end; math.randomseed(tick())
