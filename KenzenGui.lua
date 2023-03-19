@@ -477,7 +477,7 @@ Commands = {
 		Alias = {"velocityspoof","cleanfling2"},
 		Function = function(Args)
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
-			local Velocity = Vector3.new(2147483646,tonumber(Arg[1]) or 0,2147483646)
+			local Velocity = Vector3.new(-2^14,tonumber(Arg[1]) or -2^14,-2^14)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
 				game:GetService("RunService").PostSimulation:Wait()
 				local RootVelocity = HumanoidRootPart.Velocity
