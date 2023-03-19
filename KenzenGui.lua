@@ -1,4 +1,4 @@
-local Version = "1.2.6.9a"
+local Version = "1.2.7"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -465,7 +465,7 @@ Commands = {
 				if Tool:IsA("Tool") and Tool:FindFirstChild("Handle") then
 					for i,v in pairs(Tool.Handle:GetJoints()) do
 						if v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent) then
-							Player.Character.DescendantAdded:Wait()
+							Player.Character.DescendantAdded:Wait() -- waits for the grip
 							Tool.Parent = Player.Backpack
 						end
 					end
