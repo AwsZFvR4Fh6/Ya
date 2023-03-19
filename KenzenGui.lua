@@ -1,4 +1,4 @@
-local Version = "1.2.6.7"
+local Version = "1.2.6.8"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -477,7 +477,7 @@ Commands = {
 		Alias = {"velocityspoof","cleanfling2"},
 		Function = function(Args)
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
-			local Velocity = Vector3.new(-2^14,tonumber(Arg[1]) or -2^14,-2^14)
+			local Velocity = Vector3.new(-2^14,Args[1] and tonumber(Args[1]) or -2^14,-2^14)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
 				game:GetService("RunService").PostSimulation:Wait()
 				local RootVelocity = HumanoidRootPart.Velocity
