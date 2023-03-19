@@ -1,4 +1,4 @@
-local Version = "1.2.6.9"
+local Version = "1.2.6.9a"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -464,9 +464,8 @@ Commands = {
 			Player.Character.ChildAdded:Connect(function(Tool)
 				if Tool:IsA("Tool") and Tool:FindFirstChild("Handle") then
 					for i,v in pairs(Tool.Handle:GetJoints()) do
-						print(v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent))
 						if v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent) then
-							Funcs.fwait()
+							Player.Character.DescendantAdded:Wait()
 							Tool.Parent = Player.Backpack
 						end
 					end
