@@ -1,4 +1,4 @@
-local Version = "1.2.6.8"
+local Version = "1.2.6.9"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -464,7 +464,9 @@ Commands = {
 			Player.Character.ChildAdded:Connect(function(Tool)
 				if Tool:IsA("Tool") and Tool:FindFirstChild("Handle") then
 					for i,v in pairs(Tool.Handle:GetJoints()) do
+						print(v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent))
 						if v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent) then
+							Funcs.fwait()
 							Tool.Parent = Player.Backpack
 						end
 					end
@@ -487,7 +489,7 @@ Commands = {
 			end
 		end,
 	},
-	
+
 	["antibang"] = {
 		Args = {},
 		Alias = {"antiheadsit"},
@@ -1135,7 +1137,7 @@ Commands = {
 			local Plr = Funcs.ShortName(Args[1]);
 			if Plr then
 				Commands["antifling"].Function()
-				
+
 				local Character = Player.Character
 				local Humanoid = Character:WaitForChild("Humanoid")
 				local Root = Character:WaitForChild("HumanoidRootPart")
