@@ -1,4 +1,4 @@
-local Version = "1.2.7"
+local Version = "1.2.7.1"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -21,6 +21,7 @@ local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = Player:GetMouse()
 
+local sethiddenproperty = sethiddenproperty or set_hidden_property or sethiddenprop
 local gethiddenproperty = gethiddenproperty or get_hidden_property or gethiddenprop
 local Global = Global or getgenv and getgenv() or shared or _G or getfenv(0)
 local setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
@@ -61,7 +62,7 @@ local Funcs = {}; do
 			return string.find(Return,".") and tonumber(string.sub(Return,1,string.find(Return,".")+decimalPlaces+1)) or tonumber(Return)
 		end
 	end
-	Funcs.fwait = function(Time)
+	Funcs.fwait = fwait or function(Time)
 		if Time and tonumber(Time) and Time > 0 then
 			local Timed = 0; repeat Timed += Event:Wait() until Timed >= Time
 		else Event:Wait() end
@@ -194,6 +195,26 @@ local Funcs = {}; do
 			end
 		end)
 	end
+	
+	Funcs.PreventSleeping = function(Part) 
+		Funcs.ClearConnections("SleepEvent")
+		
+		local Bool = 0.07
+		local SleepEvent = Event:Connect(function()
+			sethiddenproperty(Part, "NetworkIsSleeping", false)
+			Part.CFrame = Part + Vector3.new(0,0.07,0)
+			Bool *= -1
+		end); table.insert(EventStorage["SleepEvent"],SleepEvent)
+		
+		Part.AncestryChanged:Connect(function()
+			if not Part or not Part.Parent then
+				Funcs.ClearConnections("SleepEvent")
+			end
+		end)
+		
+		return SleepEvent
+	end
+	
 end; if not Global.fwait then Global.fwait = Funcs.fwait end
 
 
@@ -479,13 +500,14 @@ Commands = {
 		Function = function(Args)
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
 			local Velocity = Vector3.new(-2^14,Args[1] and tonumber(Args[1]) or -2^14,-2^14)
+			Funcs.PreventSleeping(HumanoidRootPart)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
 				game:GetService("RunService").PostSimulation:Wait()
 				local RootVelocity = HumanoidRootPart.Velocity
 				HumanoidRootPart.Velocity = Velocity
 				game:GetService("RunService").PreRender:Wait()
 				HumanoidRootPart.Velocity = RootVelocity
-			end
+			end; 
 		end,
 	},
 
@@ -496,6 +518,7 @@ Commands = {
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
 			local Camera = workspace.CurrentCamera
 			local CFrame = CFrame.new(math.huge,-math.huge,math.huge)
+			Funcs.PreventSleeping(HumanoidRootPart)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
 				local RootCFrame = HumanoidRootPart.CFrame
 				local Cam = Camera.CFrame
@@ -505,7 +528,7 @@ Commands = {
 				HumanoidRootPart.CFrame = RootCFrame
 				Camera.CFrame = Cam
 				Funcs.fwait(Player:GetNetworkPing()*2)
-			end
+			end; 
 		end,
 	},
 	["antifling"] = {
@@ -824,13 +847,16 @@ Commands = {
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15))
 				Player.Character:WaitForChild("Humanoid").Sit = true
+				Funcs.PreventSleeping(Player.Character.HumanoidRootPart)
 				table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 					if not Seated then
 						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
 						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
 						Funcs.ClearConnections("Attachments")
+						Funcs.ClearConnections("SleepEvent")
 					end
-				end)) end
+				end)); 
+			end
 		end,
 	},
 	["headsitpredict"] = {
@@ -840,13 +866,16 @@ Commands = {
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15),true) 
 				Player.Character:WaitForChild("Humanoid").Sit = true
+				Funcs.PreventSleeping(Player.Character.HumanoidRootPart)
 				table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
 					if not Seated then
 						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
 						if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
 						Funcs.ClearConnections("Attachments")
+						Funcs.ClearConnections("SleepEvent")
 					end
-				end)) end
+				end)); 
+			end
 		end,
 	},
 	["bang"] = {
@@ -855,6 +884,7 @@ Commands = {
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,0,1)) 
+				Funcs.PreventSleeping(Player.Character.HumanoidRootPart)
 				local bangAnim = Instance.new("Animation") do
 					if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 						bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -866,7 +896,8 @@ Commands = {
 						Anim:Play(.1, 1, 1)
 						Anim:AdjustSpeed(5)
 					end
-				end end
+				end; 
+			end
 		end,
 	},
 	["bangpredict"] = {
@@ -875,6 +906,7 @@ Commands = {
 		Function = function(Args)
 			local ToPlr = Funcs.ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(0,0,1),true) 
+				Funcs.PreventSleeping(Player.Character.HumanoidRootPart)
 				local bangAnim = Instance.new("Animation") do
 					if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
 						bangAnim.AnimationId = "rbxassetid://5918726674"
@@ -1096,30 +1128,6 @@ Commands = {
 			end
 		end,
 	},
-	["invisfling"] = {
-		Args = {},
-		Alias = {},
-		Function = function()
-			local Root = Player.Character:FindFirstChild("HumanoidRootPart"); local SelectionBox = Instance.new("SelectionBox"); do
-				SelectionBox.Adornee = Root; 
-				SelectionBox.Transparency = 1; 
-				SelectionBox.Parent = Root
-			end
-			task.defer(function() Commands["fly"].Function() end)
-			EventStorage.InvisFling = Event:Connect(function()
-				Root.Velocity = Vector3.new(-17.72,0,-17.72)
-			end)
-			local Character = Player.Character; Character.Archivable = true
-			local NewCharacter = Character:Clone(); NewCharacter:WaitForChild("Head").Anchored = true
-			Player.Character = NewCharacter; Character.Parent = NewCharacter; NewCharacter.Parent = workspace
-			Funcs.fwait(Players.RespawnTime+Funcs.GetPing(750))
-			for i,v in pairs(Character:GetChildren()) do
-				if v ~= Root and v.Name ~= "Humanoid" then
-					v:Destroy()
-				end
-			end
-		end,
-	},
 	["datalimit"] = {
 		Args = {"KBPS"},
 		Alias = {},
@@ -1280,11 +1288,13 @@ Commands = {
 				local Origin = Root.CFrame
 				Commands["noclip"].Function()
 				Funcs.AttachToPlayer(ToPlr,CFrame.new(),true)
+				Funcs.PreventSleeping(Player.Character.HumanoidRootPart)
 				Funcs.fwait(.1+Funcs.GetPing(750))--Funcs.GetPing(750))
 				Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(2147483646,0,0)
 				repeat 
 					Funcs.fwait()
 				until not ToPlr.Character or not ToPlr.Character:FindFirstChild("HumanoidRootPart") or ToPlr.Character.HumanoidRootPart.Velocity.Magnitude >= 100 or ToPlr.Character.HumanoidRootPart.RotVelocity.Magnitude >= 100
+				Funcs.ClearConnections("SleepEvent")
 				Funcs.ClearConnections("Attachments")
 				Commands["clip"].Function()
 				Root:WaitForChild("BodyAngularVelocity"):Destroy()
