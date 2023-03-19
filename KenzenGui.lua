@@ -1,4 +1,4 @@
-local Version = "1.2.7.1"
+local Version = "1.2.7.1a"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -202,7 +202,7 @@ local Funcs = {}; do
 		local Bool = 0.07
 		local SleepEvent = Event:Connect(function()
 			sethiddenproperty(Part, "NetworkIsSleeping", false)
-			Part.CFrame = Part + Vector3.new(0,0.07,0)
+			Part.CFrame = Part.CFrame + Vector3.new(0,0.07,0)
 			Bool *= -1
 		end); table.insert(EventStorage["SleepEvent"],SleepEvent)
 		
