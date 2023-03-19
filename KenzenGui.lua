@@ -477,7 +477,7 @@ Commands = {
 		Alias = {"velocityspoof"},
 		Function = function()
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
-			local Velocity = Vector3.new(2147483646,-2147483646,2147483646)
+			local Velocity = Vector3.new(2147483646,0,2147483646)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
 				local RootVelocity = HumanoidRootPart.Velocity
 				HumanoidRootPart.Velocity = Velocity
