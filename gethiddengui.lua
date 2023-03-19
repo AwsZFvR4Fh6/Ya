@@ -10,25 +10,26 @@ local PlaceWhitelist = {
 	return not table.find(PlaceWhitelist,tostring(game.PlaceId))
 end
 
-local tostring,game,type,typeof,table,setfenv,getrawmetatable,DebugSettings,getrenv,newcclosure,Global,getnamecallmethod,hookmetamethod,checkcaller,cloneref,stats,setreadonly; do
-	tostring = tostring
-	game = game
-	type = type
-	typeof = typeof or type
-	table = table
-	setfenv = setfenv
-	getrawmetatable = getrawmetatable or nil
-	DebugSettings = settings and settings():GetService("DebugSettings") or nil
-	getrenv = getrenv or nil
-	newcclosure = newcclosure or nil
-	Global = Global or getgenv and getgenv() or shared or _G or getfenv(0) 
-	getnamecallmethod = getnamecallmethod
-	hookmetamethod = hookmetamethod
-	checkcaller = checkcaller
-	cloneref = cloneref or function(ref) return ref end
-	stats = stats and stats() or Stats and Stats() or game:GetService("Stats")
-	setreadonly = setreadonly
-end
+local Global = Global or getgenv and getgenv() or getrenv and getrenv() or getfenv and getfenv() or shared or _G
+local gethiddengui = nil
+local get_hidden_gui = nil
+local gethgui = nil
+local get_h_gui = nil
+local tostring = tostring
+local game = game
+local type = type
+local typeof = typeof or type
+local table = table
+local setfenv = setfenv
+local getrawmetatable = getrawmetatable or nil
+local DebugSettings = settings and settings():GetService("DebugSettings") or nil
+local getrenv = getrenv or nil
+local getnamecallmethod = getnamecallmethod or nil
+local hookmetamethod = hookmetamethod or nil
+local checkcaller = checkcaller or nil
+local newcclosure = newcclosure or nil
+local cloneref = cloneref or function(ref) return ref end
+local stats = stats and stats() or Stats and Stats() or game:GetService("Stats")
 
 if Global and Global.gethiddengui then return end; math.randomseed(tick())
 
@@ -51,7 +52,7 @@ local Folder =  Instance.new("Folder"); do
 	Folder.DescendantAdded:Connect(function(v)
 		coreGuiProtection[v] = rPlayer.Name or tostring(math.random(1e9, 2e9))
 	end) coreGuiProtection[Folder] = Folder.Name == "RobloxGui" and "RobloxGui" or rPlayer.Name or tostring(math.random(1e9, 2e9))
-	
+
 	local ConnectionsToDisable = {"ChildAdded","ChildRemoved","DescendantAdded","DescendantRemoving","childAdded","Destroying","Changed","AncestryChanged"}; pcall(function()
 		for _,Connection in pairs(ConnectionsToDisable) do
 			for _,v in pairs(getconnections(CoreGui[Connection])) do
@@ -64,7 +65,7 @@ local Folder =  Instance.new("Folder"); do
 		for _,v in pairs(getconnections(Folder.AttributeChanged)) do
 			v:Disable()
 		end
-		
+
 		if syn and syn.protect_gui and not gethui then
 			syn.protect_gui(Folder)
 		end; if protect_gui and not gethui then
@@ -238,7 +239,7 @@ do -- Mostly untouched code
 			return OldIndex(Self, Prop, ...)
 		end))
 	end
-	
+
 	if getrenv and hookfunction and newcclosure and (identifyexecutor and identifyexecutor():find("Synapse") or CheckWhitelist()) then
 		local TableNumbaor001 = {}
 		local SomethingOld;
