@@ -1,4 +1,4 @@
-local Version = "1.2.7.2a"
+local Version = "1.2.7.2"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -200,9 +200,6 @@ local Funcs = {}; do
 		Funcs.ClearConnections("SleepEvent")
 		local SleepEvent = Event:Connect(function()
 			sethiddenproperty(Part, "NetworkIsSleeping", false)
-			if Part.Velocity.Magnitude < 0.08 then
-				Part.Velocity = Vector3.new(Part.Velocity.X,-0.08,Part.Velocity.Z)
-			end
 		end); table.insert(EventStorage["SleepEvent"],SleepEvent)
 		
 		Part.AncestryChanged:Connect(function()
