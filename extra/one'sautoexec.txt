@@ -9,7 +9,7 @@ local Settings = {
 	Notifications = true, -- :: Toggles Notifications
 	DisablePrompts = true, -- :: Disables Purchase Prompts
 	AntiAFK = true, -- :: Uses common anti-afk
-	RejoinOnKick = false, -- :: Replacement for antikick, makes you rejoin the game upon kick
+	RejoinOnKick = true, -- :: Replacement for antikick, makes you rejoin the game upon kick
 	ChatFilterLabel = true, -- :: Adds a TextLabel that displays filtered text
 	DisableMenuOpened = true, -- :: Disables the MenuOpened from firing, preventing shitty condo teleports
 	GUISettings = {
@@ -204,6 +204,7 @@ else
 	local function RoundNumber(number, decimalPlaces) if number and tonumber(number) then
 			decimalPlaces = decimalPlaces or 4
 			local Return = tostring(math.round(tonumber(number) * 10^decimalPlaces) * 10^-decimalPlaces)
+			print(Return)
 			return string.find(Return,".") and tonumber(string.sub(Return,1,string.find(Return,".")+decimalPlaces+1)) or tonumber(Return)
 		end
 	end; 
@@ -636,8 +637,8 @@ else
 		end
 
 		IsGameLoaded(); Part:Destroy()
-		local GameLoadedIn = RoundNumber(tick() - LoadTick)
-		printconsole(tostring("Game loaded in " .. GameLoadedIn))
+		local GameLoadedIn = tick() - LoadTick
+		printconsole(tostring("Game loaded in " .. RoundNumber(GameLoadedIn) .. " (" .. RoundNumber(GameLoadedIn)*10000 .. "ms)"))
 
 		local Player = Players.LocalPlayer
 
@@ -703,9 +704,9 @@ else
 				loadstring(RequestURL("https://raw.githubusercontent.com/NoTwistedHere/Roblox/main/AntiAFK.lua"))()
 			end) end
 
-		local loadedtime = RoundNumber(tick() - LoadTick)
+		local loadedtime = (tick() - LoadTick)
 
-		printconsole(tostring("V3.1 Autoexec loaded in " .. loadedtime))
+		printconsole(tostring("V3.1 Autoexec loaded in " .. RoundNumber(loadedtime) .. " (" .. RoundNumber(loadedtime)*10000 .. "ms)"))
 
 		if notify ~= "Disabled" then
 			notify({Text = "Game loaded in " .. math.abs(GameLoadedIn),Duration = 5})
