@@ -1,4 +1,4 @@
-local Version = "1.2.6.4"
+local Version = "1.2.6.5"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
