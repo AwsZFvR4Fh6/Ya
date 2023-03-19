@@ -462,8 +462,8 @@ Commands = {
 		Alias = {"notk","antitk","antiattach"},
 		Function = function()
 			Player.Character.ChildAdded:Connect(function(Tool)
-				if Tool:IsA("Tool") then
-					for i,v in pairs(Tool:GetJoints()) do
+				if Tool:IsA("Tool") and Tool:FindFirstChild("Handle") then
+					for i,v in pairs(Tool.Handle:GetJoints()) do
 						if v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent) then
 							Tool.Parent = Player.Backpack
 						end
@@ -479,11 +479,11 @@ Commands = {
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
 			local Velocity = Vector3.new(2147483646,0,2147483646)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
+				game:GetService("RunService").PostSimulation:Wait()
 				local RootVelocity = HumanoidRootPart.Velocity
 				HumanoidRootPart.Velocity = Velocity
 				game:GetService("RunService").PreRender:Wait()
 				HumanoidRootPart.Velocity = RootVelocity
-				game:GetService("RunService").PostSimulation:Wait()
 			end
 		end,
 	},
