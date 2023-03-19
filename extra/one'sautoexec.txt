@@ -204,7 +204,6 @@ else
 	local function RoundNumber(number, decimalPlaces) if number and tonumber(number) then
 			decimalPlaces = decimalPlaces or 4
 			local Return = tostring(math.round(tonumber(number) * 10^decimalPlaces) * 10^-decimalPlaces)
-			print(Return)
 			return string.find(Return,".") and tonumber(string.sub(Return,1,string.find(Return,".")+decimalPlaces+1)) or tonumber(Return)
 		end
 	end; 
