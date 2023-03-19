@@ -1,4 +1,4 @@
-local Version = "1.2.7.3a"
+local Version = "1.2.7.4"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -195,22 +195,22 @@ local Funcs = {}; do
 			end
 		end)
 	end
-	
+
 	Funcs.PreventSleeping = function(Part) 
 		Funcs.ClearConnections("SleepEvent")
 		local SleepEvent = Event:Connect(function()
 			sethiddenproperty(Part, "NetworkIsSleeping", false)
 		end); table.insert(EventStorage["SleepEvent"],SleepEvent)
-		
+
 		Part.AncestryChanged:Connect(function()
 			if not Part or not Part.Parent then
 				Funcs.ClearConnections("SleepEvent")
 			end
 		end)
-		
+
 		return SleepEvent
 	end
-	
+
 end; if not Global.fwait then Global.fwait = Funcs.fwait end
 
 
@@ -511,21 +511,38 @@ Commands = {
 		Args = {},
 		Alias = {"antiheadsit"},
 		Function = function()
-			local Height = workspace.FallenPartsDestroyHeight - 1
-			workspace.FallenPartsDestroyHeight = Height -= 10
+			local Height = workspace.FallenPartsDestroyHeight - 50
+			workspace.FallenPartsDestroyHeight = Height - 100
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
 			local Camera = workspace.CurrentCamera
-			local CFrame = CFrame.new(9307193325,Height,9307193325)
 			Funcs.PreventSleeping(HumanoidRootPart)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
-				local RootCFrame = HumanoidRootPart.CFrame
-				local Cam = Camera.CFrame
-				HumanoidRootPart.CFrame = CFrame
-				Camera.CFrame = Cam
-				RunService.PreAnimation:Wait()
-				HumanoidRootPart.CFrame = RootCFrame
-				Camera.CFrame = Cam
-				Funcs.fwait(Player:GetNetworkPing()*2)
+				local If = false
+				for i,v in pairs(Players:GetPlayers()) do
+					if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and (v.Character.HumanoidRootPart.Position-HumanoidRootPart.Position).Magnitude <= 5 then
+						if v.Character:FindFirstChildOfClass("Humanoid").Sit == true then
+							If = true
+						else
+							for _,Track in pairs(v.Character:FindFirstChildOfClass("Humanoid"):GetPlayingAnimationTracks()) do
+								if Track.Speed >= 2.9 then
+									If = true
+								end
+							end
+						end
+					end
+				end
+				if If then
+					local RootCFrame = HumanoidRootPart.CFrame
+					local Cam = Camera.CFrame
+					HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position.X,Height,HumanoidRootPart.Position.Z)--CFrame
+					Camera.CFrame = Cam
+					RunService.PreRender:Wait()
+					HumanoidRootPart.CFrame = RootCFrame
+					Camera.CFrame = Cam
+					task.wait(Player:GetNetworkPing()*4)
+				else
+					Funcs.fwait()
+				end
 			end; 
 		end,
 	},
