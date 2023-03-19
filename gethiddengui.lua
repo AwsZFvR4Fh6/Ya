@@ -12,9 +12,6 @@ end
 
 local Global = Global or getgenv and getgenv() or getrenv and getrenv() or getfenv and getfenv() or shared or _G
 local gethiddengui = nil
-local get_hidden_gui = nil
-local gethgui = nil
-local get_h_gui = nil
 local tostring = tostring
 local game = game
 local type = type
@@ -74,17 +71,7 @@ local Folder =  Instance.new("Folder"); do
 	end)
 end 
 
-local gethiddengui = function() return Folder end; do
-	get_hidden_gui = gethiddengui
-	gethgui = gethiddengui
-	get_h_gui = gethiddengui
-end
-
-if gethui and type(gethui) == "function" and typeof(gethui()) == "Instance" and gethui() ~= CoreGui and not CheckIfV3Menu() then
-	--HideInMe = gethui()
-else
-	--HideInMe = CoreGui
-end
+local gethiddengui = function() return Folder end
 
 local _ENV,_Globals; if getrenv then
 	_Globals = {__metatable = "This metatable is locked"}; do
@@ -262,7 +249,10 @@ Folder.Parent = gethui and type(gethui) == "function" and typeof(gethui()) == "I
 
 if Global then
 	Global.gethiddengui =  gethiddengui
-	Global.get_hidden_gui = get_hidden_gui
-	Global.gethgui = gethgui
-	Global.get_h_gui = get_h_gui
+	Global.get_hidden_gui = gethiddengui
+	Global.gethgui = gethiddengui
+	Global.get_h_gui = gethiddengui
+	if not Global.gethui then
+		Global.gethui = gethiddengui
+	end
 end
