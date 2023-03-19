@@ -1,4 +1,4 @@
-local Version = "1.2.6.6"
+local Version = "1.2.6.7"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -1086,7 +1086,7 @@ Commands = {
 				tool.Parent = Player.Backpack
 				tool.Parent = Player.Character
 				Commands["noclip"].Function()
-				Funcs.fwait(.1)
+				Funcs.fwait(.1+Funcs.GetPing())
 				for i,v in pairs(Player.Character:WaitForChild("Humanoid"):GetPlayingAnimationTracks()) do
 					if string.find(v.Animation.AnimationId,"182393478") then
 						v:Stop()
