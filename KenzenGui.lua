@@ -1,4 +1,4 @@
-local Version = "1.2.7.3"
+local Version = "1.2.7.3a"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -511,10 +511,11 @@ Commands = {
 		Args = {},
 		Alias = {"antiheadsit"},
 		Function = function()
-			workspace.FallenPartsDestroyHeight = -50000
+			local Height = workspace.FallenPartsDestroyHeight - 1
+			workspace.FallenPartsDestroyHeight = Height -= 10
 			local HumanoidRootPart = Player.Character.HumanoidRootPart
 			local Camera = workspace.CurrentCamera
-			local CFrame = CFrame.new(math.huge,-5000,math.huge)
+			local CFrame = CFrame.new(9307193325,Height,9307193325)
 			Funcs.PreventSleeping(HumanoidRootPart)
 			while HumanoidRootPart and HumanoidRootPart.Parent do
 				local RootCFrame = HumanoidRootPart.CFrame
