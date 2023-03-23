@@ -11,12 +11,13 @@ local Settings = {
 	AntiAFK = true, -- :: Uses common anti-afk
 	RejoinOnKick = false, -- :: Replacement for antikick, makes you rejoin the game upon kick
 	ChatFilterLabel = true, -- :: Adds a TextLabel that displays filtered text
-	DisableMenuOpened = true, -- :: Disables the MenuOpened from firing, preventing shitty condo teleports
 	GUISettings = {
 		["MainColor"] = Color3.fromRGB(57, 0, 98),
 		["SecondaryColor"] = Color3.fromRGB(47, 0, 84),
 		["Image"] = "rbxassetid://4840955387" -- "rbxassetid://ID" or getsynasset(PATH)
 	},
+	SecureEnvironment = true, -- :: Fixes vuln with synapse that allows devs to get access to syn functions
+	DisableConnections = true, -- :: Disables certain connections (MenuOpened,MenuClosed)
 	ExtraGlobals = true, --[[
 	Adds the following:
 		fwait :: Uses all runservice events
@@ -113,10 +114,12 @@ else
 	local isfile = isfile or readfile and function(f) return pcall(function() readfile(f) end) end
 	local printconsole = printconsole or print
 	local request = (syn and syn.request) or (http and http.request) or (request) or (http_request) or (httprequest)
+	local getconnections = getconnections or get_connections or get_signal_cons
 	local notify,Event
 	local fwait = task.wait
 	local OldDecomp = decompile
 	local setreadonly = setreadonly or make_readonly or makereadonly
+	local issyn = syn ~= nil
 	local Sethiddenproperty; do -- sethiddenproperty compatability
 		local shp = sethiddenproperty or set_hidden_property or sethiddenprop or setscriptable and function(loc,prop,val)
 			if not loc then
@@ -226,7 +229,6 @@ else
 			local setclipboard = write_clipboard or writeclipboard or setclipboard or set_clipboard or syn and syn.write_clipboard
 			local queueonteleport = queue_on_teleport or queueonteleport or syn and syn.queue_on_teleport
 			local securecall = KRNL_SAFE_CALL or securecall or secure_call or syn and syn.securecall
-			local getconnections = getconnections or get_connections or get_signal_cons
 			local WindowFocused = true; do
 				if not iswindowactive and not isrbxactive then
 					UserInputService.WindowFocused:Connect(function()
@@ -302,7 +304,7 @@ else
 						v:Fire()
 					end
 				end)
-				
+
 				ForceTableGlobal(syng,"request",request)
 				ForceTableGlobal(http,"request",request)
 				ForceTableGlobal(syng,"write_clipboard",setclipboard)
@@ -310,14 +312,14 @@ else
 				ForceTableGlobal(syng,"securecall",securecall)
 				ForceTableGlobal(syng,"protect_gui",syng.protect_gui or function(GUI) return GUI end)
 				ForceTableGlobal(syng,"unprotect_gui",syng.unprotect_gui or function(GUI) return GUI end)
-				
+
 				Global.setfflag = setfflag or function(flag,bool) game:DefineFastFlag(flag,bool) end
 				Global.http = http
 				Global.getgenv = function() return Global end
 				Global.isluau = true
 				Global.isfile = isfile
 				Global.printconsole = printconsole
-				
+
 				if getproperties then
 					SetAllGlobals({"getproperties","get_properties"},getproperties or get_properties)
 					SetAllGlobals({"gethiddenproperties","get_hidden_properties"},gethiddenproperties or get_hidden_properties)
@@ -387,7 +389,7 @@ else
 						end)
 					end)
 				end
-				
+
 				task.defer(function() -- :: gethiddengui
 					loadstring(RequestURL("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua"))() 
 				end)
@@ -535,7 +537,7 @@ else
 					return fwait(1/30)
 				end
 			end
-			
+
 			Global.syn = syng
 		end
 
@@ -641,9 +643,14 @@ else
 
 		local Player = Players.LocalPlayer
 
-		if Settings.DisableMenuOpened and getconnections then
-			for i,v in pairs(getconnections(game:GetService("GuiService").MenuOpened)) do
-				v:Disable()
+		if Settings.DisableConnections and getconnections then
+			local ConnectionsToDisable = {
+				GuiService.MenuOpened,
+				GuiService.MenuClosed,
+			}; for _,v in pairs(ConnectionsToDisable) do
+				for _,Connection in pairs(getconnections(v)) do
+					Connection:Disable()
+				end
 			end
 		end
 
@@ -699,9 +706,17 @@ else
 			notify = Settings.Notifications and loadstring(RequestURL("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/extra/Notifications.lua"))() or "Disabled"
 		end
 
-		if Settings.AntiAFK then task.defer(function()
+		if Settings.AntiAFK then 
+			task.defer(function()
 				loadstring(RequestURL("https://raw.githubusercontent.com/NoTwistedHere/Roblox/main/AntiAFK.lua"))()
-			end) end
+			end) 
+		end
+		
+		if Settings.SecureEnvironment then 
+			if issyn then
+				loadstring(RequestURL("https://raw.githubusercontent.com/IHaxU/SecureSynapseEnv/main/SecureSynapseEnv.lua"))()
+			end 
+		end
 
 		local loadedtime = (tick() - LoadTick)
 
