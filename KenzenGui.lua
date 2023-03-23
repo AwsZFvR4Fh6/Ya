@@ -1,4 +1,4 @@
-local Version = "1.2.7.6"
+local Version = "1.2.7.7"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -181,6 +181,10 @@ local Funcs = {}; do
 				Title = Title or "",
 				Description = Description or "",
 				Icon = 8982365769,
+				Accept = {
+					Text = "Close",
+					Callback = function() end,
+				},
 			}
 		end
 	end
@@ -210,7 +214,7 @@ local Funcs = {}; do
 
 		return SleepEvent
 	end
-	
+
 	Funcs.CheckForRCD = function() 
 		return gethiddenproperty and gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletions.Enabled or true
 	end
@@ -1518,5 +1522,6 @@ for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
 
 local NewTick = tostring(Funcs.RoundNumber(tick()-Tick))
 printconsole("Version: " .. Version .. " | Load Time: " .. NewTick)
+Funcs.Notify("RCD","RejectCharacterDeletions is " .. Funcs.CheckForRCD() and "Enabled" or "Disabled")
 Funcs.Notify("LoadTime",NewTick)
 return Tick
