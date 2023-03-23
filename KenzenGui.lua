@@ -1,4 +1,4 @@
-local Version = "1.2.7.5a"
+local Version = "1.2.7.6"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -210,6 +210,10 @@ local Funcs = {}; do
 
 		return SleepEvent
 	end
+	
+	Funcs.CheckForRCD = function() 
+		return gethiddenproperty and gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletions.Enabled or true
+	end
 
 end; if not Global.fwait then Global.fwait = Funcs.fwait end
 
@@ -384,6 +388,21 @@ Commands = {
 				Players:Chat("-gr")
 				ChatBar:SetTextFromInput(Text)
 				Global.ToggleChatFix = true
+			elseif Funcs.CheckForRCD() then
+				local CameraType = workspace.CurrentCamera.CameraType
+				workspace.CurrentCamera.CameraType = Enum.CameraType.Fixed
+
+				Player.Character:PivotTo(CFrame.new(0,workspace.FallenPartsDestroyHeight+0.1,0))
+				task.defer(function()
+					Funcs.fwait(Funcs.GetPing(850))
+					Player.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+					Player.Character.Humanoid:TakeDamage(9e9 + 9e9 + 9e9 + 9e9); Player.Character.Humanoid.Health = 0
+					if firesignal then firesignal(Player.Character.Humanoid.Died) end
+					Player.Character:FindFirstChild("Humanoid").Health = 0
+				end)
+
+				Player.CharacterAdded:Wait()
+				workspace.CurrentCamera.CameraType = CameraType
 			elseif Player.Character:FindFirstChild(Player.Name) then
 				Player.Character.Head:Destroy()
 			else
