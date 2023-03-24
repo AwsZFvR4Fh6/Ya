@@ -26,6 +26,8 @@ local hookmetamethod = hookmetamethod or nil
 local checkcaller = checkcaller or nil
 local newcclosure = newcclosure or nil
 local cloneref = cloneref or function(ref) return ref end
+local getconnections = getconnections or get_connections or get_signal_cons
+local setreadonly = setreadonly or make_readonly or makereadonly
 local stats = stats and stats() or Stats and Stats() or game:GetService("Stats")
 
 if Global and Global.gethiddengui then return end; math.randomseed(tick())
@@ -37,7 +39,10 @@ local UserInputService = game:GetService("UserInputService")
 local rPlayer = Players:FindFirstChildOfClass("Player") ~= nil and cloneref(Players:FindFirstChildOfClass("Player"))
 local coreGuiProtection = {}
 
-local Folder =  Instance.new("Folder"); do
+local Folder; do
+	if not pcall(function()
+			Folder = Instance.new("ParabolaAdornment")
+		end) then Folder = Instance.new("Folder") end
 	local function CheckIfV3Menu()
 		return CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuModalBlur") or 
 			CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuConfirmationDialog") or 
@@ -49,18 +54,20 @@ local Folder =  Instance.new("Folder"); do
 	Folder.DescendantAdded:Connect(function(v)
 		coreGuiProtection[v] = rPlayer.Name or tostring(math.random(1e9, 2e9))
 	end) coreGuiProtection[Folder] = Folder.Name == "RobloxGui" and "RobloxGui" or rPlayer.Name or tostring(math.random(1e9, 2e9))
-
+	
 	local ConnectionsToDisable = {"ChildAdded","ChildRemoved","DescendantAdded","DescendantRemoving","childAdded","Destroying","Changed","AncestryChanged"}; pcall(function()
-		for _,Connection in pairs(ConnectionsToDisable) do
-			for _,v in pairs(getconnections(CoreGui[Connection])) do
+		if getconnections then
+			for _,Connection in pairs(ConnectionsToDisable) do
+				for _,v in pairs(getconnections(CoreGui[Connection])) do
+					v:Disable()
+				end
+				for _,v in pairs(getconnections(Folder[Connection])) do
+					v:Disable()
+				end
+			end
+			for _,v in pairs(getconnections(Folder.AttributeChanged)) do
 				v:Disable()
 			end
-			for _,v in pairs(getconnections(Folder[Connection])) do
-				v:Disable()
-			end
-		end
-		for _,v in pairs(getconnections(Folder.AttributeChanged)) do
-			v:Disable()
 		end
 
 		if syn and syn.protect_gui and not gethui then
@@ -84,7 +91,7 @@ local _ENV,_Globals; if getrenv then
 			_ENV[i] = v
 		end
 	end
-	pcall(function() set_read_only(_Globals, true) set_read_only(_ENV, true) end)
+	pcall(function() setreadonly(_Globals, true) setreadonly(_ENV, true) end)
 end
 
 local MemoryUsageForGui = 0; do
@@ -188,11 +195,11 @@ do -- Mostly untouched code
 		end))
 	end
 
-	if hookfunction and newcclosure and (identifyexecutor and identifyexecutor():find("Synapse") or CheckWhitelist()) then
+	if (hookfunction and newcclosure and identifyexecutor and identifyexecutor():find("Synapse")) or (hookfunction and newcclosure and CheckWhitelist()) then
 		local OldFunction
 		OldFunction = hookfunction(stats.GetMemoryUsageMbForTag, newcclosure(function(Self, ...)
 			local Args = {...}
-			if not checkcaller() and Self == stats == "Stats" and MemoryUsageForGui >= 11 and Args[1] and (Args[1] == Enum.DeveloperMemoryTag.Gui or Args[1] == "Gui") then
+			if not checkcaller() and (Self == stats) == "Stats" and MemoryUsageForGui >= 11 and Args[1] and (Args[1] == Enum.DeveloperMemoryTag.Gui or Args[1] == "Gui") then
 				if identifyexecutor and not identifyexecutor():find("Synapse") then setfenv(1, _ENV) end
 				return MemoryUsageForGui - RandomFloat(3, 7)
 			end
@@ -211,7 +218,7 @@ do -- Mostly untouched code
 		end
 	end)
 
-	if hookmetamethod and newcclosure and checkcaller and (identifyexecutor and identifyexecutor():find("Synapse") or CheckWhitelist()) then
+	if hookmetamethod and newcclosure and checkcaller and identifyexecutor and identifyexecutor():find("Synapse") or hookmetamethod and newcclosure and checkcaller and CheckWhitelist() then
 		local OldIndex
 		OldIndex = hookmetamethod(game, "__index", newcclosure(function(Self, Prop, ...)
 			if not checkcaller() and Self == stats and Prop == "InstanceCount" then
@@ -227,7 +234,7 @@ do -- Mostly untouched code
 		end))
 	end
 
-	if getrenv and hookfunction and newcclosure and (identifyexecutor and identifyexecutor():find("Synapse") or CheckWhitelist()) then
+	if getrenv and hookfunction and newcclosure and identifyexecutor and identifyexecutor():find("Synapse") or getrenv and hookfunction and newcclosure and CheckWhitelist() then
 		local TableNumbaor001 = {}
 		local SomethingOld;
 		SomethingOld = hookfunction(getrenv().newproxy, newcclosure(function(...)
