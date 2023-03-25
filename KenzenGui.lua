@@ -1,4 +1,4 @@
-local Version = "1.2.7.7"
+local Version = "1.2.7.8a"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -1522,6 +1522,7 @@ for i,v in pairs(Players:GetPlayers()) do Funcs.KillValidity(v) end
 
 local NewTick = tostring(Funcs.RoundNumber(tick()-Tick))
 printconsole("Version: " .. Version .. " | Load Time: " .. NewTick)
-Funcs.Notify("RCD","RejectCharacterDeletions is " .. Funcs.CheckForRCD() and "Enabled" or "Disabled")
+local RCD = Funcs.CheckForRCD() and "Enabled" or "Disabled"
+Funcs.Notify("RCD","RejectCharacterDeletions is " .. RCD)
 Funcs.Notify("LoadTime",NewTick)
 return Tick
