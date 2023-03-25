@@ -1,4 +1,4 @@
-local Version = "1.2.7.8d"
+local Version = "1.2.7.8e"
 
 local Success, Err = pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/gethiddengui.lua", false))() end)
 
@@ -216,7 +216,7 @@ local Funcs = {}; do
 	end
 
 	Funcs.CheckForRCD = function() 
-		return gethiddenproperty and gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletions.Enabled or true
+		return not gethiddenproperty and true or gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletions.Enabled
 	end
 
 end; if not Global.fwait then Global.fwait = Funcs.fwait end
