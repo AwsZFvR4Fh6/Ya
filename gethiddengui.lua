@@ -39,22 +39,25 @@ local UserInputService = game:GetService("UserInputService")
 local rPlayer = Players:FindFirstChildOfClass("Player") ~= nil and cloneref(Players:FindFirstChildOfClass("Player"))
 local coreGuiProtection = {}
 
+local function CheckIfV3Menu()
+	return CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuModalBlur") or 
+		CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuConfirmationDialog") or 
+		CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuEducationalPopupDialog")
+end
+
+local Check = gethui and type(gethui) == "function" and typeof(gethui()) == "Instance" and gethui() ~= CoreGui and not CheckIfV3Menu()
+
 local Folder; do
 	if not pcall(function()
 			Folder = Instance.new("ParabolaAdornment")
 		end) then Folder = Instance.new("Folder") end
-	local function CheckIfV3Menu()
-		return CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuModalBlur") or 
-			CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuConfirmationDialog") or 
-			CoreGui:FindFirstChild("InGameMenu") and CoreGui:FindFirstChild("InGameMenuEducationalPopupDialog")
-	end
-	Folder.Name = gethui and type(gethui) == "function" and typeof(gethui()) == "Instance" and gethui() ~= CoreGui and not CheckIfV3Menu() and tostring(math.random(1e9, 2e9)) or "RobloxGui"
+	local Name = Check and tostring(math.random(1e9, 2e9)) or "RobloxGui"
 	Folder.Archivable = false
 
 	Folder.DescendantAdded:Connect(function(v)
 		coreGuiProtection[v] = rPlayer.Name or tostring(math.random(1e9, 2e9))
-	end) coreGuiProtection[Folder] = Folder.Name == "RobloxGui" and "RobloxGui" or rPlayer.Name or tostring(math.random(1e9, 2e9))
-	
+	end) coreGuiProtection[Folder] = not Check and "RobloxGui" or rPlayer.Name or tostring(math.random(1e9, 2e9))
+
 	local ConnectionsToDisable = {"ChildAdded","ChildRemoved","DescendantAdded","DescendantRemoving","childAdded","Destroying","Changed","AncestryChanged"}; pcall(function()
 		if getconnections then
 			for _,Connection in pairs(ConnectionsToDisable) do
@@ -252,7 +255,7 @@ do -- Mostly untouched code
 	end
 end
 
-Folder.Parent = gethui and type(gethui) == "function" and typeof(gethui()) == "Instance" and gethui() ~= CoreGui and not CheckIfV3Menu() and gethui() or CoreGui
+Folder.Parent = Check and gethui() or CoreGui
 
 if Global then
 	Global.gethiddengui =  gethiddengui
