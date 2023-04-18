@@ -36,7 +36,7 @@ local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local rPlayer = Players:FindFirstChildOfClass("Player") ~= nil and cloneref(Players:FindFirstChildOfClass("Player"))
+local rPlayer = Players:FindFirstChildOfClass("Player") ~= nil and cloneref(Players:FindFirstChildOfClass("Player")) or nil
 local coreGuiProtection = {}
 
 local function CheckIfV3Menu()
@@ -55,8 +55,8 @@ local Folder; do
 	Folder.Archivable = false
 
 	Folder.DescendantAdded:Connect(function(v)
-		coreGuiProtection[v] = rPlayer.Name or tostring(math.random(1e9, 2e9))
-	end) coreGuiProtection[Folder] = not Check and "RobloxGui" or rPlayer.Name or tostring(math.random(1e9, 2e9))
+		coreGuiProtection[v] = rPlayer and rPlayer.Name or tostring(math.random(1e9, 2e9))
+	end) coreGuiProtection[Folder] = not Check and "RobloxGui" or rPlayer and rPlayer.Name or tostring(math.random(1e9, 2e9))
 
 	local ConnectionsToDisable = {"ChildAdded","ChildRemoved","DescendantAdded","DescendantRemoving","childAdded","Destroying","Changed","AncestryChanged"}; pcall(function()
 		if getconnections then
