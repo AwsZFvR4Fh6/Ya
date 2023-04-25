@@ -667,8 +667,46 @@ end
 
 if Settings.FastLoad then
 	task.defer(function()
-		GetToPath(CoreGui,"RobloxLoadingGUI.BackgroundScreen").Enabled = false
+		local RobloxLoadingGui = GetToPath(CoreGui,"RobloxLoadingGUI")
+		GetToPath(RobloxLoadingGui,"BackgroundScreen").Enabled = false
 		RunService:SetRobloxGuiFocused(false)
+		
+		local InfoFrame = GetToPath(RobloxLoadingGui,"MainScreen.DarkGradient.InfoFrame")
+		InfoFrame.BackgroundTransparency = 1
+		InfoFrame.AnchorPoint = Vector2.new(0,1)
+		InfoFrame.Position = UDim2.fromScale(0,1)
+		
+		local IconFrame = GetToPath(InfoFrame,"IconFrame")
+		IconFrame.AnchorPoint = Vector2.new(0,1)
+		IconFrame.Position = UDim2.fromScale(0,1)
+		
+		local TextLayout = GetToPath(InfoFrame,"TextLayout")
+		GetToPath(TextLayout,"UIListLayout"):Destroy()
+		GetToPath(TextLayout,"Padding"):Destroy()
+		TextLayout.AnchorPoint = Vector2.new(0,1)
+		TextLayout.Position = UDim2.new(0,IconFrame.Size.X.Offset+5,1,0)
+		
+		local CreatorLabel = GetToPath(TextLayout,"CreatorLabel")
+		CreatorLabel.AnchorPoint = Vector2.new(0,1)
+		CreatorLabel.Position = UDim2.new(0,0,1,18)
+		CreatorLabel.Size = UDim2.new(0.6,0,0,16)
+		CreatorLabel.AutomaticSize = Enum.AutomaticSize.None
+		CreatorLabel.TextXAlignment = Enum.TextXAlignment.Left
+		
+		local PlaceLabel = GetToPath(TextLayout,"PlaceLabel")
+		PlaceLabel.AnchorPoint = Vector2.new(0,0)
+		PlaceLabel.Position = UDim2.new(0,0,1,18)
+		PlaceLabel.Size = UDim2.new(0.8,0,0,30)
+		PlaceLabel.AutomaticSize = Enum.AutomaticSize.None
+		PlaceLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+		PlaceLabel.TextXAlignment = Enum.TextXAlignment.Left
+		
+		local ServerFrame = GetToPath(RobloxLoadingGui,"MainScreen.DarkGradient.ServerFrame")
+		ServerFrame.AnchorPoint = Vector2.new(0.5,0)
+		ServerFrame.Position = UDim2.new(0.5,0,0,0)
+		
+		local JoinText = GetToPath(ServerFrame,"JoinText")
+		JoinText.Position = UDim2.new(0,0,0,0)
 	end)
 	Part = Instance.new("Part"); do
 		Part.Size = Vector3.new(5,1,5)
