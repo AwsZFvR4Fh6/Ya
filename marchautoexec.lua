@@ -759,13 +759,6 @@ if Settings.DisablePrompts then
 		GetToPath(CoreGui,"PurchasePrompt.ProductPurchaseContainer").Visible = false
 	end)
 end
---[[
-if Settings.ToggleGUI then
-	task.defer(function()
-		Global.AidKid = Settings.GUISettings
-		loadstring(RequestURL("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/KenzenGui.lua"))()
-	end)
-end]]
 
 if Settings.ToggleGUI then
 	-- :: Variables
@@ -781,7 +774,7 @@ if Settings.ToggleGUI then
 		Ping = GetToPath(game:GetService("Stats"),"Network.ServerStatsItem.Data Ping")
 	end)
 
-	local noclipping,Flying,Toggle,BackgroundToggle = false,false,true,false
+	local noclipping,Flying,Toggle,BackgroundToggle = false,false,false,false
 	local ChatRemote; task.defer(function()
 		ChatRemote = GetToPath(game:GetService("ReplicatedStorage"),"DefaultChatSystemChatEvents.SayMessageRequest")
 	end)
