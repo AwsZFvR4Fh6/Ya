@@ -687,8 +687,6 @@ if Settings.FastLoad then
 		
 		local RobloxLoadingGui = GetToPath(CoreGui,"RobloxLoadingGUI")
 		
-		RobloxLoadingGui:Clone().Parent = game:GetService("Lighting")
-		
 		GetToPath(RobloxLoadingGui,"BackgroundScreen").Enabled = false
 		RunService:SetRobloxGuiFocused(false)
 		
