@@ -667,46 +667,75 @@ end
 
 if Settings.FastLoad then
 	task.defer(function()
+		local Properties = {}
+		local function LockProperty(Inst,Property,Value)
+			Inst[Property] = Value
+			if not Properties[Inst] then
+				Properties[Inst] = {}
+				Inst.Changed:Connect(function(ChangedProp)
+					if Properties[Inst][ChangedProp] then
+						Inst[ChangedProp] = Properties[Inst][ChangedProp]
+						printconsole(Inst.Name .. " " .. ChangedProp)
+					end
+				end)
+			end
+			Properties[Inst][Property] = Value
+			Inst[Property] = Value
+		end
+		
+		
 		local RobloxLoadingGui = GetToPath(CoreGui,"RobloxLoadingGUI")
+		
+		RobloxLoadingGui:Clone().Parent = game:GetService("Lighting")
+		
 		GetToPath(RobloxLoadingGui,"BackgroundScreen").Enabled = false
 		RunService:SetRobloxGuiFocused(false)
 		
 		local InfoFrame = GetToPath(RobloxLoadingGui,"MainScreen.DarkGradient.InfoFrame")
-		InfoFrame.BackgroundTransparency = 1
-		InfoFrame.AnchorPoint = Vector2.new(0,1)
-		InfoFrame.Position = UDim2.fromScale(0,1)
+		LockProperty(InfoFrame,"BackgroundTransparency",1)
+		LockProperty(InfoFrame,"AnchorPoint",Vector2.new(0,1))
+		LockProperty(InfoFrame,"Position",UDim2.fromScale(0,1))
 		
 		local IconFrame = GetToPath(InfoFrame,"IconFrame")
-		IconFrame.AnchorPoint = Vector2.new(0,1)
-		IconFrame.Position = UDim2.fromScale(0,1)
+		LockProperty(IconFrame,"AnchorPoint",Vector2.new(0,1))
+		LockProperty(IconFrame,"Position",UDim2.fromScale(0,1))
 		
 		local TextLayout = GetToPath(InfoFrame,"TextLayout")
-		GetToPath(TextLayout,"UIListLayout"):Destroy()
-		GetToPath(TextLayout,"Padding"):Destroy()
-		TextLayout.AnchorPoint = Vector2.new(0,1)
-		TextLayout.Position = UDim2.new(0,IconFrame.Size.X.Offset+5,1,0)
+		
+		task.defer(function()
+			TextLayout.ChildAdded:Connect(function(v)
+				if v:IsA("UIListLayout") or v:IsA("UIPadding") then
+					v:Destroy()
+				end
+			end)
+			GetToPath(TextLayout,"UIListLayout"):Destroy()
+			GetToPath(TextLayout,"Padding"):Destroy()
+		end)
+		
+		LockProperty(TextLayout,"AnchorPoint",Vector2.new(0,1))
+		LockProperty(TextLayout,"Position",UDim2.new(0,IconFrame.Size.X.Offset*1.75,1,0)) -- IconFrame.Size.X.Offset+5
 		
 		local CreatorLabel = GetToPath(TextLayout,"CreatorLabel")
-		CreatorLabel.AnchorPoint = Vector2.new(0,1)
-		CreatorLabel.Position = UDim2.new(0,0,1,18)
-		CreatorLabel.Size = UDim2.new(0.6,0,0,16)
-		CreatorLabel.AutomaticSize = Enum.AutomaticSize.None
-		CreatorLabel.TextXAlignment = Enum.TextXAlignment.Left
+		LockProperty(CreatorLabel,"AnchorPoint",Vector2.new(0,1))
+		LockProperty(CreatorLabel,"Position",UDim2.new(0,0,1,20))
+		LockProperty(CreatorLabel,"Size",UDim2.new(0.6,0,0,20))
+		LockProperty(CreatorLabel,"AutomaticSize",Enum.AutomaticSize.None)
+		LockProperty(CreatorLabel,"TextXAlignment",Enum.TextXAlignment.Left)
 		
 		local PlaceLabel = GetToPath(TextLayout,"PlaceLabel")
-		PlaceLabel.AnchorPoint = Vector2.new(0,0)
-		PlaceLabel.Position = UDim2.new(0,0,1,18)
-		PlaceLabel.Size = UDim2.new(0.8,0,0,30)
-		PlaceLabel.AutomaticSize = Enum.AutomaticSize.None
-		PlaceLabel.TextYAlignment = Enum.TextYAlignment.Bottom
-		PlaceLabel.TextXAlignment = Enum.TextXAlignment.Left
+		LockProperty(PlaceLabel,"AnchorPoint",Vector2.new(0,0))
+		LockProperty(PlaceLabel,"Position",UDim2.new(0,0,0,0))
+		LockProperty(PlaceLabel,"Size",UDim2.new(0.8,0,0,90))
+		LockProperty(PlaceLabel,"AutomaticSize",Enum.AutomaticSize.None)
+		LockProperty(PlaceLabel,"TextYAlignment",Enum.TextYAlignment.Bottom)
+		LockProperty(PlaceLabel,"TextXAlignment",Enum.TextXAlignment.Left)
 		
 		local ServerFrame = GetToPath(RobloxLoadingGui,"MainScreen.DarkGradient.ServerFrame")
-		ServerFrame.AnchorPoint = Vector2.new(0.5,0)
-		ServerFrame.Position = UDim2.new(0.5,0,0,0)
+		LockProperty(ServerFrame,"AnchorPoint",Vector2.new(0.5,0))
+		LockProperty(ServerFrame,"Position",UDim2.new(0.5,0,0,0))
 		
 		local JoinText = GetToPath(ServerFrame,"JoinText")
-		JoinText.Position = UDim2.new(0,0,0,0)
+		LockProperty(JoinText,"Position",UDim2.new(0,0,0,0))
 	end)
 	Part = Instance.new("Part"); do
 		Part.Size = Vector3.new(5,1,5)
@@ -725,7 +754,7 @@ if Settings.FastLoad then
 		Image.Parent = Surface
 	end
 end
-
+ 
 if Settings.DisablePrompts then
 	task.defer(function()
 		GetToPath(CoreGui,"PurchasePrompt.ProductPurchaseContainer").Visible = false
