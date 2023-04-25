@@ -1,0 +1,15 @@
+return {
+	AutomaticUpdates = false,
+	ToggleGUI = true,
+	Backrooms = false,
+	FastLoad = true,
+	KickGui = true,
+	Notifications = true,
+	DisablePrompts = true,
+	AntiAFK = true,
+	RejoinOnKick = true,
+	ChatFilterLabel = true,
+	SecureEnvironment = false,
+	DisableConnections = true,
+	ExtraGlobals = true,
+}
