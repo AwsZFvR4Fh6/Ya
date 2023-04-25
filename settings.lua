@@ -7,7 +7,7 @@ return {
 	Notifications = true,
 	DisablePrompts = true,
 	AntiAFK = true,
-	RejoinOnKick = true,
+	RejoinOnKick = false,
 	ChatFilterLabel = true,
 	SecureEnvironment = false,
 	DisableConnections = true,
