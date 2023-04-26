@@ -2688,7 +2688,6 @@ if Settings.ToggleGUI then
 					if EnterPressed then
 						local Args = string.split(CommandBar.Text," ")
 						local CommandName = string.lower(Args[1]); table.remove(Args,1)
-						if not Args[1] then Args[1] = "" end
 						for i,v in pairs(Commands) do
 							if i == CommandName or table.find(v.Alias,CommandName) then
 								task.defer(function()
@@ -2967,7 +2966,7 @@ end
 
 local loadedtime = (tick() - LoadTick)
 
-printconsole(tostring("V4.1 Autoexec loaded in " .. RoundNumber(loadedtime) .. " (" .. RoundNumber(loadedtime)*10000 .. "ms)"))
+printconsole(tostring("V4 Autoexec loaded in " .. RoundNumber(loadedtime) .. " (" .. RoundNumber(loadedtime)*10000 .. "ms)"))
 
 if notify ~= "Disabled" then
 	notify({Text = "Game loaded in " .. math.abs(GameLoadedIn),Duration = 5})
