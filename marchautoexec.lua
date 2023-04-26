@@ -2966,7 +2966,7 @@ end
 
 local loadedtime = (tick() - LoadTick)
 
-printconsole(tostring("V4 Autoexec loaded in " .. RoundNumber(loadedtime) .. " (" .. RoundNumber(loadedtime)*10000 .. "ms)"))
+printconsole(tostring("V4.11 Autoexec loaded in " .. RoundNumber(loadedtime) .. " (" .. RoundNumber(loadedtime)*10000 .. "ms)"))
 
 if notify ~= "Disabled" then
 	notify({Text = "Game loaded in " .. math.abs(GameLoadedIn),Duration = 5})
