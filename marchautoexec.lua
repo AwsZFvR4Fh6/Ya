@@ -553,7 +553,7 @@ if Settings.ExtraGlobals then
 				PingVal = GetValue
 				PingBind:Fire(PingVal/1000)
 			end
-			
+
 			repeat fwait(0/1) until Player or Players.LocalPlayer
 			local GetNetworkPing = Player and Player:GetNetworkPing() or Players.LocalPlayer and Players.LocalPlayer:GetNetworkPing()
 			if GetNetworkPing and GetNetworkPing ~= PingVal2 then
@@ -711,24 +711,24 @@ if Settings.FastLoad then
 			Properties[Inst][Property] = Value
 			Inst[Property] = Value
 		end
-		
-		
+
+
 		local RobloxLoadingGui = GetToPath(CoreGui,"RobloxLoadingGUI")
-		
+
 		GetToPath(RobloxLoadingGui,"BackgroundScreen").Enabled = false
 		RunService:SetRobloxGuiFocused(false)
-		
+
 		local InfoFrame = GetToPath(RobloxLoadingGui,"MainScreen.DarkGradient.InfoFrame")
 		LockProperty(InfoFrame,"BackgroundTransparency",1)
 		LockProperty(InfoFrame,"AnchorPoint",Vector2.new(0,1))
 		LockProperty(InfoFrame,"Position",UDim2.fromScale(0,1))
-		
+
 		local IconFrame = GetToPath(InfoFrame,"IconFrame")
 		LockProperty(IconFrame,"AnchorPoint",Vector2.new(0,1))
 		LockProperty(IconFrame,"Position",UDim2.fromScale(0,1))
-		
+
 		local TextLayout = GetToPath(InfoFrame,"TextLayout")
-		
+
 		task.defer(function()
 			TextLayout.ChildAdded:Connect(function(v)
 				if v:IsA("UIListLayout") or v:IsA("UIPadding") then
@@ -738,17 +738,17 @@ if Settings.FastLoad then
 			GetToPath(TextLayout,"UIListLayout"):Destroy()
 			GetToPath(TextLayout,"Padding"):Destroy()
 		end)
-		
+
 		LockProperty(TextLayout,"AnchorPoint",Vector2.new(0,1))
 		LockProperty(TextLayout,"Position",UDim2.new(0,IconFrame.Size.X.Offset*1.75,1,0)) -- IconFrame.Size.X.Offset+5
-		
+
 		local CreatorLabel = GetToPath(TextLayout,"CreatorLabel")
 		LockProperty(CreatorLabel,"AnchorPoint",Vector2.new(0,1))
 		LockProperty(CreatorLabel,"Position",UDim2.new(0,0,1,20))
 		LockProperty(CreatorLabel,"Size",UDim2.new(0.6,0,0,20))
 		LockProperty(CreatorLabel,"AutomaticSize",Enum.AutomaticSize.None)
 		LockProperty(CreatorLabel,"TextXAlignment",Enum.TextXAlignment.Left)
-		
+
 		local PlaceLabel = GetToPath(TextLayout,"PlaceLabel")
 		LockProperty(PlaceLabel,"AnchorPoint",Vector2.new(0,0))
 		LockProperty(PlaceLabel,"Position",UDim2.new(0,0,0,0))
@@ -756,11 +756,11 @@ if Settings.FastLoad then
 		LockProperty(PlaceLabel,"AutomaticSize",Enum.AutomaticSize.None)
 		LockProperty(PlaceLabel,"TextYAlignment",Enum.TextYAlignment.Bottom)
 		LockProperty(PlaceLabel,"TextXAlignment",Enum.TextXAlignment.Left)
-		
+
 		local ServerFrame = GetToPath(RobloxLoadingGui,"MainScreen.DarkGradient.ServerFrame")
 		LockProperty(ServerFrame,"AnchorPoint",Vector2.new(0.5,0))
 		LockProperty(ServerFrame,"Position",UDim2.new(0.5,0,0,0))
-		
+
 		local JoinText = GetToPath(ServerFrame,"JoinText")
 		LockProperty(JoinText,"Position",UDim2.new(0,0,0,0))
 	end)
@@ -781,24 +781,31 @@ if Settings.FastLoad then
 		Image.Parent = Surface
 	end
 end
- 
+
 if Settings.DisablePrompts then
 	task.defer(function()
 		GetToPath(CoreGui,"PurchasePrompt.ProductPurchaseContainer").Visible = false
+		for i,v in pairs(GetToPath(CoreGui,"TopBarApp.TopBarFrame.LeftFrame"):GetChildren()) do
+			if v.Name == "Button" and v:FindFirstChild("Button",true) then
+				v.Visible = false
+			end
+		end
 	end)
 end
 
 if Settings.ToggleGUI then
 	-- :: Variables
-	
+
 	local Background,ConsoleScroll,ConsoleExample,SettingsScroll,SettingsExample,CommandsFrame,CommandsScroll,CommandBar,Commands,Visible,Token,OutfitsUI,OutfitList
-	
+
+	local VcVerified = {{},{}}
+
 	local PathfindingService = game:GetService("PathfindingService")
 	local TweenService = game:GetService("TweenService")
 	local HTTP = game:GetService("HttpService")
 	local TextService = game:GetService("TextService")
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	
+
 	local Ping; task.defer(function()
 		Ping = GetToPath(game:GetService("Stats"),"Network.ServerStatsItem.Data Ping")
 	end)
@@ -807,9 +814,9 @@ if Settings.ToggleGUI then
 	local ChatRemote; task.defer(function()
 		ChatRemote = GetToPath(ReplicatedStorage,"DefaultChatSystemChatEvents.SayMessageRequest")
 	end)
-	
+
 	local EventStorage = {}
-	
+
 	printconsole = function(...)
 		local NewString = ""
 		local Packed = table.pack(...)
@@ -818,14 +825,14 @@ if Settings.ToggleGUI then
 				NewString ..= " " .. tostring(v)
 			end
 		end
-		
+
 		local NewPrint = ConsoleExample:Clone(); do
 			NewPrint.Text = NewString
 			NewPrint.Size = UDim2.new(0,383,0,TextService:GetTextSize(NewString,12,Enum.Font.Ubuntu,Vector2.new(383,math.huge)).Y)
 			NewPrint.Parent = ConsoleScroll
 		end
 	end; 
-	
+
 	local function colorprintconsole(Color,...)
 		local NewString = ""
 		local Packed = table.pack(...)
@@ -842,7 +849,7 @@ if Settings.ToggleGUI then
 			NewPrint.Parent = ConsoleScroll
 		end
 	end
-	
+
 	local ShortName = function(Name,IncludeLocal)
 		local Users = {}; local Names = string.split(Name,",")
 		for _,v in pairs(Names) do
@@ -857,14 +864,14 @@ if Settings.ToggleGUI then
 		end
 		return Users[1] and Users or nil
 	end
-	
+
 	local PredictPos = function(Pos1, Velocity1, Pos2, Velocity2, _Pos3, TOAOff, DISTOff)
 		local DIST = (Pos1 - (_Pos3 or Pos2)).Magnitude + (DISTOff or 0)
 		local TOA = (DIST / Velocity1.Magnitude) + (TOAOff or 0)
 		local POS = Pos2 + (Velocity2 * TOA)
 		return POS
 	end
-	
+
 	local ClearConnections = function(Folder)
 		if EventStorage[Folder] then
 			for i,v in pairs(EventStorage[Folder]) do
@@ -872,11 +879,11 @@ if Settings.ToggleGUI then
 			end
 		end; EventStorage[Folder] = {}
 	end
-	
+
 	local GetPing = function(Divider) Divider = Divider or 1000
 		return Ping:GetValue()/Divider
 	end
-	
+
 	local AttachToPlayer = function(ToPlr,Offset,Prediction)
 		local function FixYAxis(Velocity)
 			return Vector3.new(Velocity.X,Velocity.Y/3.5,Velocity.Z)
@@ -915,13 +922,13 @@ if Settings.ToggleGUI then
 			ClearConnections("Attachments")
 		end)
 	end
-	
+
 	local Loadstring = function(Link,NoHTTP,ChunkName)
 		if loadstring then
 			return loadstring(NoHTTP and Link or RequestURL(Link,true),ChunkName)()
 		end
 	end
-	
+
 	local GetAuthentication = function()
 		local cookie = _OG.readfile("cookie.txt")
 		local authRes = request({
@@ -955,7 +962,7 @@ if Settings.ToggleGUI then
 			printconsole("Incorrect Cookie","Your cookie invalid")
 		end
 	end
-	
+
 	local PreventSleeping = function(Part) 
 		ClearConnections("SleepEvent")
 		local SleepEvent = Event:Connect(function()
@@ -970,11 +977,11 @@ if Settings.ToggleGUI then
 
 		return SleepEvent
 	end
-	
+
 	local CheckForRCD = function() 
 		return not Gethiddenproperty and true or Gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletions.Enabled
 	end
-	
+
 	local function Drag(DragFrame,ToDrag)
 		local dragToggle,dragInput,dragStart,startPos
 		local dragSpeed = 0
@@ -1005,7 +1012,7 @@ if Settings.ToggleGUI then
 			end
 		end)
 	end
-	
+
 	local function InvokeRobloxApi(Link,Body)
 		if _OG.isfile("cookie.txt") then
 			if not Token then GetAuthentication() end
@@ -1033,7 +1040,7 @@ if Settings.ToggleGUI then
 			printconsole("No Cookie","You have not added your cookie, please use the savecookie command.")
 		end
 	end
-	
+
 	Commands = {
 		["print"] = {
 			Args = {"Text"},
@@ -1120,18 +1127,18 @@ if Settings.ToggleGUI then
 			Alias = {"re","unbang"},
 			Function = function(Args)
 				local CameraPos = workspace.CurrentCamera and workspace.CurrentCamera.CFrame
-				
+
 				local PreviousPosition = Player and Player.Character; if PreviousPosition then
 					PreviousPosition = PreviousPosition:FindFirstChild("HumanoidRootPart") or PreviousPosition:FindFirstChild("Head") or PreviousPosition:FindFirstChildOfClass("BasePart")
 					if PreviousPosition then PreviousPosition = PreviousPosition.CFrame end
 				end
-				
+
 				Commands["respawn"].Function(Args)
-				
+
 				Player.CharacterAdded:Wait()
-				
+
 				Player.Character:WaitForChild("HumanoidRootPart").CFrame = PreviousPosition
-				
+
 				RunService.RenderStepped:Wait()
 				workspace.CurrentCamera.CFrame = CameraPos
 			end,
@@ -1388,7 +1395,7 @@ if Settings.ToggleGUI then
 			Function = function(Args)
 				local ServerList = HTTP:JSONDecode(RequestURL("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
 				local Type = "Random"
-				
+
 				if Args[1] then
 					if table.find({"small","smallest","lowest","low","bottom","s"},string.lower(Args[1])) then
 						Type = "Smallest"
@@ -1415,7 +1422,7 @@ if Settings.ToggleGUI then
 						ServerJobId = NotFull[math.random(1,#NotFull)][1]
 					end
 				end
-				
+
 				IsTeleporting = true
 				if ServerJobId then
 					TeleportService:TeleportToPlaceInstance(game.PlaceId, ServerJobId)
@@ -2270,7 +2277,7 @@ if Settings.ToggleGUI then
 										TextLabel.FontFace.Family = "rbxasset://fonts/families/GothamSSm.json"
 										TextLabel.FontFace.Style = Enum.FontStyle.Normal
 									end
-									
+
 									TextLabel.FontSize = Enum.FontSize.Size14
 									TextLabel.Position = UDim2.new(0,0,1,0)
 									TextLabel.Text = ""
@@ -2283,22 +2290,22 @@ if Settings.ToggleGUI then
 									TextLabel.Size = UDim2.new(1,0,0,20)
 									TextLabel.Parent = OutfitExample
 								end
-								
+
 								local ViewportFrame = Instance.new("ViewportFrame"); do
 									ViewportFrame.BackgroundTransparency = 1
 									ViewportFrame.Size = UDim2.new(1,0,1,-20)
-									
+
 									local Camera = Instance.new("Camera"); do
 										Camera.CFrame = CFrame.new(0,0,-5) * CFrame.Angles(0,math.rad(-180),0)
 										Camera.Parent = ViewportFrame
-										
+
 										ViewportFrame.CurrentCamera = Camera
 									end
-									
+
 									local WorldModel = Instance.new("WorldModel"); do
 										WorldModel.Parent = ViewportFrame
 									end
-									
+
 									ViewportFrame.Parent = OutfitExample
 								end
 							end
@@ -2317,12 +2324,12 @@ if Settings.ToggleGUI then
 							end
 						end
 					end
-					
+
 					local loadqueue,loadqueuetable = 0,{}
 					for i,v in pairs(OutfitList) do
 						table.insert(loadqueuetable,{i,v})
 					end
-					
+
 					for i=1,#loadqueuetable do
 						if loadqueue < 5 then
 							loadqueue += 1; task.defer(function()
@@ -2378,6 +2385,59 @@ if Settings.ToggleGUI then
 				end
 			end,
 		},
+		["checkvc"] = {
+			Args = {"Player"},
+			Alias = {"isvc"},
+			Function = function(Args)
+				if keypress and keyrelease then
+					local ToPlr; if Args[1] then ToPlr = ShortName(Args[1]); if ToPlr then ToPlr = ToPlr[1] end end
+					local NewTeam = game:GetService("Teams"):FindFirstChild("VC")
+					if not NewTeam then
+						NewTeam = Instance.new("Team"); do
+							NewTeam.Name = "VC";
+							NewTeam.TeamColor = BrickColor.new("Royal purple")
+							NewTeam.Parent = game:GetService("Teams")
+						end
+					end
+
+					if ToPlr and table.find(VcVerified[1],ToPlr) then
+						ChatRemote:FireServer(ToPlr.Name .. " (" .. ToPlr.DisplayName .. ") is VC Verified","All")
+					elseif ToPlr and table.find(VcVerified[2],ToPlr) then
+						ChatRemote:FireServer(ToPlr.Name .. " (" .. ToPlr.DisplayName .. ") is not VC Verified","All")
+					else
+						local function OpenMenu()
+							keypress(27)
+							keyrelease(27)
+						end
+						
+						local DontAddExtraWait = iswindowactive or isrbxactive or WindowFocused 
+						repeat fwait() until iswindowactive or isrbxactive or WindowFocused  
+						if not DontAddExtraWait then fwait(1/2) end
+
+						OpenMenu()
+						for i=1,10 do 
+							fwait()
+						end
+						OpenMenu()
+
+						for i,v in pairs(GetToPath(CoreGui,"RobloxGui.SettingsShield.SettingsShield.MenuContainer.PageViewClipper.PageView.PageViewInnerFrame.Players"):GetChildren()) do
+							if v:IsA("ImageLabel") then
+								local ThePlayer = Players:FindFirstChild(string.split(v.Name,"Label")[2])
+								if v:FindFirstChild("MuteStatusButton",true) and ThePlayer then
+									ThePlayer.Team = NewTeam
+								end
+								if ToPlr and string.find(v.Name,ToPlr.Name) then
+									table.insert(v:FindFirstChild("MuteStatusButton",true) and VcVerified[1] or VcVerified[2],ToPlr)
+									fwait(GetPing(900))
+									local Additive = v:FindFirstChild("MuteStatusButton",true) and " VC Verified" or " not VC Verified"
+									ChatRemote:FireServer(ToPlr.Name .. " (" .. ToPlr.DisplayName .. ") is" .. Additive,"All")
+								end
+							end
+						end
+					end
+				end
+			end,
+		},
 	 --[[
 	[""] = {
 		Args = {},
@@ -2387,8 +2447,8 @@ if Settings.ToggleGUI then
 		end,
 	}, ]]
 	}
-	
-	
+
+
 
 	local ScreenGui = Instance.new("ScreenGui"); do
 		ScreenGui.IgnoreGuiInset = true
@@ -2476,20 +2536,20 @@ if Settings.ToggleGUI then
 							ConsoleExample.FontFace.Family = "rbxasset://fonts/families/Ubuntu.json"
 							ConsoleExample.FontFace.Style = Enum.FontStyle.Normal
 						end
-						
+
 						ConsoleExample.FontSize = Enum.FontSize.Size12
 						ConsoleExample.TextColor3 = Color3.fromRGB(255,255,255)
 						ConsoleExample.TextSize = 12
 						ConsoleExample.TextXAlignment = Enum.TextXAlignment.Left
 						ConsoleExample.Size = UDim2.new(1,-6,0,12)
 					end
-					
+
 					local EmptySpace = Instance.new("Frame"); do
 						EmptySpace.Size = UDim2.new(0,3,0,3)
 						EmptySpace.BackgroundTransparency = 1
 						EmptySpace.Parent = ConsoleScroll
 					end
-					
+
 					ConsoleScroll.Parent = Console
 				end
 				Console.Parent = Background
@@ -2589,17 +2649,17 @@ if Settings.ToggleGUI then
 							TextLabel_3.Parent = SettingsExample
 						end
 					end
-					
+
 					local EmptySpace = Instance.new("Frame"); do
 						EmptySpace.Size = UDim2.new(0,3,0,3)
 						EmptySpace.BackgroundTransparency = 1
 						EmptySpace.Parent = SettingsScroll
 					end
-					
+
 					SettingsScroll.Parent = Settings
 				end
 				Settings.Parent = Background
-			Drag(Settings,Settings)	
+				Drag(Settings,Settings)	
 			end
 
 			CommandBar = Instance.new("TextBox"); do
@@ -2730,20 +2790,20 @@ if Settings.ToggleGUI then
 			end
 			Background.Parent = ScreenGui
 		end
-		
+
 		if not pcall(function()
 				ScreenGui.Parent = Global.gethiddengui and Global.gethiddengui() or Global.gethui and Global.gethui() or  game:GetService("CoreGui"):FindFirstChild("RobloxGui") or game:GetService("CoreGui")
 			end) then
 			ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 		end
 	end
-	
+
 	local Success,Reason = pcall(function() -- could error
 		for i,v in pairs(loadstring(readfile("commands.lua"))()) do
 			Commands[i] = v
 		end
 	end); if not Success then printconsole("Errored loading commands.lua") end
-	
+
 	for i,v in pairs(Commands) do
 		local newlabel = Instance.new("TextLabel"); do
 			newlabel.BackgroundTransparency = 1
@@ -2761,7 +2821,7 @@ if Settings.ToggleGUI then
 			newlabel.Parent = CommandsScroll
 		end
 	end
-	
+
 	for i,v in pairs(Settings) do
 		local NewSetting = SettingsExample:Clone(); do
 			NewSetting.BackgroundColor3 = v and Color3.fromRGB(247,104,2) or Color3.fromRGB(68,68,68)
@@ -2774,7 +2834,7 @@ if Settings.ToggleGUI then
 			end)
 		end
 	end
-	
+
 	UserInputService.InputBegan:Connect(function(input,gameprocess)
 		if not gameprocess then
 			if input.KeyCode == Enum.KeyCode.LeftBracket then
@@ -2786,21 +2846,21 @@ if Settings.ToggleGUI then
 			end
 		end
 	end)
-	
+
 	ToggleKenzen = function(Bool)
 		Background.BackgroundTransparency = Bool and 0.5 or 1
 		Background:WaitForChild("Console").Visible = Bool
 		Background:WaitForChild("Settings").Visible = Bool
 		Background:WaitForChild("Commands").Visible = Bool
-		
+
 		if OutfitsUI then
 			OutfitsUI.Visible = Bool
 		end
-		
+
 		GetToPath(CommandsFrame,"Frame.TextButton").Visible = not Bool
 		Background.Active = Bool
 	end; ToggleKenzen(true)
-	
+
 	task.defer(function()
 		repeat fwait(0/1) until Player
 		Player.Chatted:Connect(function(msg)
@@ -2907,7 +2967,7 @@ end
 
 local loadedtime = (tick() - LoadTick)
 
-printconsole(tostring("V4 Autoexec loaded in " .. RoundNumber(loadedtime) .. " (" .. RoundNumber(loadedtime)*10000 .. "ms)"))
+printconsole(tostring("V4.1 Autoexec loaded in " .. RoundNumber(loadedtime) .. " (" .. RoundNumber(loadedtime)*10000 .. "ms)"))
 
 if notify ~= "Disabled" then
 	notify({Text = "Game loaded in " .. math.abs(GameLoadedIn),Duration = 5})
