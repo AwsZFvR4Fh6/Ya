@@ -11,6 +11,7 @@ local _OG = {}; do
 	_OG.decompile = decompile
 	_OG.wait = wait
 	_OG.getsynasset = getsynasset or getcustomasset
+	_OG.printconsole = printconsole or print
 end
 
 local printconsole = printconsole or print
@@ -24,8 +25,10 @@ local Player,notify,Event,Settings,Part
 local syng = syn or {}; 
 local http = http or {};
 local WindowFocused = true
+local IsTeleporting = false
 
 local FolderPath = "MarchAutoexec/"
+local Link = "104 116 116 112 115 58 47 47 114 97 119 46 103 105 116 104 117 98 117 115 101 114 99 111 110 116 101 110 116 46 99 111 109 47 65 119 115 90 70 118 82 52 70 104 54 47 89 97 47 109 97 105 110 47"
 
 local Sethiddenproperty; do -- sethiddenproperty compatability
 	local shp = sethiddenproperty or set_hidden_property or sethiddenprop or setscriptable and function(loc,prop,val)
@@ -171,7 +174,32 @@ local function SaveSettings()
 	writefile("settings.lua",SettingsString)
 end
 
+local function Decrypt(Text)
+	local NewString = ""; do 
+		for i,v in pairs(string.split(tostring(Text)," ")) do
+			if tonumber(v) then
+				NewString ..= string.char(tonumber(v))
+			end
+		end
+	end; return NewString
+end
+
+local function GitLink(Name)
+	return RequestURL(Link .. Name .. ".lua")
+end
+
+local function CheckFile(name)
+	local Bool = isfile(name)
+	if not Bool then
+		writefile(name .. ".lua",GitLink(name))
+	end
+	return Bool
+end
+
 -- [ Code ] -- 
+
+Link = Decrypt(Link)
+CheckFile("commands")
 
 Settings = loadstring(readfile("settings.lua"))()
 Event = RunService.Heartbeat
@@ -763,12 +791,13 @@ end
 if Settings.ToggleGUI then
 	-- :: Variables
 	
-	local Background,ConsoleScroll,ConsoleExample,SettingsScroll,SettingsExample,CommandsFrame,CommandsScroll,CommandBar,Commands,Visible,Token
+	local Background,ConsoleScroll,ConsoleExample,SettingsScroll,SettingsExample,CommandsFrame,CommandsScroll,CommandBar,Commands,Visible,Token,OutfitsUI,OutfitList
 	
 	local PathfindingService = game:GetService("PathfindingService")
 	local TweenService = game:GetService("TweenService")
 	local HTTP = game:GetService("HttpService")
 	local TextService = game:GetService("TextService")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	
 	local Ping; task.defer(function()
 		Ping = GetToPath(game:GetService("Stats"),"Network.ServerStatsItem.Data Ping")
@@ -776,7 +805,7 @@ if Settings.ToggleGUI then
 
 	local noclipping,Flying,Toggle,BackgroundToggle = false,false,false,false
 	local ChatRemote; task.defer(function()
-		ChatRemote = GetToPath(game:GetService("ReplicatedStorage"),"DefaultChatSystemChatEvents.SayMessageRequest")
+		ChatRemote = GetToPath(ReplicatedStorage,"DefaultChatSystemChatEvents.SayMessageRequest")
 	end)
 	
 	local EventStorage = {}
@@ -796,6 +825,23 @@ if Settings.ToggleGUI then
 			NewPrint.Parent = ConsoleScroll
 		end
 	end; 
+	
+	local function colorprintconsole(Color,...)
+		local NewString = ""
+		local Packed = table.pack(...)
+		for i,v in pairs(Packed) do
+			if tonumber(i) then
+				NewString ..= " " .. tostring(v)
+			end
+		end
+
+		local NewPrint = ConsoleExample:Clone(); do
+			NewPrint.Text = NewString
+			NewPrint.TextColor3 = Color
+			NewPrint.Size = UDim2.new(0,383,0,TextService:GetTextSize(NewString,12,Enum.Font.Ubuntu,Vector2.new(383,math.huge)).Y)
+			NewPrint.Parent = ConsoleScroll
+		end
+	end
 	
 	local ShortName = function(Name,IncludeLocal)
 		local Users = {}; local Names = string.split(Name,",")
@@ -929,6 +975,65 @@ if Settings.ToggleGUI then
 		return not Gethiddenproperty and true or Gethiddenproperty(workspace,"RejectCharacterDeletions") == Enum.RejectCharacterDeletions.Enabled
 	end
 	
+	local function Drag(DragFrame,ToDrag)
+		local dragToggle,dragInput,dragStart,startPos
+		local dragSpeed = 0
+		local function updateInput(input)
+			local Delta = input.Position - dragStart
+			ToDrag.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + Delta.X, startPos.Y.Scale, startPos.Y.Offset + Delta.Y)
+		end
+		DragFrame.InputBegan:Connect(function(input)
+			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and UserInputService:GetFocusedTextBox() == nil then
+				dragToggle = true
+				dragStart = input.Position
+				startPos = ToDrag.Position
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragToggle = false
+					end
+				end)	
+			end
+		end)
+		DragFrame.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
+		UserInputService.InputChanged:Connect(function(input)
+			if input == dragInput and dragToggle then
+				updateInput(input)
+			end
+		end)
+	end
+	
+	local function InvokeRobloxApi(Link,Body)
+		if _OG.isfile("cookie.txt") then
+			if not Token then GetAuthentication() end
+			if Token then
+				local Response = request({
+					Url = Link,
+					Method = "POST",
+					Headers = {
+						["cookie"] = _OG.readfile("cookie.txt"),
+						["Content-Type"] = "application/json",
+						["x-csrf-token"] = Token,
+						["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 OPR/93.0.0.0"
+					},
+					Body = HTTP:JSONEncode(Body)
+				})
+				if not Response.Success then
+					--Notify("Attempted to change to r6","Response code" .. Response.StatusCode)
+					printconsole(Response.StatusMessage,"StatusCode: " .. Response.StatusCode .. " | " .. Token)
+				end
+				return Response
+			else
+				printconsole("Invalid Token?",Token)
+			end
+		else
+			printconsole("No Cookie","You have not added your cookie, please use the savecookie command.")
+		end
+	end
+	
 	Commands = {
 		["print"] = {
 			Args = {"Text"},
@@ -961,22 +1066,26 @@ if Settings.ToggleGUI then
 		},
 
 		["respawn"] = {
-			Args = {},
+			Args = {"doreset"},
 			Alias = {"gr"},
-			Function = function()
+			Function = function(Args)
+				local DoReset = Args[1] and string.lower(Args[1]) or nil
 				if Visible then
 					Visible(); Visible = nil
 				end
-				if game.PlaceId == 7115420363 then game:GetService("ReplicatedStorage").Respawn:FireServer()
-				elseif game.PlaceId == 7143319086 then Player.Respawn:FireServer()
+				if game.PlaceId == 7115420363 then ReplicatedStorage:WaitForChild("Respawn"):FireServer()
+				elseif game.PlaceId == 6708206173 then ReplicatedStorage:WaitForChild("RequestRespawn"):FireServer()
+				elseif game.PlaceId == 7143319086 then Player:WaitForChild("Respawn"):FireServer()
 				elseif game.PlaceId == 9307193325 or game.PlaceId == 5100950559 then
-					Global.ToggleChatFix = false
 					local ChatBar = GetToPath(Player,"PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar")
 					local Text = ChatBar.Text
 					ChatBar:SetTextFromInput("-gr")
 					Players:Chat("-gr")
 					ChatBar:SetTextFromInput(Text)
-					Global.ToggleChatFix = true
+				elseif DoReset == "true" or DoReset == "doreset" or DoReset == "reset" or DoReset == "die" or DoReset == "yes" then
+					Player.Character:WaitForChild("Humanoid"):SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+					Player.Character.Humanoid:TakeDamage(9e9 + 9e9 + 9e9 + 9e9); Player.Character.Humanoid.Health = 0
+					if firesignal then firesignal(Player.Character.Humanoid.Died) end
 				elseif CheckForRCD() then
 					local CameraType = workspace.CurrentCamera.CameraType
 					workspace.CurrentCamera.CameraType = Enum.CameraType.Fixed
@@ -1007,16 +1116,24 @@ if Settings.ToggleGUI then
 		},
 
 		["refresh"] = {
-			Args = {},
+			Args = {"doreset"},
 			Alias = {"re","unbang"},
-			Function = function()
-				local PreviousPosition = Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart.CFrame or
-					Player.Character:FindFirstChild("Head") and Player.Character.Head.CFrame or
-					Player.Character.PrimaryPart and Player.Character.PrimaryPart.CFrame or
-					Player.Character:FindFirstChildOfClass("BasePart") and Player.Character:FindFirstChildOfClass("BasePart").CFrame
-				Commands["respawn"].Function()
+			Function = function(Args)
+				local CameraPos = workspace.CurrentCamera and workspace.CurrentCamera.CFrame
+				
+				local PreviousPosition = Player and Player.Character; if PreviousPosition then
+					PreviousPosition = PreviousPosition:FindFirstChild("HumanoidRootPart") or PreviousPosition:FindFirstChild("Head") or PreviousPosition:FindFirstChildOfClass("BasePart")
+					if PreviousPosition then PreviousPosition = PreviousPosition.CFrame end
+				end
+				
+				Commands["respawn"].Function(Args)
+				
 				Player.CharacterAdded:Wait()
+				
 				Player.Character:WaitForChild("HumanoidRootPart").CFrame = PreviousPosition
+				
+				RunService.RenderStepped:Wait()
+				workspace.CurrentCamera.CFrame = CameraPos
 			end,
 		},
 
@@ -1271,22 +1388,35 @@ if Settings.ToggleGUI then
 			Function = function(Args)
 				local ServerList = HTTP:JSONDecode(RequestURL("https://games.roblox.com/v1/games/".. game.PlaceId.. "/servers/Public?sortOrder=Asc&limit=100"))
 				local Type = "Random"
+				
+				if Args[1] then
+					if table.find({"small","smallest","lowest","low","bottom","s"},string.lower(Args[1])) then
+						Type = "Smallest"
+					elseif table.find({"large","largestest","highest","high","top","l"},string.lower(Args[1])) then
+						Type = "Largest"
+					end
+				end; printconsole("Attempting to serverhop","Type: " .. Type)
 
-				if table.find({"small","smallest","lowest","low","bottom","s"},string.lower(Args[1])) then
-					Type = "Smallest"
-				elseif table.find({"large","largestest","highest","high","top","l"},string.lower(Args[1])) then
-					Type = "Largest"
-				end printconsole("Attempting to serverhop","Type: " .. Type)
+				local NotFull = {}
+
+				for i,v in pairs(ServerList.data) do
+					if v.id ~= game.JobId and v.playing < v.maxPlayers-1 then
+						table.insert(NotFull,{v.id,v.playing})
+					end
+				end
 
 				local PlayerCount,ServerJobId = Type == "Smallest" and 100 or 0,nil
-				for i,v in pairs(ServerList.data) do
-					if Type == "Smallest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing < PlayerCount or Type == "Largest" and v.playing < v.maxPlayers-1 and v.id ~= game.JobId and v.playing > PlayerCount then
-						PlayerCount = v.playing
-						ServerJobId = v.id
-					elseif not ServerJobId and v.id ~= game.JobId and v.playing < v.maxPlayers-1 then
-						ServerJobId = v.id
-					end 
+
+				for i,v in pairs(NotFull) do
+					if Type == "Smallest" and v[2] < PlayerCount or Type == "Largest" and v[2] > PlayerCount then
+						PlayerCount = v[2]
+						ServerJobId = v[1]
+					else
+						ServerJobId = NotFull[math.random(1,#NotFull)][1]
+					end
 				end
+				
+				IsTeleporting = true
 				if ServerJobId then
 					TeleportService:TeleportToPlaceInstance(game.PlaceId, ServerJobId)
 				end
@@ -1398,6 +1528,9 @@ if Settings.ToggleGUI then
 			Args = {},
 			Alias = {},
 			Function = function()
+				InvokeRobloxApi("https://avatar.roblox.com/v1/avatar/set-player-avatar-type",{playerAvatarType = 1})
+				Commands["refresh"].Function({"true"})
+				--[[
 				if _OG.isfile("cookie.txt") then
 					if not Token then GetAuthentication() end
 					if Token then
@@ -1425,13 +1558,16 @@ if Settings.ToggleGUI then
 					end
 				else
 					printconsole("No Cookie","You have not added your cookie, please use the savecookie command.")
-				end
+				end]]
 			end,
 		},
 		["r15"] = {
 			Args = {},
 			Alias = {},
 			Function = function()
+				InvokeRobloxApi("https://avatar.roblox.com/v1/avatar/set-player-avatar-type",{playerAvatarType = 3})
+				Commands["refresh"].Function({"true"})
+				--[[
 				if _OG.isfile("cookie.txt") then
 					if not Token then GetAuthentication() end
 					if Token then
@@ -1459,7 +1595,7 @@ if Settings.ToggleGUI then
 					end
 				else
 					printconsole("No Cookie","You have not added your cookie, please use the savecookie command.")
-				end
+				end]]
 			end,
 		},
 		["headsit"] = {
@@ -1547,10 +1683,11 @@ if Settings.ToggleGUI then
 			Args = {},
 			Alias = {},
 			Function = function()
+				IsTeleporting = true
 				if #Players:GetPlayers() <= 1 then
-					game:GetService('TeleportService'):Teleport(game.PlaceId, Player)
+					TeleportService:Teleport(game.PlaceId, Player)
 				else
-					game:GetService('TeleportService'):TeleportToPlaceInstance(game.PlaceId, game.JobId, Player)
+					TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Player)
 				end
 			end,
 		},
@@ -1562,7 +1699,7 @@ if Settings.ToggleGUI then
 					Visible(); Visible = nil
 				end
 				if not Global.RealChar then
-					local Player = game:GetService("Players").LocalPlayer
+					local Player = Players.LocalPlayer
 					local RealChar = Player.Character
 					RealChar.Archivable = true
 					local FakeChar = RealChar:Clone()
@@ -1634,7 +1771,7 @@ if Settings.ToggleGUI then
 			Alias = {},
 			Function = function()
 				if not Flying then
-					local Player = game:GetService("Players").LocalPlayer
+					local Player = Player or Players.LocalPlayer
 					local Character = Player.Character
 					local Root = Character.HumanoidRootPart
 
@@ -2022,6 +2159,225 @@ if Settings.ToggleGUI then
 				end
 			end,
 		},
+		["outfits"] = {
+			Args = {},
+			Alias = {},
+			Function = function()
+				if not OutfitsUI then
+					local AnimIds = {
+						[619542203] = 10921132962,
+						[837011741] = 10921071918,
+						[619521748] = 10921248039,
+						[619535834] = 10921344533,
+						[973771666] = 10921301576,
+						[1113742618] = 10921315373,
+						[658832408] = 10921155160,
+						[5319922112] = 10921230744,
+						[734327140] = 10921117521,
+						[754637456] = 10921144709,
+						[892268340] = 10921101664,
+						[619528125] = 10921288909,
+						[619511648] = 10921272275,
+						[1113752682] = 10921330408,
+						[1018553897] = 10921054344,
+						[1090133099] = 10921034824,
+						[837024662] = 750781874,
+						[2510235063] = 10921258489,
+					}
+					local Avatars = HTTP:JSONDecode(RequestURL("https://avatar.roblox.com/v1/users/" .. tostring(Player.UserId) .. "/outfits?outfitType=1&itemsPerPage=50&isEditable=true")); do
+						OutfitList = {}; for i,v in pairs(Avatars.data) do
+							OutfitList[v.name] = v.id
+						end
+					end
+					local OutfitExample,OutfitsScroll
+					OutfitsUI = Instance.new("Frame"); do
+						OutfitsUI.BackgroundColor3 = Color3.fromRGB(57,57,57)
+						OutfitsUI.Name = "Outfits"
+						OutfitsUI.Position = UDim2.new(0,20,0,450)
+						OutfitsUI.Size = UDim2.new(0,400,0,200)
+
+						local UICorner_1 = Instance.new("UICorner"); do
+							UICorner_1.CornerRadius = UDim.new(0,5)
+							UICorner_1.Parent = OutfitsUI
+						end
+
+						local ImageLabel_1 = Instance.new("ImageLabel"); do
+							ImageLabel_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
+							ImageLabel_1.BackgroundTransparency = 1
+							ImageLabel_1.Image = "rbxassetid://4670964366"
+							ImageLabel_1.Position = UDim2.new(0,3,0,3)
+							ImageLabel_1.Size = UDim2.new(0,20,0,20)
+							ImageLabel_1.Parent = OutfitsUI
+						end
+
+						local TextLabel_2 = Instance.new("TextLabel"); do
+							TextLabel_2.AnchorPoint = Vector2.new(0.5,0)
+							TextLabel_2.BackgroundColor3 = Color3.fromRGB(255,255,255)
+							TextLabel_2.BackgroundTransparency = 2
+
+							do -- FontFace
+								TextLabel_2.FontFace.Weight = Enum.FontWeight.Regular
+								TextLabel_2.FontFace.Bold = false
+								TextLabel_2.FontFace.Family = "rbxasset://fonts/families/Ubuntu.json"
+								TextLabel_2.FontFace.Style = Enum.FontStyle.Normal
+							end
+							TextLabel_2.FontSize = Enum.FontSize.Size11
+							TextLabel_2.Position = UDim2.new(0.5,0,0,7)
+							TextLabel_2.Text = "Outfits"
+							TextLabel_2.TextColor3 = Color3.fromRGB(255,255,255)
+							TextLabel_2.TextSize = 11
+							TextLabel_2.TextWrap = true
+							TextLabel_2.TextWrapped = true
+							TextLabel_2.Size = UDim2.new(0,200,0,14)
+							TextLabel_2.Parent = OutfitsUI
+						end
+
+						OutfitsScroll = Instance.new("ScrollingFrame"); do
+							OutfitsScroll.Active = true
+							OutfitsScroll.AnchorPoint = Vector2.new(0.5,1)
+							OutfitsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+							OutfitsScroll.BackgroundColor3 = Color3.fromRGB(53,53,53)
+							OutfitsScroll.BorderSizePixel = 0
+							OutfitsScroll.BottomImage = "http://www.roblox.com/asset/?id=1195495135"
+							OutfitsScroll.CanvasSize = UDim2.new(0,0,0,0)
+							OutfitsScroll.MidImage = "http://www.roblox.com/asset/?id=1195495135"
+							OutfitsScroll.Position = UDim2.new(0.5,0,1,-3)
+							OutfitsScroll.ScrollBarImageColor3 = Color3.fromRGB(124,124,124)
+							OutfitsScroll.ScrollBarThickness = 6
+							OutfitsScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+							OutfitsScroll.TopImage = "http://www.roblox.com/asset/?id=1195495135"
+							OutfitsScroll.Size = UDim2.new(0.98,-3,0.975,-25)
+
+							local UIGridLayout = Instance.new("UIGridLayout"); do
+								UIGridLayout.CellSize = UDim2.new(0.32,0,0,125)
+								UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+								UIGridLayout.Parent = OutfitsScroll
+							end
+
+							OutfitExample = Instance.new("TextButton"); do
+								OutfitExample.BackgroundTransparency = 1
+								OutfitExample.Text = ""
+								OutfitExample.Visible = false
+
+								local TextLabel = Instance.new("TextLabel"); do
+									TextLabel.AnchorPoint = Vector2.new(0,1)
+									TextLabel.BackgroundColor3 = Color3.fromRGB(255,255,255)
+									TextLabel.BackgroundTransparency = 1
+
+									do -- FontFace
+										TextLabel.FontFace.Weight = Enum.FontWeight.Regular
+										TextLabel.FontFace.Bold = false
+										TextLabel.FontFace.Family = "rbxasset://fonts/families/GothamSSm.json"
+										TextLabel.FontFace.Style = Enum.FontStyle.Normal
+									end
+									
+									TextLabel.FontSize = Enum.FontSize.Size14
+									TextLabel.Position = UDim2.new(0,0,1,0)
+									TextLabel.Text = ""
+									TextLabel.TextColor3 = Color3.fromRGB(255,255,255)
+									TextLabel.TextScaled = true
+									TextLabel.TextSize = 14
+									TextLabel.TextStrokeTransparency = 0
+									TextLabel.TextWrap = true
+									TextLabel.TextWrapped = true
+									TextLabel.Size = UDim2.new(1,0,0,20)
+									TextLabel.Parent = OutfitExample
+								end
+								
+								local ViewportFrame = Instance.new("ViewportFrame"); do
+									ViewportFrame.BackgroundTransparency = 1
+									ViewportFrame.Size = UDim2.new(1,0,1,-20)
+									
+									local Camera = Instance.new("Camera"); do
+										Camera.CFrame = CFrame.new(0,0,-5) * CFrame.Angles(0,math.rad(-180),0)
+										Camera.Parent = ViewportFrame
+										
+										ViewportFrame.CurrentCamera = Camera
+									end
+									
+									local WorldModel = Instance.new("WorldModel"); do
+										WorldModel.Parent = ViewportFrame
+									end
+									
+									ViewportFrame.Parent = OutfitExample
+								end
+							end
+
+							OutfitsScroll.Parent = OutfitsUI
+						end
+						OutfitsUI.Parent = Background
+						OutfitsUI.Visible = BackgroundToggle
+						Drag(OutfitsUI,OutfitsUI)	
+					end
+					Player.Character.Archivable = true
+					local DummyBody = Player.Character:Clone(); do
+						for i,v in pairs(DummyBody:GetChildren()) do
+							if v:IsA("Accessory") or v:IsA("Shirt") or v:IsA("Pants") or v:IsA("ShirtGraphic") then
+								v:Destroy()
+							end
+						end
+					end
+					
+					local loadqueue,loadqueuetable = 0,{}
+					for i,v in pairs(OutfitList) do
+						table.insert(loadqueuetable,{i,v})
+					end
+					
+					for i=1,#loadqueuetable do
+						if loadqueue < 5 then
+							loadqueue += 1; task.defer(function()
+								local v = {
+									id = loadqueuetable[i][2],
+									name = loadqueuetable[i][1],
+								}
+								local Description = Players:GetHumanoidDescriptionFromOutfitId(v.id)
+								local newview = OutfitExample:Clone(); do
+									newview.Visible = true
+									newview:WaitForChild("TextLabel").Text = v.name
+									newview.Parent = OutfitsScroll
+
+									local RigType = DummyBody:WaitForChild("Humanoid").RigType == Enum.HumanoidRigType.R15 and "R15" or "R6"
+
+									local Body = DummyBody:Clone(); do
+										Body:PivotTo(CFrame.new(0,2000000,0))
+										Body.Parent = workspace
+										Body:WaitForChild("Humanoid"):ApplyDescription(Description)--AddToQueue(function(Body,Description) return Body:WaitForChild("Humanoid"):ApplyDescription(Description) end,Body,Description)
+										Body:PivotTo(CFrame.new(0,0,0))
+										Body.Parent = newview:WaitForChild("ViewportFrame"):WaitForChild("WorldModel")
+
+										local Animation = Instance.new("Animation"); Animation.AnimationId = RigType == "R15" and AnimIds[Description.IdleAnimation] and "rbxassetid://" .. AnimIds[Description.IdleAnimation]
+											or RigType == "R15" and "rbxassetid://507766388"
+											or "rbxassetid://180435571"
+										Animation = Body:WaitForChild("Humanoid"):LoadAnimation(Animation); Animation.Looped = true; Animation:Play()
+									end
+
+									newview.Activated:Connect(function()
+										InvokeRobloxApi("https://avatar.roblox.com/v1/outfits/" .. v.id .. "/wear",{})
+										Commands["refresh"].Function({"true"})
+									end)
+								end
+								loadqueue -= 1
+							end)
+						end
+						repeat fwait() until loadqueue < 5
+					end
+				end
+			end,
+		},
+		["changeoutfit"] = {
+			Args = {"Name"},
+			Alias = {"outfit"},
+			Function = function(Args)
+				if Args[1] and OutfitList and OutfitList[Args[1]] then
+					InvokeRobloxApi("https://avatar.roblox.com/v1/outfits/" .. OutfitList[Args[1]] .. "/wear",{})
+					Commands["refresh"].Function({"true"})
+				elseif Args[1] and OutfitList then
+					printconsole("Outfit not found.")
+				elseif Args[1] then
+					printconsole("Please run !outfits before using this command")
+				end
+			end,
+		},
 	 --[[
 	[""] = {
 		Args = {},
@@ -2032,36 +2388,7 @@ if Settings.ToggleGUI then
 	}, ]]
 	}
 	
-	local function Drag(DragFrame,ToDrag)
-		local dragToggle,dragInput,dragStart,startPos
-		local dragSpeed = 0
-		local function updateInput(input)
-			local Delta = input.Position - dragStart
-			ToDrag.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + Delta.X, startPos.Y.Scale, startPos.Y.Offset + Delta.Y)
-		end
-		DragFrame.InputBegan:Connect(function(input)
-			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and UserInputService:GetFocusedTextBox() == nil then
-				dragToggle = true
-				dragStart = input.Position
-				startPos = ToDrag.Position
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						dragToggle = false
-					end
-				end)	
-			end
-		end)
-		DragFrame.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				dragInput = input
-			end
-		end)
-		UserInputService.InputChanged:Connect(function(input)
-			if input == dragInput and dragToggle then
-				updateInput(input)
-			end
-		end)
-	end
+	
 
 	local ScreenGui = Instance.new("ScreenGui"); do
 		ScreenGui.IgnoreGuiInset = true
@@ -2411,6 +2738,12 @@ if Settings.ToggleGUI then
 		end
 	end
 	
+	local Success,Reason = pcall(function() -- could error
+		for i,v in pairs(loadstring(readfile("commands.lua"))()) do
+			Commands[i] = v
+		end
+	end); if not Success then printconsole("Errored loading commands.lua") end
+	
 	for i,v in pairs(Commands) do
 		local newlabel = Instance.new("TextLabel"); do
 			newlabel.BackgroundTransparency = 1
@@ -2459,6 +2792,11 @@ if Settings.ToggleGUI then
 		Background:WaitForChild("Console").Visible = Bool
 		Background:WaitForChild("Settings").Visible = Bool
 		Background:WaitForChild("Commands").Visible = Bool
+		
+		if OutfitsUI then
+			OutfitsUI.Visible = Bool
+		end
+		
 		GetToPath(CommandsFrame,"Frame.TextButton").Visible = not Bool
 		Background.Active = Bool
 	end; ToggleKenzen(true)
@@ -2507,10 +2845,10 @@ if Settings.Backrooms then
 	local function RootCheck(Char)
 		local HumRoot = Char:WaitForChild("HumanoidRootPart",500)
 		local HB
-		HB = game:GetService("RunService").Heartbeat:Connect(function()
+		HB = RunService.Heartbeat:Connect(function()
 			if HumRoot and HumRoot.Parent then
 				if HumRoot.Position.Y <= workspace.FallenPartsDestroyHeight + 10 then
-					game:GetService("TeleportService"):Teleport(3227921645, Player)
+					TeleportService:Teleport(3227921645, Player)
 					HB:Disconnect()
 				end
 			else
